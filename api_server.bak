@@ -1,0 +1,28 @@
+from fastapi import FastAPI, HTTPException
+import json
+import os
+
+app = FastAPI()
+
+#Define the path to your JSON file
+DATA_FILE_PATH = 'data.json'
+
+@app.get("/api/data")
+def get_pi_data():
+    try: 
+        with open(DATA_FILE, 'r') as f:
+            data = json.load(f)
+        # The jsonify function esnures the response is correctly formatted as JSON
+        return jsonify(data)
+     
+    except FileNoteFoundError:
+        return jsonify({"error": "Data file not found"}), 404
+        
+    except Exception as e:
+        return justify({"error": str(e)}), 500
+        
+if __name__ == '__main__':
+    # Run the server on a port (ex. 5000) and make it accessbile from any IP
+    app.run(host='0.0.0.0', port=5000)
+        
+   

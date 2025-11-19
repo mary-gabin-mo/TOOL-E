@@ -1,0 +1,4 @@
+import requests
+import json
+
+Desktop_API_URL = '(destop IP and FastAPI port'
