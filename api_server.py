@@ -4,23 +4,31 @@ import mysql.connector
 from mysql.connector import Error
 import uvicorn
 import json
-import requests
+#import requests
+import os
+
+TOOL_E_DB_USERNAME = os.environ.get('TOOL_E_DB_USERNAME')
+TOOL_E_DB_PASSWORD = os.environ.get('TOOL_E_DB_PASSWORD')
+
+MAKERSPACE_DB_USERNAME = os.environ.get('MAKERSPACE_DB_USERNAME')
+MAKERSPACE_DB_PASSWORD = os.environ.get('MAKERSPACE_DB_PASSWORD')
+MAKERSPACE_DB_HOST = os.environ.get('MAKERSPACE_DB_HOST')
 
 app = FastAPI(title="Pi Data Ingestion Server")
 
 # --- MySQL Configs ---
 TOOLE_CONFIG = {
     'host': 'localhost',
-    'database': 'pi_data',
-    'user': '', #sql user
-    'password': '' #passwrod user
+    'database': 'tool_e_db',
+    'user': '{TOOL_E_DB_USERNAME}',
+    'password': '{TOOL_E_DB_PASSWORD}'
 }
 
 UNI_CONFIG = {
-    'host': 'localhost',
-    'database': 'verification_db',
-    'user': '', #sql user
-    'password': '' #passwrod user
+    'host': '{MAKERSPACE_DB_HOST}',
+    'database': 'Museum',
+    'user': '{MAKERSPACE_DB_USERNAME}', #sql user
+    'password': '{MAKERSPACE_DB_PASSWORD}' #passwrod user
 }
 
 #--- Pydantic Model for Incoming Data ---
