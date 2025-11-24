@@ -37,6 +37,10 @@ class WelcomeScreen(MDScreen):
         """Navigate to the Borrow/Return screen."""
         self.manager.current = 'action selection screen'
         
+    def go_to_manual(self):
+        """Navigate to the Manual Entry screen."""
+        self.manager.current = 'manual entry screen'
+        
     # def go_to_manaul(self):
     #     """Navigate to Manual Entry."""
     #     self.manager.current = 'manual_entry_screen'

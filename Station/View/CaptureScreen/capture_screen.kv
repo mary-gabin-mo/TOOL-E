@@ -1,0 +1,31 @@
+<CaptureScreen>:
+    md_bg_color: 1, 1, 1, 1  # White background
+
+    MDBoxLayout:
+        orientation: 'vertical'
+        padding: "40dp"
+        spacing: "30dp"
+        pos_hint: {"center_x": .5, "center_y": .5}
+
+        # -- Logo Area --
+        Image:
+            source: "assets/images/logo_black.png"
+            size_hint_y: 0.3
+            allow_stretch: True
+            keep_ratio: True
+
+       # -- Title --
+        MDLabel:
+            text: "TOOL-E Checkout"
+            halign: "center"
+            font_style: "H3"
+            theme_text_color: "Primary"
+            bold: True
+            size_hint_y: 0.1
+
+        MDLabel:
+            text: "Place the tool on the tool bed"
+            halign: "center"
+            font_style: "H5"
+            theme_text_color: "Secondary"
+            size_hint_y: 0.1
