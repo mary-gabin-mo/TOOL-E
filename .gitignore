@@ -1,0 +1,18 @@
+# python virtual environments
+venv/
+.venv/ 
+env/ 
+*.env
+station_venv/
+
+# python cache
+pycache/ 
+*.pycache
+__pycache__/
+
+# OS/IDE Files
+.DS_Store 
+.vscode/
+
+# test code
+reference/
