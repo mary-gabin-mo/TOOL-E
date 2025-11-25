@@ -42,7 +42,7 @@
                 size_hint: 0.6, 0.15
                 pos_hint: {"center_x": .5}
                 md_bg_color: .2, .6, .8, 1  # Blue-ish
-                on_release: root.borrow_tool()
+                on_release: root.select_borrow()
 
             MDFillRoundFlatButton:
                 text: "RETURN"
@@ -50,11 +50,11 @@
                 size_hint: 0.6, 0.15
                 pos_hint: {"center_x": .5}
                 md_bg_color: .2, .6, .8, 1  # Blue-ish
-                on_release: root.return_tool()
+                on_release: root.select_return()
 
         # -- DEV -- Main Button --
         MDFillRoundFlatButton:
-            text: "Back to Main"
+            text: "Cancel"
             font_size: "24sp"
             size_hint: 1, 0.01
             pos_hint: {"center_x": .5}

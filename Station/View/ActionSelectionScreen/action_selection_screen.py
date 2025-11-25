@@ -7,10 +7,16 @@ class ActionSelectionScreen(MDScreen):
         """Navigate to the Welcome screen."""
         self.manager.current = 'welcome screen'
     
-    def borrow_tool(self):
+    def select_borrow(self):
         """persist borrow state"""
+        app = App.get_running_app()
+        app.session.set_transaction_type("borrow")
+        self.manager.current = 'welcome screen'
         print("BORROWING")
     
-    def return_tool(self):
+    def select_return(self):
         """persist return state"""
+        app = App.get_running_app()
+        app.session.set_transaction_type("return")
+        self.manager.current = 'welcome screen'
         print("RETURNING")

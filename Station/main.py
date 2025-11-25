@@ -31,6 +31,7 @@ Config.write()
 # --- Local Module Imports ---
 # Services 
 from services.hardware import HardwareManager
+from services.session import SessionManager
 
 if ENABLE_HOT_RELOAD:
     # --- Kivy/KivyMD imports ---
@@ -53,6 +54,7 @@ if ENABLE_HOT_RELOAD:
                 self.hardware = HardwareManager()
             # if not hasattr(self, 'api_client'):
             #     self.api_client = APIClient()
+            self.session = SessionManager()
             
             self.manager_screens = MDScreenManager()
             Window.bind(on_key_down=self.on_keyboard_down)
