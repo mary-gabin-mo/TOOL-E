@@ -3,29 +3,36 @@
 
     MDBoxLayout:
         orientation: 'vertical'
-        padding: "40dp"
-        spacing: "30dp"
-        pos_hint: {"center_x": .5, "center_y": .5}
+        padding: "20dp"
+        spacing: "20dp"
 
-        # -- Logo Area --
+        MDLabel:
+            text: "Place tool on Bed"
+            halign: "center"
+            font_style: "H4"
+            size_hint_y: 0.1
+
+        # --- Live Feed Window
         Image:
-            source: "assets/images/logo_black.png"
-            size_hint_y: 0.3
+            id: camera_preview
+            source: "assets/images/logo_white.png"
             allow_stretch: True
             keep_ratio: True
+            size_hint_y: 0.7
 
-       # -- Title --
-        MDLabel:
-            text: "TOOL-E Checkout"
-            halign: "center"
-            font_style: "H3"
-            theme_text_color: "Primary"
-            bold: True
-            size_hint_y: 0.1
+            # border to frame the window
+            canvas.before:
+                Color: 
+                    rgba: 0.9, 0.9, 0.9, 1
+                Line:
+                    width: 2
+                    rectangle: self.x, self.y, self.width, self.height
 
-        MDLabel:
-            text: "Place the tool on the tool bed"
-            halign: "center"
-            font_style: "H5"
-            theme_text_color: "Secondary"
-            size_hint_y: 0.1
+        # -- DEV -- Main Button --
+        MDFillRoundFlatButton:
+            text: "CANCEL"
+            font_size: "24sp"
+            size_hint: 1, 0.01
+            pos_hint: {"center_x": .5}
+            md_bg_color: .2, .6, .8, 1  # Blue-ish
+            on_release: root.go_to_main()

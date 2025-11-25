@@ -11,12 +11,12 @@ class ActionSelectionScreen(MDScreen):
         """persist borrow state"""
         app = App.get_running_app()
         app.session.set_transaction_type("borrow")
-        self.manager.current = 'welcome screen'
+        self.manager.current = 'capture screen'
         print("BORROWING")
     
     def select_return(self):
         """persist return state"""
         app = App.get_running_app()
         app.session.set_transaction_type("return")
-        self.manager.current = 'welcome screen'
+        self.manager.current = 'capture screen'
         print("RETURNING")

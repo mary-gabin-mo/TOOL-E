@@ -1,4 +1,4 @@
-<CaptureScreen>:
+<ToolConfirmScreen>:
     md_bg_color: 1, 1, 1, 1  # White background
 
     MDBoxLayout:
@@ -29,3 +29,12 @@
             font_style: "H5"
             theme_text_color: "Secondary"
             size_hint_y: 0.1
+
+        # -- DEV -- Main Button --
+        MDFillRoundFlatButton:
+            text: "Cancel"
+            font_size: "24sp"
+            size_hint: 1, 0.01
+            pos_hint: {"center_x": .5}
+            md_bg_color: .2, .6, .8, 1  # Blue-ish
+            on_release: root.go_to_main()
