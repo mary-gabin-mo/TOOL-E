@@ -7,12 +7,14 @@
         spacing: "30dp"
         pos_hint: {"center_x": .5, "center_y": .5}
 
-        # -- Logo Area --
-        Image:
-            source: "assets/images/logo_black.png"
-            size_hint_y: 0.3
-            allow_stretch: True
-            keep_ratio: True
+        # -- Back Button --
+        MDFillRoundFlatButton:
+            text: "Back to Main"
+            font_size: "24sp"
+            size_hint: 1, 0.01
+            pos_hint: {"center_x": .5}
+            md_bg_color: .2, .6, .8, 1  # Blue-ish
+            on_release: root.go_to_main()
 
        # -- Title --
         MDLabel:
