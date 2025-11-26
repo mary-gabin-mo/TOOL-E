@@ -14,7 +14,7 @@
             allow_stretch: True
             keep_ratio: True
 
-       # -- Title --
+        # -- Title --
         MDLabel:
             text: "TOOL-E Checkout"
             halign: "center"
@@ -29,3 +29,34 @@
             font_style: "H5"
             theme_text_color: "Secondary"
             size_hint_y: 0.1
+
+        MDBoxLayout:
+            orientation: 'horizontal'
+            padding: "40dp"
+            spacing: "30dp"
+            pos_hint: {"center_x": .5, "center_y": .5}
+
+            MDFillRoundFlatButton:
+                text: "BORROW"
+                font_size: "24sp"
+                size_hint: 0.6, 0.15
+                pos_hint: {"center_x": .5}
+                md_bg_color: .2, .6, .8, 1  # Blue-ish
+                on_release: root.select_borrow()
+
+            MDFillRoundFlatButton:
+                text: "RETURN"
+                font_size: "24sp"
+                size_hint: 0.6, 0.15
+                pos_hint: {"center_x": .5}
+                md_bg_color: .2, .6, .8, 1  # Blue-ish
+                on_release: root.select_return()
+
+        # -- DEV -- Main Button --
+        MDFillRoundFlatButton:
+            text: "Cancel"
+            font_size: "24sp"
+            size_hint: 1, 0.01
+            pos_hint: {"center_x": .5}
+            md_bg_color: .2, .6, .8, 1  # Blue-ish
+            on_release: root.go_to_main()

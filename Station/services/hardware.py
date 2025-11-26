@@ -38,26 +38,27 @@ class HardwareManager(EventDispatcher):
         print("[HARDWARE] Initializing Real Pi Hardware...")
         
         # implement GPIO setup...
-        
-    # implement other methods for the real hardware
+        # implement other methods for the real hardware
+        barcode = "#barcode_test#" ### Replace with the card reader input
+        self.dispatch('on_card_scanned', barcode)
     
     # --- MOCK HARDWARE (Mac/Windows) ---
     def _setup_mock_hardware(self):
         print("[HARDWARE] Initializing MOCK Hardware (Dev Mode)...")
-        print("   -> Press 'SPACE' to simulate Load Cell Trigger")
-        print("   -> Press 'C' to simulate Card Scan")
+        print("   -> Press 'd' to simulate Load Cell Trigger")
+        print("   -> Press 'c' to simulate Card Scan")
         
         # Bind keyboard keys to simulate hardware events
         Window.bind(on_key_down=self._on_mock_keyboard_input)
         
     def _on_mock_keyboard_input(self, window, key, scancode, codepoint, modifiers):
-        # Spacebar (32) simulates Load Cell
-        if key == 32: 
+        # 'd' key (100) simulates Load Cell
+        if key == 100: 
             print("[MOCK] Load Cell Triggered!")
             self.dispatch('on_load_cell_detect', weight=500.0)
         
         # 'c' key (99) simulates Card Tap
         elif key == 99: 
             print("[MOCK] Card Scanned!")
-            self.dispatch('on_card_scanned', "30012345")
+            self.dispatch('on_card_scanned', "##### barcode_dev #####")
                 

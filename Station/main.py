@@ -23,7 +23,7 @@ else:
     Config.set('graphics', 'height', '1024')
     
     Window.top = 0
-    Window.left = 2000
+    Window.left = 1400
 
 Config.write()
 
@@ -31,6 +31,8 @@ Config.write()
 # --- Local Module Imports ---
 # Services 
 from services.hardware import HardwareManager
+from services.session import SessionManager
+from services.api_client import APIClient
 
 if ENABLE_HOT_RELOAD:
     # --- Kivy/KivyMD imports ---
@@ -51,8 +53,10 @@ if ENABLE_HOT_RELOAD:
             # Initialize Services (Singleton)
             if not hasattr(self, 'hardware'):
                 self.hardware = HardwareManager()
-            # if not hasattr(self, 'api_client'):
-            #     self.api_client = APIClient()
+            if not hasattr(self, 'api_client'):
+                self.api_client = APIClient()
+            if not hasattr(self, 'session'):
+                self.session = SessionManager()
             
             self.manager_screens = MDScreenManager()
             Window.bind(on_key_down=self.on_keyboard_down)

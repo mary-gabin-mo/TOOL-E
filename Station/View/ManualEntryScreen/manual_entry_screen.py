@@ -3,4 +3,6 @@ from kivy.app import App
 from kivy.clock import Clock
 
 class ManualEntryScreen(MDScreen):
-    pass
+    def go_to_main(self):
+        """Navigate to the Welcome screen."""
+        self.manager.current = 'welcome screen'

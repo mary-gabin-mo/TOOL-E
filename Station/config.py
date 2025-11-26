@@ -16,7 +16,7 @@ API_TRANSACTION   = f"{BASE_URL}/transaction"
 NETWORK_TIMEOUT = 5.0
 
 
-# # --- HARDWARE SETTINGS ---
+# # --- HARDWARE SETTINGS --- ##### NEED #####
 # # GPIO Pins (BCM Numbering)
 # PIN_LOAD_CELL_DAT = 5
 # PIN_LOAD_CELL_CLK = 6
@@ -32,10 +32,10 @@ NETWORK_TIMEOUT = 5.0
 # --- UI SETTINGS ---
 # Paths
 ASSETS_DIR = os.path.join(os.path.dirname(__file__), 'assets')
-LOGO_PATH  = os.path.join(ASSETS_DIR, 'logo.png')
+LOGO_PATH  = os.path.join(ASSETS_DIR, '/iamges/logo_black.png')
 FONT_PATH  = os.path.join(ASSETS_DIR, 'fonts')
 
-# # Camera
+# # Camera ##### NEED #####
 # # Resolution for the "Live Feed" preview (keep low for performance)
 # CAMERA_PREVIEW_RES = (640, 480)
 # # Resolution for the actual recognition image (higher quality)

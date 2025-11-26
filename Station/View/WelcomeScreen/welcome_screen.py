@@ -24,14 +24,21 @@ class WelcomeScreen(MDScreen):
         if hasattr(app, 'hardware'):
             app.hardware.unbind(on_card_scanned=self.handle_card_scan)
             
-    def handle_card_scan(self, instance, card_id):
+    def handle_card_scan(self, instance, barcode):
         """
         Logic for when a card is detected.
         """
-        print(f"[UI] Welcome Screen detected card: {card_id}")
+        print(f"[UI] Welcome Screen detected card: {barcode}")
         
-        # Validate User (irl, would be an API call - for now, simulate a delay)
-        Clock.schedule_once(lambda dt: self.go_to_action_selection(), 1.0)
+        ### UNCOMMENT THE BELOW LOGIC ONCE API IS CONNECTED ### 
+        # app = App.get_running_app()
+        # result = app.api_client.validate_user(barcode)
+        # if result['success']:
+        #     # Once the user is validated, save the user info in SessionManager.
+        #     app.session.user_data = result['data']
+        
+        # for now, simulate a delay
+        Clock.schedule_once(lambda dt: self.go_to_action_selection(), .5)
         
     def go_to_action_selection(self):
         """Navigate to the Borrow/Return screen."""
@@ -41,7 +48,4 @@ class WelcomeScreen(MDScreen):
         """Navigate to the Manual Entry screen."""
         self.manager.current = 'manual entry screen'
         
-    # def go_to_manaul(self):
-    #     """Navigate to Manual Entry."""
-    #     self.manager.current = 'manual_entry_screen'
         

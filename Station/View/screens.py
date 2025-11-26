@@ -5,7 +5,7 @@ from View.ManualEntryScreen.manual_entry_screen import ManualEntryScreen
 from View.ToolConfirmScreen.tool_confirm_screen import ToolConfirmScreen
 
 screens = {
-    "welcome_screen": {
+    "welcome screen": {
         "view": WelcomeScreen
     },
     "manual entry screen": {
