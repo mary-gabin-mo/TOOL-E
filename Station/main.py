@@ -90,7 +90,7 @@ if ENABLE_HOT_RELOAD:
 else:
     # --- Kivy/KivyMD imports ---
     from kivymd.app import MDApp
-    from kivymd.uix.screenmanager import MDScreeenManager
+    from kivymd.uix.screenmanager import MDScreenManager
     
     from View.screens import screens
     
@@ -109,8 +109,10 @@ else:
             # Initialize Services (Singleton)
             if not hasattr(self, 'hardware'):
                 self.hardware = HardwareManager()
-            # if not hasattr(self, 'api_client'):
-            #     self.api_client = APIClient()
+            if not hasattr(self, 'api_client'):
+                self.api_client = APIClient()
+            if not hasattr(self, 'session'):
+                self.session = SessionManager()
             
             self.generate_application_screens()
             return self.manager_screens
