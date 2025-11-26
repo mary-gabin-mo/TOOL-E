@@ -3,17 +3,17 @@ import os
 # # --- NETWORK SETTINGS ---
 # # The IP address of your FastAPI Server (PC)
 # # Use "localhost" for testing on Mac, or the actual IP (e.g., "192.168.1.10") for Pi
-# SERVER_IP = "192.168.1.10" 
-# SERVER_PORT = 8000
-# BASE_URL = f"http://{SERVER_IP}:{SERVER_PORT}"
+SERVER_IP = "192.168.1.6" 
+SERVER_PORT = 5000
+BASE_URL = f"http://{SERVER_IP}:{SERVER_PORT}"
 
 # # API Endpoints
-# API_VALIDATE_USER = f"{BASE_URL}/validate_user"
-# API_IDENTIFY_TOOL = f"{BASE_URL}/identify_tool"
-# API_TRANSACTION   = f"{BASE_URL}/transaction"
+API_VALIDATE_USER = f"{BASE_URL}/validate_user"
+API_IDENTIFY_TOOL = f"{BASE_URL}/identify_tool"
+API_TRANSACTION   = f"{BASE_URL}/transaction"
 
 # # Timeouts (in seconds)
-# NETWORK_TIMEOUT = 5.0
+NETWORK_TIMEOUT = 5.0
 
 
 # # --- HARDWARE SETTINGS ---
