@@ -56,7 +56,7 @@ class HardwareManager(EventDispatcher):
                 return # No reader plugged in
             
             reader = r_list[0] # Use the first reader found
-            print(f"Using: {reader=}")
+            # print(f"Using: {reader=}")        # DEBUG
             connection = reader.createConnection()
             
             # Try to connect (fails if no card is on the reader)
@@ -77,7 +77,7 @@ class HardwareManager(EventDispatcher):
                     self.dispatch('on_card_scanned', uid_hex)
             except Exception:
                 # No card present, just ignore
-                print("no card detected")
+                # print("no card detected")     # DEBUG
                 pass
         
         except Exception as e:

@@ -31,14 +31,14 @@ class WelcomeScreen(MDScreen):
         print(f"[UI] Welcome Screen detected card: {barcode}")
         
         ### UNCOMMENT THE BELOW LOGIC ONCE API IS CONNECTED ### 
-        # app = App.get_running_app()
-        # result = app.api_client.validate_user(barcode)
-        # if result['success']:
-        #     # Once the user is validated, save the user info in SessionManager.
-        #     app.session.user_data = result['data']
+        app = App.get_running_app()
+        result = app.api_client.validate_user(barcode)
+        if result['success']:
+            # Once the user is validated, save the user info in SessionManager.
+            app.session.user_data = result['data']
         
         # for now, simulate a delay
-        Clock.schedule_once(lambda dt: self.go_to_action_selection(), .5)
+        # Clock.schedule_once(lambda dt: self.go_to_action_selection(), .5)
         
     def go_to_action_selection(self):
         """Navigate to the Borrow/Return screen."""
