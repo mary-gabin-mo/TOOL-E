@@ -1,20 +1,30 @@
-from fastapi import FastAPI, HTTPException
+from fastapi import FastAPI, HTTPException, Depends
 from pydantic import BaseModel
-import mysql.connector
-from mysql.connector import Error
+# import mysql.connector
+# from mysql.connector import Error
+from sqlalchemy import create_engine, Connection, Column, Integer, String, DateTime, Date, Numeric, func, text
+from sqlalchemy.ext.declarative import declarative_base
+from sqlalchemy.orm import sessionmaker, Session
 import uvicorn
 import json
 #import requests
 import os
+from dotenv import load_dotenv
 from datetime import date, timedelta
 
-TOOL_E_DB_USERNAME = os.environ.get('TOOL_E_DB_USERNAME')
-TOOL_E_DB_PASSWORD = os.environ.get('TOOL_E_DB_PASSWORD')
+load_dotenv('.env.local')
 
-MAKERSPACE_DB_USERNAME = os.environ.get('MAKERSPACE_DB_USERNAME')
-MAKERSPACE_DB_PASSWORD = os.environ.get('MAKERSPACE_DB_PASSWORD')
-MAKERSPACE_DB_HOST = os.environ.get('MAKERSPACE_DB_HOST')
-MAKERSPACE_DB_PORT = os.environ.get('MAKERSPACE_DB_PORT')
+TOOL_E_DB_USERNAME = os.getenv('TOOL_E_DB_USERNAME')
+TOOL_E_DB_PASSWORD = os.getenv('TOOL_E_DB_PASSWORD')
+
+MAKERSPACE_DB_USERNAME = os.getenv('MAKERSPACE_DB_USERNAME')
+MAKERSPACE_DB_PASSWORD = os.getenv('MAKERSPACE_DB_PASSWORD')
+MAKERSPACE_DB_HOST = os.getenv('MAKERSPACE_DB_HOST')
+MAKERSPACE_DB_PORT = os.getenv('MAKERSPACE_DB_PORT')
+
+DATABASE_URL = f"mysql+pymysql://{MAKERSPACE_DB_USERNAME}:{MAKERSPACE_DB_PASSWORD}@{MAKERSPACE_DB_HOST}:{MAKERSPACE_DB_PORT}/{'Museum'}"
+
+
 
 app = FastAPI(title="Pi Data Ingestion Server")
 
@@ -36,10 +46,10 @@ UNI_CONFIG = {
 
 #--- Pydantic Model for Incoming Data ---
 class UserRequest(BaseModel):
-    UCID: str
+    UCID: int
 
 class ServerResponse(BaseModel):
-    valid: bool
+    success: bool
     message: str
 
 
@@ -136,60 +146,97 @@ class ServerResponse(BaseModel):
 #     }
 
 def get_db_connection():
-    try: 
-        conn = mysql.connector.connect(**UNI_CONFIG)
-        print(f"CONNECTED TO DATABASE")
-        return conn
-    except Error as e:
-        print(f"Database Connection Error: {e}")
-        raise HTTPException(status_code=500, detail="Could not connect to database")
+    # try: 
+    #     conn = mysql.connector.connect(**UNI_CONFIG)
+    #     print(f"CONNECTED TO DATABASE")
+    #     return conn
+    # except Error as e:
+    #     print(f"Database Connection Error: {e}")
+    #     raise HTTPException(status_code=500, detail="Could not connect to database")
+
+    engine = create_engine(DATABASE_URL)
+
+    conn = engine.connect()
+    try:
+        yield conn
+    finally: 
+        conn.close()
 
 @app.post("/validate_user", response_model=ServerResponse)
 async def validate_user_route(request: UserRequest):
     # Receives a user ID, checks the database for existence and status, and returns validation status, and returns validation status
+    engine = create_engine(DATABASE_URL)
 
-    print(f"[SERVER] Validating UserID: {request.UCID}")
-    conn = get_db_connection()
-    print(f"CONNECTED TO DATABASE")
-    cursor = conn.cursor(dictionary=True)
+    with engine.connect() as conn:
+        print(f"CONNECTED TO DATABASE")
 
-    try:
-        sql_query = """SELECT UCID, recordDate FROM MakerspaceCapstone WHERE UCID = %s """
+        print(f"[SERVER] Validating UserID: {request.UCID}")
+    # conn = get_db_connection()
+    # user = db.query(UserRequest).filter(UserRequest.UCID == request.user_id).first() 
+    
+        sql_query = text(f"SELECT UCID, recordDate FROM MakerspaceCapstone WHERE UCID = :ucid ")
+    
+        user = conn.execute(sql_query,{"ucid": request.UCID}).fetchone()
+    # cursor = conn.cursor(dictionary=True)
 
-        cursor.execute(sql_query, (request.UCID))
-        user = cursor.fetchone()
-
-        # checker for UCID
         if not user:
             return ServerResponse(
-                valid=False,
+                success=False,
                 message="User not found in database"
             )
         
         # checker for waiver (recordDate)
 
-        waiver_date = user['recordDate']
+        waiver_date = user[1]
         one_year_ago = date.today() - timedelta(days=365)
-        
+            
         if waiver_date is None or waiver_date < one_year_ago:
             return ServerResponse(
-                valid=False,
+                success=False,
                 message="Waiver is expired, please renew"
             )
         
         return ServerResponse(
-            valid=True,
+            success=True,
             message="Access Granted"
         )
+    # try:
+    #     # sql_query = """SELECT UCID, recordDate FROM MakerspaceCapstone WHERE UCID = %s """
+
+    #     # cursor.execute(sql_query, (request.UCID))
+    #     # user = cursor.fetchone()
+
+    #     # checker for UCID
+    #     if not user:
+    #         return ServerResponse(
+    #             success=False,
+    #             message="User not found in database"
+    #         )
+        
+    #     # checker for waiver (recordDate)
+
+    #     waiver_date = user['recordDate']
+    #     one_year_ago = date.today() - timedelta(days=365)
+        
+    #     if waiver_date is None or waiver_date < one_year_ago:
+    #         return ServerResponse(
+    #             success=False,
+    #             message="Waiver is expired, please renew"
+    #         )
+        
+    #     return ServerResponse(
+    #         valid=True,
+    #         message="Access Granted"
+    #     )
     
-    except Error as e:
-        print(f"SQL Query Error: {e}")
-        raise HTTPException(status_code=500, detail="Databse query failed")
+    # except Error as e:
+    #     print(f"SQL Query Error: {e}")
+    #     raise HTTPException(status_code=500, detail="Databse query failed")
     
-    finally:
-        if conn and conn.is_connected():
-            cursor.close()
-            conn.close()
+    # finally:
+    #     if conn and conn.is_connected():
+    #         cursor.close()
+    #         conn.close()
 
 
 if __name__ == '__main__':
