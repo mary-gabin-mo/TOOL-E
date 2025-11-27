@@ -44,9 +44,9 @@ class HardwareManager(EventDispatcher):
         barcode = "#barcode_test#" ### Replace with the card reader input
         self.dispatch('on_card_scanned', barcode)
         
-        # # Start checking for smart cards every 1 second
-        # print("[HARDWARE] Starting PC/SC Reader Polling...")
-        # Clock.schedule_interval(self._check_pcsc_reader, 1.0)
+        # # Start checking for smart cards every .5 second
+        print("[HARDWARE] Starting PC/SC Reader Polling...")
+        Clock.schedule_interval(self._check_pcsc_reader, 0.5)
         
     def _check_pcsc_reader(self, dt):
         try:
@@ -56,6 +56,7 @@ class HardwareManager(EventDispatcher):
                 return # No reader plugged in
             
             reader = r_list[0] # Use the first reader found
+            print(f"Using: {reader=}")
             connection = reader.createConnection()
             
             # Try to connect (fails if no card is on the reader)
@@ -76,9 +77,10 @@ class HardwareManager(EventDispatcher):
                     self.dispatch('on_card_scanned', uid_hex)
             except Exception:
                 # No card present, just ignore
+                print("no card detected")
                 pass
         
-        except Exception:
+        except Exception as e:
             print(f"Error polling reader: {e}")
     
     # --- MOCK HARDWARE (Mac/Windows) ---
