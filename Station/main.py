@@ -15,10 +15,9 @@ if IS_RASPBERRY_PI:
     print("System: Raspberry Pi detected. Setting FULLSCREEN.")
     # Config.set('graphics', 'fullscreen', 'auto')
     # Config.set('graphics', 'window_state', 'maximized')
-    # Config.set('graphics', 'show_cursor', '0')
-    Config.set('graphics', 'fullscreen', '0')
-    Config.set('graphics', 'width', '600')
-    Config.set('graphics', 'height', '1024')
+    Config.set('graphics', 'show_cursor', '1')
+    Config.set('graphics', 'width', '300')
+    Config.set('graphics', 'height', '524')
 else:
     print("System: Dev Environment detected. Setting WINDOWED.")
     Config.set('graphics', 'fullscreen', '0')
