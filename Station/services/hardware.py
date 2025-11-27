@@ -1,5 +1,7 @@
 import platform
 from kivy.event import EventDispatcher
+from smartcard.System import readers
+from smartcard.util import toHexString
 from kivy.clock import Clock
 from kivy.core.window import Window
 
@@ -41,6 +43,43 @@ class HardwareManager(EventDispatcher):
         # implement other methods for the real hardware
         barcode = "#barcode_test#" ### Replace with the card reader input
         self.dispatch('on_card_scanned', barcode)
+        
+        # # Start checking for smart cards every 1 second
+        # print("[HARDWARE] Starting PC/SC Reader Polling...")
+        # Clock.schedule_interval(self._check_pcsc_reader, 1.0)
+        
+    def _check_pcsc_reader(self, dt):
+        try:
+            # Get list of available readers
+            r_list = readers()
+            if not r_list:
+                return # No reader plugged in
+            
+            reader = r_list[0] # Use the first reader found
+            connection = reader.createConnection()
+            
+            # Try to connect (fails if no card is on the reader)
+            try:
+                connection.connect()
+                
+                # Send ADPU command to get the UID (Standard for Mifare cards)
+                # Command: FF CA 00 00 00 (Get Data)
+                GET_UID = [0xFF, 0xCA, 0x00, 0x00, 0x00]
+                data, sw1, sw2 = connection.transmit(GET_UID)
+                
+                if sw1 == 0x90: # Success code
+                    # Convert raw bytes to a hex string (e.g., "04 A3 5E...")
+                    uid_hex = toHexString(data).replace(" ", "")
+                    print(f"[HARDWARE] PC/SC Card Detected: {uid_hex}")
+                    
+                    # Dispatch event
+                    self.dispatch('on_card_scanned', uid_hex)
+            except Exception:
+                # No card present, just ignore
+                pass
+        
+        except Exception:
+            print(f"Error polling reader: {e}")
     
     # --- MOCK HARDWARE (Mac/Windows) ---
     def _setup_mock_hardware(self):
@@ -60,5 +99,5 @@ class HardwareManager(EventDispatcher):
         # 'c' key (99) simulates Card Tap
         elif key == 99: 
             print("[MOCK] Card Scanned!")
-            self.dispatch('on_card_scanned', "##### barcode_dev #####")
+            self.dispatch('on_card_scanned', "10131867")
                 
