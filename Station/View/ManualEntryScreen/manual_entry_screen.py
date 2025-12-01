@@ -19,10 +19,16 @@ class ManualEntryScreen(MDScreen):
         
         app = App.get_running_app()
         result = app.api_client.validate_user(ucid)
-        if result['success']:
+        if result['success'] == True:
             # Save the user info to the session once validated
             app.session.user_data = result['data']
             self.go_to('action selection screen')
+            
+        else:
+            # if the validation failed, show the appropriate error message
+            error_screen = self.manager.get_screen('user error screen')
+            error_screen.set_error_message(result['error'])
+            self.go_to('user error screen')
             
     def back_to_main(self):
         """Clear input field and navigate to the Welcome screen."""
