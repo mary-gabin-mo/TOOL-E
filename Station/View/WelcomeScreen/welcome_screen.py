@@ -37,7 +37,7 @@ class WelcomeScreen(MDScreen):
             # Once the user is validated, save the user info in SessionManager.
             app.session.user_data = result['data']
             self.go_to('action selection screen')
-        # else:
+        else:
             # if the validation failed, show the appropriate error message
             error_screen = self.manager.get_screen('user error screen')
             error_screen.set_error_message(result['error'])
