@@ -36,7 +36,7 @@ class APIClient(EventDispatcher):
         else: # barcode is alphanumeric
             barcode = id;
             print(f"[API] Validating User: {barcode=}...")
-            payload = {"barcode": barcode, "UCID": None} # Distinguish whether it's barcode or UCID in the server with regex
+            payload = {"barcode": barcode+';', "UCID": None} # Distinguish whether it's barcode or UCID in the server with regex
             
         try:
             response = requests.post(
