@@ -1,5 +1,6 @@
 from fastapi import FastAPI, HTTPException, Depends
 from pydantic import BaseModel
+from typing import Optional
 # import mysql.connector
 # from mysql.connector import Error
 from sqlalchemy import create_engine, Connection, Column, Integer, String, DateTime, Date, Numeric, func, text
@@ -46,7 +47,8 @@ UNI_CONFIG = {
 
 #--- Pydantic Model for Incoming Data ---
 class UserRequest(BaseModel):
-    UCID: int
+    UCID: Optional[int] = None   
+    barcode: Optional[str] = None
 
 class ServerResponse(BaseModel):
     success: bool
@@ -170,14 +172,25 @@ async def validate_user_route(request: UserRequest):
     with engine.connect() as conn:
         print(f"CONNECTED TO DATABASE")
 
-        print(f"[SERVER] Validating UserID: {request.UCID}")
-    # conn = get_db_connection()
-    # user = db.query(UserRequest).filter(UserRequest.UCID == request.user_id).first() 
-    
-        sql_query = text(f"SELECT UCID, recordDate FROM MakerspaceCapstone WHERE UCID = :ucid ")
-    
-        user = conn.execute(sql_query,{"ucid": request.UCID}).fetchone()
-    # cursor = conn.cursor(dictionary=True)
+        if request.UCID:
+            print(f"[SERVER] Validating UserID: {request.UCID}")
+            # conn = get_db_connection()
+            # user = db.query(UserRequest).filter(UserRequest.UCID == request.user_id).first() 
+        
+            sql_query = text(f"SELECT FirstName, UCID, UNICARDBarcode, recordDate FROM MakerspaceCapstone WHERE UCID = :ucid ")
+        
+            user = conn.execute(sql_query,{"ucid": int(request.UCID)}).fetchone()
+        
+        elif request.barcode:
+            print(f"[SERVER] Validating UserID: {request.barcode}")
+
+            # Keep the SQL simple (no extra semicolon needed inside the quotes)
+            sql_query = text("SELECT FirstName, UCID, UNICARDBarcode, recordDate FROM MakerspaceCapstone WHERE UNICARDBarcode = :barcode")
+            
+            # ADD THE SEMICOLON HERE to the input data
+            barcode_input = f"{request.barcode};" 
+
+            user = conn.execute(sql_query, {"barcode": barcode_input}).fetchone()
 
         if not user:
             return ServerResponse(
@@ -185,9 +198,11 @@ async def validate_user_route(request: UserRequest):
                 message="User not found in database"
             )
         
-        # checker for waiver (recordDate)
+        #Variable declaration 0=FirstName 1=UCID 2=UNICARDBarode 3=WaiverDate
+        first_name = user[0]                
+        waiver_date = user[3]        
 
-        waiver_date = user[1]
+        # checker for waiver (recordDate)
         one_year_ago = date.today() - timedelta(days=365)
             
         if waiver_date is None or waiver_date < one_year_ago:
@@ -198,7 +213,7 @@ async def validate_user_route(request: UserRequest):
         
         return ServerResponse(
             success=True,
-            message="Access Granted"
+            message=f"Access Granted, {first_name}"
         )
     # try:
     #     # sql_query = """SELECT UCID, recordDate FROM MakerspaceCapstone WHERE UCID = %s """
