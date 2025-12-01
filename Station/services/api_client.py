@@ -31,12 +31,12 @@ class APIClient(EventDispatcher):
         if id.isdigit(): # if id contains digits only, it is UCID
             ucid = id;
             print(f"[API] Validating User: {ucid=}...")
-            payload = {"barcode": null, "UCID": ucid} # Distinguish whether it's barcode or UCID in the server with regex
+            payload = {"barcode": None, "UCID": ucid} # Distinguish whether it's barcode or UCID in the server with regex
         
         else: # barcode is alphanumeric
             barcode = id;
             print(f"[API] Validating User: {barcode=}...")
-            payload = {"barcode": barcode, "UCID": null} # Distinguish whether it's barcode or UCID in the server with regex
+            payload = {"barcode": barcode, "UCID": None} # Distinguish whether it's barcode or UCID in the server with regex
             
         try:
             response = requests.post(

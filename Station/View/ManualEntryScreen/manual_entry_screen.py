@@ -22,6 +22,7 @@ class ManualEntryScreen(MDScreen):
         if result['success']:
             # Save the user info to the session once validated
             app.session.user_data = result['data']
+            self.go_to('action selection screen')
             
     def back_to_main(self):
         """Clear input field and navigate to the Welcome screen."""
