@@ -50,7 +50,7 @@ if ENABLE_HOT_RELOAD:
             
             self.title = "TOOL-E Kiosk"
             self.theme_cls.theme_style = "Light"
-            self.theme_cls.primary_palette = "Blue"
+            self.theme_cls.primary_palette = "Red"
             
             # Initialize Services (Singleton)
             if not hasattr(self, 'hardware'):

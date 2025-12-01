@@ -26,9 +26,18 @@ class APIClient(EventDispatcher):
         Returns:
             dict: {'success': True, 'data': user_dict} OR {'success': False, 'error': str}
         """
-        print(f"[API] Validating User: {id}...")
-        payload = {"id": id} # Distinguish whether it's barcode or UCID in the server with regex
         
+        # Determine if id is UCID or barcode
+        if id.isdigit(): # if id contains digits only, it is UCID
+            ucid = id;
+            print(f"[API] Validating User: {ucid=}...")
+            payload = {"barcode": null, "UCID": ucid} # Distinguish whether it's barcode or UCID in the server with regex
+        
+        else: # barcode is alphanumeric
+            barcode = id;
+            print(f"[API] Validating User: {barcode=}...")
+            payload = {"barcode": barcode, "UCID": null} # Distinguish whether it's barcode or UCID in the server with regex
+            
         try:
             response = requests.post(
                 API_VALIDATE_USER,

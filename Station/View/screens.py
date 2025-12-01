@@ -3,6 +3,7 @@ from View.ActionSelectionScreen.action_selection_screen import ActionSelectionSc
 from View.CaptureScreen.capture_screen import CaptureScreen
 from View.ManualEntryScreen.manual_entry_screen import ManualEntryScreen
 from View.ToolConfirmScreen.tool_confirm_screen import ToolConfirmScreen
+from View.UserErrorScreen.user_error_screen import UserErrorScreen
 
 screens = {
     "welcome screen": {
@@ -19,5 +20,8 @@ screens = {
     },
     "tool confirm screen": {
         "view": ToolConfirmScreen
+    },
+    "user error screen": {
+        "view": UserErrorScreen
     },
 }

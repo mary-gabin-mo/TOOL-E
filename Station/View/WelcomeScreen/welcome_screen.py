@@ -28,7 +28,7 @@ class WelcomeScreen(MDScreen):
         """
         Logic for when a card is detected.
         """
-        print(f"[UI] Welcome Screen detected card: {barcode}")
+        print(f"[UI] Welcome Screen detected card: {barcode=}")
         
         ### UNCOMMENT THE BELOW LOGIC ONCE API IS CONNECTED ### 
         app = App.get_running_app()
@@ -36,16 +36,18 @@ class WelcomeScreen(MDScreen):
         if result['success']:
             # Once the user is validated, save the user info in SessionManager.
             app.session.user_data = result['data']
+            self.go_to('action selection screen')
+        # else:
+            # if the validation failed, show the appropriate error message
+            error_screen = self.manager.get_screen('user error screen')
+            error_screen.set_error_message(result['error'])
+            self.go_to('user error screen')
         
-        # for now, simulate a delay
+        # for dev, simulate a delay
         # Clock.schedule_once(lambda dt: self.go_to_action_selection(), .5)
         
-    def go_to_action_selection(self):
-        """Navigate to the Borrow/Return screen."""
-        self.manager.current = 'action selection screen'
-        
-    def go_to_manual(self):
-        """Navigate to the Manual Entry screen."""
-        self.manager.current = 'manual entry screen'
-        
+    def go_to(self, screen):
+        self.manager_screens.transition.direction = 'left'
+        self.manager_screens.current = screen
+
         

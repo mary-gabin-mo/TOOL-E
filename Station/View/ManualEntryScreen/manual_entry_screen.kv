@@ -1,33 +1,109 @@
-<ManualEntryScreen>:
+<ManualEntryScreen>
     md_bg_color: 1, 1, 1, 1  # White background
 
     MDBoxLayout:
         orientation: 'vertical'
-        padding: "40dp"
-        spacing: "30dp"
-        pos_hint: {"center_x": .5, "center_y": .5}
+        padding: "20dp"
+        spacing: "10dp"
 
-        # -- Back Button --
-        MDFillRoundFlatButton:
-            text: "Back to Main"
-            font_size: "24sp"
-            size_hint: 1, 0.01
+        # --- HEADER (Back Button + Title) ---
+        MDBoxLayout:
+            size_hint_y: 0.1
+            spacing: "20dp"
+            
+            MDIconButton:
+                icon: "arrow-left"
+                theme_text_color: "Custom"
+                text_color: 0, 0, 0, 1
+                pos_hint: {"center_y": .5}
+                on_release: root.back_to_main()
+
+            MDLabel:
+                text: "Enter UCID Manually"
+                font_style: "H5"
+                bold: True
+                pos_hint: {"center_y": .5}
+
+        # --- DISPLAY AREA ---
+        MDBoxLayout:
+            size_hint_y: 0.2
+            padding: "40dp", "0dp"
+            
+            MDTextField:
+                id: ucid_input
+                hint_text: "Enter UCID Number"
+                text: ""
+                font_size: "48sp"
+                halign: "center"
+                readonly: True  # Vital: Prevents OS keyboard from popping up
+                mode: "fill"
+                radius: [10, 10, 0, 0]
+
+        # --- NUMBER PAD GRID ---
+        MDGridLayout:
+            cols: 3
+            spacing: "15dp"
+            padding: "20dp"
+            size_hint_y: 0.7
             pos_hint: {"center_x": .5}
-            md_bg_color: .2, .6, .8, 1  # Blue-ish
-            on_release: root.go_to_main()
 
-       # -- Title --
-        MDLabel:
-            text: "TOOL-E Checkout"
-            halign: "center"
-            font_style: "H3"
-            theme_text_color: "Primary"
-            bold: True
-            size_hint_y: 0.1
+            # Row 1
+            NumpadButton:
+                text: "1"
+                on_release: root.add_digit("1")
+            NumpadButton:
+                text: "2"
+                on_release: root.add_digit("2")
+            NumpadButton:
+                text: "3"
+                on_release: root.add_digit("3")
 
-        MDLabel:
-            text: "<add text input and num keypad>"
-            halign: "center"
-            font_style: "H5"
-            theme_text_color: "Secondary"
-            size_hint_y: 0.1
+            # Row 2
+            NumpadButton:
+                text: "4"
+                on_release: root.add_digit("4")
+            NumpadButton:
+                text: "5"
+                on_release: root.add_digit("5")
+            NumpadButton:
+                text: "6"
+                on_release: root.add_digit("6")
+
+            # Row 3
+            NumpadButton:
+                text: "7"
+                on_release: root.add_digit("7")
+            NumpadButton:
+                text: "8"
+                on_release: root.add_digit("8")
+            NumpadButton:
+                text: "9"
+                on_release: root.add_digit("9")
+
+            # Row 4 (Control Row)
+            MDFillRoundFlatButton:
+                text: "CLEAR"
+                font_size: "24sp"
+                size_hint: 1, 1
+                md_bg_color: 0.8, 0.2, 0.2, 1  # Red
+                on_release: root.clear_input()
+
+            NumpadButton:
+                text: "0"
+                on_release: root.add_digit("0")
+
+            MDFillRoundFlatButton:
+                text: "ENTER"
+                font_size: "24sp"
+                size_hint: 1, 1
+                md_bg_color: 0.2, 0.7, 0.2, 1  # Green
+                on_release: root.submit_ucid()
+
+# --- Custom Button Component ---
+# This prevents code duplication for the number keys
+<NumpadButton@MDRaisedButton>:
+    font_size: "32sp"
+    size_hint: 1, 1
+    elevation: 2
+    md_bg_color: 0.9, 0.9, 0.9, 1  # Light Grey
+    text_color: 0, 0, 0, 1         # Black Text
