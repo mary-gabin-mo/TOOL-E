@@ -33,7 +33,7 @@ class WelcomeScreen(MDScreen):
         ### UNCOMMENT THE BELOW LOGIC ONCE API IS CONNECTED ### 
         app = App.get_running_app()
         result = app.api_client.validate_user(barcode)
-        if result['success']:
+        if result['success'] == True:
             # Once the user is validated, save the user info in SessionManager.
             app.session.user_data = result['data']
             self.go_to('action selection screen')
