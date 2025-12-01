@@ -5,6 +5,8 @@ from kivy.clock import Clock
 class ActionSelectionScreen(MDScreen):
     def go_to_main(self):
         """Navigate to the Welcome screen."""
+        app = App.get_running_app()
+        app.session.reset()
         self.manager.current = 'welcome screen'
     
     def select_borrow(self):
