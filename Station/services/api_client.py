@@ -48,8 +48,9 @@ class APIClient(EventDispatcher):
             
             # Success!
             data = response.json()
+            success = data.success
             print(f"[API] Success: {data}")
-            return {'success': data["success"], 'data': data}
+            return {'success': success, 'data': data}
         
         except requests.exceptions.ConnectionError:
             print("[API] Connection Error: Is the server running?")
