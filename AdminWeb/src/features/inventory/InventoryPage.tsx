@@ -1,23 +1,33 @@
 import React, { useState, useMemo, useRef, useEffect } from 'react';
-import { Plus, ChevronDown, ArrowUp, ArrowDown, ArrowUpDown } from 'lucide-react';
+import { useQuery } from '@tanstack/react-query';
+import { Plus, ChevronDown, ArrowUp, ArrowDown, ArrowUpDown, Loader2 } from 'lucide-react';
 import { AddToolModal } from './AddToolModal';
+import { api } from '../../lib/axios';
 
-// Mock Data
-const inventoryData = [
-  { id: 1, name: 'Slip Joint Pliers', type: 'Borrowable', total: 10, available: 8 },
-  { id: 2, name: 'Long Nose Pliers Small', type: 'Borrowable', total: 10, available: 8 },
-  { id: 3, name: 'Tape Measure', type: 'Borrowable', total: 10, available: 8 },
-  { id: 4, name: 'Super Glue', type: 'Consumable', total: 10, available: 8 },
-  { id: 5, name: 'Hammer', type: 'Borrowable', total: 5, available: 2 },
-  { id: 6, name: 'Screwdriver Set', type: 'Borrowable', total: 15, available: 15 },
-];
+// API Response type
+interface Tool {
+  id: number;
+  name: string;
+  type: string;
+  total_quantity: number;
+  available_quantity: number;
+}
 
-type SortKey = 'name' | 'available';
+type SortKey = 'name' | 'available_quantity';
 type SortDirection = 'asc' | 'desc';
 
 export const InventoryPage = () => {
   const [isAddModalOpen, setIsAddModalOpen] = useState(false);
   
+  // Fetch Tools
+  const { data: tools = [], isLoading, isError } = useQuery<Tool[]>({
+    queryKey: ['tools'],
+    queryFn: async () => {
+      const { data } = await api.get('/tools');
+      return data;
+    },
+  });
+
   // Sorting State
   const [sortConfig, setSortConfig] = useState<{ key: SortKey; direction: SortDirection }>({
     key: 'name',
@@ -29,7 +39,9 @@ export const InventoryPage = () => {
   const [selectedTypes, setSelectedTypes] = useState<string[]>([]);
   const dropdownRef = useRef<HTMLDivElement>(null);
 
-  const uniqueTypes = Array.from(new Set(inventoryData.map((item) => item.type)));
+  const uniqueTypes = useMemo(() => {
+    return Array.from(new Set(tools.map((item) => item.type)));
+  }, [tools]);
 
   // Close dropdown when clicking outside
   useEffect(() => {
@@ -47,7 +59,7 @@ export const InventoryPage = () => {
 
   // Derived Data
   const filteredAndSortedData = useMemo(() => {
-    let data = [...inventoryData];
+    let data = [...tools];
 
     // 1. Filter by Type
     if (selectedTypes.length > 0) {
@@ -60,16 +72,16 @@ export const InventoryPage = () => {
         return sortConfig.direction === 'asc'
           ? a.name.localeCompare(b.name)
           : b.name.localeCompare(a.name);
-      } else if (sortConfig.key === 'available') {
+      } else if (sortConfig.key === 'available_quantity') {
         return sortConfig.direction === 'asc'
-          ? a.available - b.available
-          : b.available - a.available;
+          ? a.available_quantity - b.available_quantity
+          : b.available_quantity - a.available_quantity;
       }
       return 0;
     });
 
     return data;
-  }, [sortConfig, selectedTypes]);
+  }, [tools, sortConfig, selectedTypes]); // Depend on tools instead of inventoryData
 
   const handleSort = (key: SortKey) => {
     setSortConfig((current) => ({
@@ -86,6 +98,22 @@ export const InventoryPage = () => {
         : [...prev, type]
     );
   };
+
+  if (isLoading) {
+    return (
+      <div className="flex justify-center items-center h-64">
+        <Loader2 className="w-8 h-8 animate-spin text-blue-600" />
+      </div>
+    );
+  }
+
+  if (isError) {
+    return (
+      <div className="text-red-600 p-4 bg-red-50 rounded-lg">
+        Error loading tools. Please try again later.
+      </div>
+    );
+  }
 
   return (
     <div className="space-y-6">
@@ -158,11 +186,11 @@ export const InventoryPage = () => {
               {/* Available Column - Sortable */}
               <th 
                 className="py-4 px-6 text-xs font-semibold text-gray-500 uppercase tracking-wider cursor-pointer hover:bg-gray-50 transition-colors"
-                onClick={() => handleSort('available')}
+                onClick={() => handleSort('available_quantity')}
               >
                 <div className="flex items-center">
                   Available
-                  {sortConfig.key === 'available' ? (
+                  {sortConfig.key === 'available_quantity' ? (
                     sortConfig.direction === 'asc' ? <ArrowUp className="w-3 h-3 ml-1" /> : <ArrowDown className="w-3 h-3 ml-1" />
                   ) : (
                     <ArrowUpDown className="w-3 h-3 ml-1 text-gray-300" />
@@ -181,10 +209,10 @@ export const InventoryPage = () => {
                   {item.type}
                 </td>
                 <td className="py-4 px-6 text-sm text-gray-500">
-                  {item.total}
+                  {item.total_quantity}
                 </td>
                 <td className="py-4 px-6 text-sm text-gray-500">
-                  {item.available}
+                  {item.available_quantity}
                 </td>
               </tr>
             ))}
