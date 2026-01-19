@@ -1,8 +1,10 @@
-from kivymd.uix.screen import MDScreen
+
 from kivy.app import App
 from kivy.clock import Clock
 
-class CaptureScreen(MDScreen):
+from View.baseScreen import BaseScreen
+
+class CaptureScreen(BaseScreen):
     
     def on_enter(self):
         """
@@ -36,10 +38,3 @@ class CaptureScreen(MDScreen):
         
         # For now, simulate a delay
         Clock.schedule_once(lambda dt: self.go_to('tool confirm screen'), .5)
-    
-    def go_to_main(self):
-        """Navigate to the Welcome screen."""
-        self.go_to('welcome screen')
-        
-    def go_to(self, screen):
-        self.manager.current = screen

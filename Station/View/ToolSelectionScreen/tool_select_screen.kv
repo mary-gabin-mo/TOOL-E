@@ -1,4 +1,4 @@
-<ToolConfirmScreen>:
+<ToolSelectScreen>:
     md_bg_color: 1, 1, 1, 1  # White background
 
     MDBoxLayout:
@@ -11,21 +11,34 @@
         Widget:
             size_hint_y: 0.3
 
-    #    # -- Title --
-    #     MDLabel:
-    #         text: "TOOL-E Checkout"
-    #         halign: "center"
-    #         font_style: "H3"
-    #         theme_text_color: "Primary"
-    #         bold: True
-    #         size_hint_y: 0.1
-
         MDLabel:
-            text: "Is this the correct tool?"
+            text: "Please select the correct tool:"
             halign: "center"
             font_style: "H5"
-            theme_text_color: "Secondary"
+            theme_text_color: "Primary"
             size_hint_y: 0.1
+
+        MDCard:
+            orientation: 'vertical'
+            padding: '5dp'
+            size_hint: .5, .6
+            pos_hint: {"center_x": .5}
+
+            style: "outlined"
+            line_color: 0.4, 0.4, 0.4, 1  # Grey border
+            line_width: 1.5
+
+            radius: [10, 10, 10, 10]
+            md_bg_color: 1, 1, 1, 1 # White card background
+
+            MDScrollView:
+                do_scroll_x: False # Only allow vertical scrolling
+                do_scroll_y: True
+
+                # The container for the list items
+                MDList:
+                    id: tool_list_container
+                    padding: 0
 
         MDBoxLayout:
             orientation: 'horizontal'
@@ -36,22 +49,22 @@
             padding: '10dp'             # Optional padding around the row
 
             MDFillRoundFlatButton:
-                text: "DEV - BACK\n(Capture Screen)"
+                text: "DEV - BACK\n(Tool Confim Screen)"
                 font_size: "20sp"
-                size_hint_x: 0.3
+                size_hint: 0.3, 1        
                 md_bg_color: 0.4, 0.4, 0.4, 1  # Grey
-                on_release: root.go_back('capture screen')
+                on_release: root.go_back('tool confirm screen')
 
             MDFillRoundFlatButton:
-                text: "DEV - NEXT\n(Tool Select Screen)"
+                text: "DEV - NEXT\n(Return Date Screen)"
                 font_size: "20sp"
-                size_hint_x: 0.3
+                size_hint: 0.3, 1        
                 md_bg_color: 0.4, 0.4, 0.4, 1  # Grey
-                on_release: root.go_to('tool select screen')
+                # on_release: root.go_to('return date screen') # add later
 
         # -- Cancel Button --
         MDFillRoundFlatButton:
-            text: "CANCEL"
+            text: "Cancel"
             font_size: "24sp"
             size_hint: 1, 0.01
             pos_hint: {"center_x": .5}
@@ -60,8 +73,6 @@
 
         # Widget:
         #     size_hint_y: 0.01
-
-
         # # -- DEV BUTTON --
         # MDFillRoundFlatButton:
         #     text: "DEV - BACK (Capture Screen)"

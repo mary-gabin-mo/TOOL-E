@@ -7,38 +7,60 @@
         spacing: "30dp"
         pos_hint: {"center_x": .5, "center_y": .5}
 
-        # -- Logo Area --
-        Image:
-            source: "assets/images/logo_black.png" 
+        # -- Logo Area Placeholder --
+        Widget:
             size_hint_y: 0.3
-            allow_stretch: True
-            keep_ratio: True
 
-        # -- Title --
+        # # -- Title --
+        # MDLabel:
+        #     text: "TOOL-E Checkout"
+        #     halign: "center"
+        #     font_style: "H3"
+        #     theme_text_color: "Primary"
+        #     bold: True
+        #     size_hint_y: 0.1
+
+        Widget:
+            size_hint_y: 0.2
+
         MDLabel:
-            text: "TOOL-E Checkout"
+            text: "Checkout / Return Tools Here"
             halign: "center"
-            font_style: "H3"
-            theme_text_color: "Primary"
+            font_style: "H4"
             bold: True
+            theme_text_color: "Primary"
             size_hint_y: 0.1
+            # pos_hint: {"top": 0.5, "center_x": .5}
 
         MDLabel:
-            text: "Please tap your UNICARD to begin"
+            text: "Please TAP your UNICARD to begin"
             halign: "center"
             font_style: "H5"
             theme_text_color: "Secondary"
             size_hint_y: 0.1
+            # pos_hint: {"top": 0.5, "center_x": .5}
 
         # -- Spacer --
         Widget:
-            size_hint_y: 0.2
+            size_hint_y: 0.3
+
+        # -- DEV BUTTON --
+        MDFillRoundFlatButton:
+            text: "DEV - SCAN CARD"
+            font_size: "20sp"
+            size_hint: 0.4, 0.05
+            pos_hint: {"center_x": .5}
+            md_bg_color: 0.4, 0.4, 0.4, 1  # Red
+            on_release: root.go_to('action selection screen')
 
         # -- Manual Entry Button --
         MDFillRoundFlatButton:
             text: "MANUAL UCID ENTRY"
             font_size: "24sp"
-            size_hint: 0.6, 0.15
+            size_hint: 0.6, 0.1
             pos_hint: {"center_x": .5}
-            md_bg_color: 0.8, 0.2, 0.2, 1  # Red
+            md_bg_color: 0.9, 0.17, 0.25, 1  # Red
             on_release: root.go_to('manual entry screen')
+        
+        # Widget:
+        #     size_hint_y: 0.01

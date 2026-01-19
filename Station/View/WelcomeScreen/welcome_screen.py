@@ -1,8 +1,10 @@
-from kivymd.uix.screen import MDScreen
+
 from kivy.app import App
 from kivy.clock import Clock
 
-class WelcomeScreen(MDScreen):
+from View.baseScreen import BaseScreen
+
+class WelcomeScreen(BaseScreen):
     
     def on_enter(self):
         """

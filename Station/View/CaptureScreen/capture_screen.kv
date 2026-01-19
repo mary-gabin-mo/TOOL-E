@@ -6,6 +6,10 @@
         padding: "20dp"
         spacing: "20dp"
 
+        # -- Logo Area Placeholder --
+        Widget:
+            size_hint_y: 0.3
+
         MDLabel:
             text: "Place tool on Bed"
             halign: "center"
@@ -28,11 +32,37 @@
                     width: 2
                     rectangle: self.x, self.y, self.width, self.height
 
-        # -- DEV -- Main Button --
+        MDBoxLayout:
+            orientation: 'horizontal'
+            spacing: "20dp"             # Gap between buttons
+            size_hint_y: None           # Don't expand vertically
+            height: '80dp'              # Fixed height for this row
+            pos_hint: {"centre_x": .5}
+            padding: '10dp'             # Optional padding around the row
+
+            MDFillRoundFlatButton:
+                text: "DEV - BACK\n(Action Selection Screen)"
+                font_size: "20sp"
+                size_hint: .3, 1        
+                md_bg_color: 0.4, 0.4, 0.4, 1  # Grey
+                on_release: root.go_back('action selection screen')
+
+            # -- DEV BUTTON --
+            MDFillRoundFlatButton:
+                text: "DEV - NEXT\n(Tool Confirm Screen)"
+                font_size: "20sp"
+                size_hint: .3, 1        
+                md_bg_color: 0.4, 0.4, 0.4, 1  # Grey
+                on_release: root.go_to('tool confirm screen')
+
+        # -- Cancel Button --
         MDFillRoundFlatButton:
             text: "CANCEL"
             font_size: "24sp"
             size_hint: 1, 0.01
             pos_hint: {"center_x": .5}
-            md_bg_color: .2, .6, .8, 1  # Blue-ish
-            on_release: root.go_to_main()
+            md_bg_color: 0.9, 0.17, 0.25, 1  # Red
+            on_release: root.go_back('welcome screen')
+
+        # Widget:
+        #     size_hint_y: 0.01
