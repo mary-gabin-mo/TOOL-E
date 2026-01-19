@@ -12,6 +12,7 @@ export const LoginPage = () => {
 
   const loginMutation = useMutation({
     mutationFn: login,
+    // Redirect to dashboard only after a successful login API call
     onSuccess: () => {
       navigate('/dashboard');
     },
@@ -19,6 +20,7 @@ export const LoginPage = () => {
 
   const handleLogin = (e: React.FormEvent) => {
     e.preventDefault();
+    // Start login request with the form values
     loginMutation.mutate({ ucid, password });
   };
 
