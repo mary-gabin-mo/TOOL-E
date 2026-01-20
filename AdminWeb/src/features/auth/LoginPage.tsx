@@ -1,5 +1,7 @@
 import React, { useState } from 'react';
+import { useMutation } from '@tanstack/react-query';
 import { useNavigate } from 'react-router-dom';
+import { login } from './api/login';
 
 export const LoginPage = () => {
   // Local state for form inputs
@@ -8,25 +10,18 @@ export const LoginPage = () => {
 
   const navigate = useNavigate();
 
-  // Placeholder for API mutation hook
-  // const loginMutation = useMutation({
-  //   mutationFn: (data) => api.post('/login', data),
-  //   onSuccess: () => {
-  //     navigate('/dashboard');
-  //   },
-  //   onError: (error) => {
-  //     // Handle error state
-  //   }
-  // });
+  const loginMutation = useMutation({
+    mutationFn: login,
+    // Redirect to dashboard only after a successful login API call
+    onSuccess: () => {
+      navigate('/dashboard');
+    },
+  });
 
   const handleLogin = (e: React.FormEvent) => {
     e.preventDefault();
-    // Functional logic placeholder
-    // loginMutation.mutate({ ucid, password });
-    console.log('Login clicked', { ucid, password });
-    
-    // Frontend-only redirect for now
-    navigate('/dashboard');
+    // Start login request with the form values
+    loginMutation.mutate({ ucid, password });
   };
 
   return (
@@ -41,7 +36,7 @@ export const LoginPage = () => {
       {/* Login Form Card */}
       <div className="w-full max-w-md p-8 bg-white rounded-lg border border-gray-100 shadow-sm">
         <form onSubmit={handleLogin} className="space-y-6">
-          
+
           {/* UCID / Email Input */}
           <div>
             <input
@@ -67,22 +62,17 @@ export const LoginPage = () => {
           {/* Sign In Button */}
           <button
             type="submit"
-            className="w-full py-3 px-4 bg-[#242424] hover:bg-black text-white font-medium rounded-md transition-colors duration-200"
+            disabled={loginMutation.isPending}
+            className="w-full py-3 px-4 bg-[#242424] hover:bg-black disabled:bg-gray-400 disabled:cursor-not-allowed text-white font-medium rounded-md transition-colors duration-200"
           >
-            Sign In
+            {loginMutation.isPending ? 'Signing In...' : 'Sign In'}
           </button>
 
-          {/* Error State Placeholder */}
-          {/* {isError && (
+          {loginMutation.isError && (
             <div className="text-red-500 text-sm text-center mt-2">
-              Invalid credentials. Please try again.
+              Unable to sign in. Please check your credentials.
             </div>
-          )} */}
-          
-          {/* Loading State Placeholder */}
-          {/* {isLoading && (
-             <div className="text-center">Loading...</div>
-          )} */}
+          )}
 
         </form>
       </div>
