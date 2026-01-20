@@ -47,16 +47,24 @@ class ServerResponse(BaseModel):
 
 # --- Tools Models ---
 class ToolInput(BaseModel):
-    name: str
-    type: str
+    tool_name: str
+    tool_size: Optional[str] = None
+    tool_type: str
+    current_status: str = "Available"
     total_quantity: int
     available_quantity: int
+    consumed_quantity: int = 0
+    trained: bool = False
 
 class ToolUpdate(BaseModel):
-    name: Optional[str] = None
-    type: Optional[str] = None
+    tool_name: Optional[str] = None
+    tool_size: Optional[str] = None
+    tool_type: Optional[str] = None
+    current_status: Optional[str] = None
     total_quantity: Optional[int] = None
     available_quantity: Optional[int] = None
+    consumed_quantity: Optional[int] = None
+    trained: Optional[bool] = None
 
 # --------------------
 
@@ -118,15 +126,19 @@ async def get_tools():
     """Get all tools from the database"""
     engine = create_engine(TOOLS_DB_URL)
     with engine.connect() as conn:
-        result = conn.execute(text("SELECT id, name, type, total_quantity, available_quantity FROM tools"))
+        result = conn.execute(text("SELECT tool_id, tool_name, tool_size, tool_type, current_status, total_quantity, available_quantity, consumed_quantity, trained FROM tools"))
         tools = []
         for row in result:
              tools.append({
-                 "id": row.id,
-                 "name": row.name,
-                 "type": row.type,
+                 "id": row.tool_id,
+                 "name": row.tool_name,
+                 "size": row.tool_size,
+                 "type": row.tool_type,
+                 "status": row.current_status,
                  "total_quantity": row.total_quantity,
-                 "available_quantity": row.available_quantity
+                 "available_quantity": row.available_quantity,
+                 "consumed_quantity": row.consumed_quantity,
+                 "trained": bool(row.trained)
              })
         return tools
 
@@ -136,14 +148,18 @@ async def create_tool(tool: ToolInput):
     engine = create_engine(TOOLS_DB_URL)
     with engine.connect() as conn:
         query = text("""
-            INSERT INTO tools (name, type, total_quantity, available_quantity)
-            VALUES (:name, :type, :total, :available)
+            INSERT INTO tools (tool_name, tool_size, tool_type, current_status, total_quantity, available_quantity, consumed_quantity, trained)
+            VALUES (:name, :size, :type, :status, :total, :available, :consumed, :trained)
         """)
         conn.execute(query, {
-            "name": tool.name,
-            "type": tool.type,
+            "name": tool.tool_name,
+            "size": tool.tool_size,
+            "type": tool.tool_type,
+            "status": tool.current_status,
             "total": tool.total_quantity,
-            "available": tool.available_quantity
+            "available": tool.available_quantity,
+            "consumed": tool.consumed_quantity,
+            "trained": tool.trained
         })
         conn.commit()
     return {"success": True, "message": "Tool created successfully"}
@@ -154,36 +170,49 @@ async def update_tool(tool_id: int, tool: ToolUpdate):
     engine = create_engine(TOOLS_DB_URL)
     with engine.connect() as conn:
         # Check if tool exists
-        check = conn.execute(text("SELECT id FROM tools WHERE id = :id"), {"id": tool_id}).fetchone()
+        check = conn.execute(text("SELECT tool_id FROM tools WHERE tool_id = :id"), {"id": tool_id}).fetchone()
         if not check:
             raise HTTPException(status_code=404, detail="Tool not found")
 
         updates = []
         params = {"id": tool_id}
         
-        if tool.name is not None:
-            updates.append("name = :name")
-            params["name"] = tool.name
-        if tool.type is not None:
-             updates.append("type = :type")
-             params["type"] = tool.type
+        if tool.tool_name is not None:
+            updates.append("tool_name = :name")
+            params["name"] = tool.tool_name
+        if tool.tool_size is not None:
+            updates.append("tool_size = :size")
+            params["size"] = tool.tool_size
+        if tool.tool_type is not None:
+             updates.append("tool_type = :type")
+             params["type"] = tool.tool_type
+        if tool.current_status is not None:
+             updates.append("current_status = :status")
+             params["status"] = tool.current_status
         if tool.total_quantity is not None:
              updates.append("total_quantity = :total")
              params["total"] = tool.total_quantity
         if tool.available_quantity is not None:
              updates.append("available_quantity = :available")
              params["available"] = tool.available_quantity
+        if tool.consumed_quantity is not None:
+             updates.append("consumed_quantity = :consumed")
+             params["consumed"] = tool.consumed_quantity
+        if tool.trained is not None:
+             updates.append("trained = :trained")
+             params["trained"] = tool.trained
         
         if not updates:
              return {"success": True, "message": "No changes provided"}
 
-        sql = f"UPDATE tools SET {', '.join(updates)} WHERE id = :id"
+        sql = f"UPDATE tools SET {', '.join(updates)} WHERE tool_id = :id"
+        
         conn.execute(text(sql), params)
         conn.commit()
-        
+    
     return {"success": True, "message": "Tool updated successfully"}
 
 if __name__ == '__main__':
     uvicorn.run(app, host="0.0.0.0", port=5000)
-
+        
     
