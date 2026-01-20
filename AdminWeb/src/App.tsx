@@ -6,6 +6,7 @@ import { InventoryPage } from './features/inventory/InventoryPage';
 import { TransactionsPage } from './features/transactions/TransactionsPage';
 import { ManualTransactionPage } from './features/manual-transaction/ManualTransactionPage';
 import { ReportsPage } from './features/reports/ReportsPage';
+import { MLDebugPage } from './features/debug/MLDebugPage';
 
 function App() {
   return (
@@ -20,6 +21,7 @@ function App() {
           <Route path="/transactions" element={<TransactionsPage />} />
           <Route path="/manual-transaction" element={<ManualTransactionPage />} />
           <Route path="/reports" element={<ReportsPage />} />
+          <Route path="/debug-ml" element={<MLDebugPage />} />
         </Route>
 
         <Route path="/" element={<Navigate to="/login" replace />} />
