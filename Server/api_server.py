@@ -1,4 +1,4 @@
-from fastapi import FastAPI, HTTPException, Depends
+from fastapi import FastAPI, HTTPException, Depends, UploadFile, File
 from fastapi.middleware.cors import CORSMiddleware
 from pydantic import BaseModel
 from typing import Optional
@@ -6,10 +6,81 @@ from sqlalchemy import create_engine, text
 from sqlalchemy.orm import sessionmaker
 import uvicorn
 import os
+import io
+import json
+import torch
+import torch.nn as nn
+from torchvision import transforms, models
+from torchvision.models import EfficientNet_V2_S_Weights
+from PIL import Image
 from dotenv import load_dotenv
 from datetime import date, timedelta
 
 load_dotenv('.env.local')
+
+# ==========================================
+# ML CONFIGURATION & SETUP
+# ==========================================
+# Calculate paths relative to this file so it works regardless of where you run it from
+BASE_DIR = os.path.dirname(os.path.abspath(__file__))
+MODEL_PATH = os.path.join(BASE_DIR, '..', 'ML', 'efficientnet_finetuned_sprint2.pth')
+CLASS_NAMES_PATH = os.path.join(BASE_DIR, '..', 'ML', 'class_names.json')
+
+IMG_SIZE = 384
+NORMALIZE_MEAN = [0.485, 0.456, 0.406]
+NORMALIZE_STD = [0.229, 0.224, 0.225]
+
+# Load Class Names
+CLASS_NAMES = []
+if os.path.exists(CLASS_NAMES_PATH):
+    try:
+        with open(CLASS_NAMES_PATH, 'r') as f:
+            CLASS_NAMES = json.load(f)
+        print(f"[ML] Loaded {len(CLASS_NAMES)} classes.")
+    except Exception as e:
+        print(f"[ML] Error loading class names: {e}")
+else:
+    print(f"[ML] Warning: Class names file not found at {CLASS_NAMES_PATH}")
+
+# Define Transform
+inference_transform = transforms.Compose([
+    transforms.Resize((IMG_SIZE, IMG_SIZE)),
+    transforms.ToTensor(),
+    transforms.Normalize(mean=NORMALIZE_MEAN, std=NORMALIZE_STD)
+])
+
+# Load Model Logic
+device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
+ml_model = None
+
+def load_ml_model():
+    global ml_model
+    if not os.path.exists(MODEL_PATH):
+        print(f"[ML] Model file not found at {MODEL_PATH}. ML features disabled.")
+        return
+
+    print("[ML] Loading AI Model... (This may take a few seconds)")
+    try:
+        weights = EfficientNet_V2_S_Weights.DEFAULT
+        model = models.efficientnet_v2_s(weights=weights)
+        
+        # Rebuild Head
+        in_features = model.classifier[1].in_features
+        # Ensure we have class names to determine output size, default to 15 if missing
+        num_classes = len(CLASS_NAMES) if CLASS_NAMES else 15
+        model.classifier[1] = nn.Linear(in_features, num_classes)
+        
+        # Load Weights
+        model.load_state_dict(torch.load(MODEL_PATH, map_location=device))
+        model.to(device)
+        model.eval()
+        ml_model = model
+        print("[ML] Model Loaded Successfully!")
+    except Exception as e:
+        print(f"[ML] Failed to load model: {e}")
+
+# Load the model immediately on startup
+load_ml_model()
 
 # --- Database 1: User Database (Museum/Makerspace) ---
 MAKERSPACE_DB_USERNAME = os.getenv('MAKERSPACE_DB_USERNAME')
@@ -111,6 +182,55 @@ async def validate_user_route(request: UserRequest):
             message=f"Access Granted, {first_name}"
         )
 
+# --- ML Prediction Endpoint ---
+@app.post("/identify_tool")
+async def identify_tool(file: UploadFile = File(...)):
+    """
+    Receives an image file, runs it through the loaded ML model, 
+    and returns the predicted tool class and confidence.
+    """
+    if ml_model is None:
+         raise HTTPException(status_code=503, detail="ML Model is not loaded (check server logs/paths)")
+
+    try:
+        # 1. Read the file content
+        contents = await file.read()
+        image = Image.open(io.BytesIO(contents)).convert('RGB')
+        
+        # 2. Preprocess
+        input_tensor = inference_transform(image)
+        input_batch = input_tensor.unsqueeze(0).to(device)
+
+        # 3. Predict
+        with torch.no_grad():
+            output = ml_model(input_batch)
+            probabilities = torch.nn.functional.softmax(output[0], dim=0)
+            
+            # Get top prediction
+            top_prob, top_catid = torch.topk(probabilities, 1)
+            class_id = top_catid.item()
+            score = top_prob.item()
+            
+            # Safety check if class_id is valid
+            if class_id < len(CLASS_NAMES):
+                class_name = CLASS_NAMES[class_id]
+            else:
+                class_name = f"Unknown_Class_{class_id}"
+            
+            # Get all probabilities
+            all_probs = {CLASS_NAMES[i]: prob.item() for i, prob in enumerate(probabilities) if i < len(CLASS_NAMES)}
+
+        return {
+            "success": True,
+            "prediction": class_name,
+            "confidence": score,
+            "all_probabilities": all_probs
+        }
+
+    except Exception as e:
+        print(f"[ML] Prediction Error: {e}")
+        raise HTTPException(status_code=500, detail=f"Prediction failed: {str(e)}")
+
 # --- Tool Management Endpoints ---
 
 @app.get("/tools")
@@ -186,4 +306,3 @@ async def update_tool(tool_id: int, tool: ToolUpdate):
 if __name__ == '__main__':
     uvicorn.run(app, host="0.0.0.0", port=5000)
 
-    
