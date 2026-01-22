@@ -1,4 +1,4 @@
-<ToolSelectScreen>:
+<ToolSelectionScreen>:
     md_bg_color: 1, 1, 1, 1  # White background
 
     MDBoxLayout:
@@ -60,7 +60,7 @@
                 font_size: "20sp"
                 size_hint: 0.3, 1        
                 md_bg_color: 0.4, 0.4, 0.4, 1  # Grey
-                # on_release: root.go_to('return date screen') # add later
+                on_release: root.go_to('transaction confirm screen')
 
         # -- Cancel Button --
         MDFillRoundFlatButton:

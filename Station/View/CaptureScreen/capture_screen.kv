@@ -16,10 +16,10 @@
             font_style: "H4"
             size_hint_y: 0.1
 
-        # --- Live Feed Window
+        # --- Live Feed Window ---
         Image:
             id: camera_preview
-            source: "assets/images/logo_white.png"
+            source: "assets/images/logo_white.png" # Placeholder for now
             allow_stretch: True
             keep_ratio: True
             size_hint_y: 0.7
@@ -41,17 +41,24 @@
             padding: '10dp'             # Optional padding around the row
 
             MDFillRoundFlatButton:
-                text: "DEV - BACK\n(Action Selection Screen)"
-                font_size: "20sp"
-                size_hint: .3, 1        
+                text: "DEV - BACK\n(Action Selection\nScreen)"
+                font_size: "14sp"
+                size_hint: .2, 1        
                 md_bg_color: 0.4, 0.4, 0.4, 1  # Grey
                 on_release: root.go_back('action selection screen')
+            
+            MDFillRoundFlatButton:
+                text: "DEV - Capture"
+                font_size: "14sp"
+                size_hint: .2, 1        
+                md_bg_color: 0.4, 0.4, 0.4, 1  # Grey
+                on_release: root.capture_btn('done')
 
             # -- DEV BUTTON --
             MDFillRoundFlatButton:
-                text: "DEV - NEXT\n(Tool Confirm Screen)"
-                font_size: "20sp"
-                size_hint: .3, 1        
+                text: "DEV - NEXT\n(Tool Confirm\nScreen)"
+                font_size: "14sp"
+                size_hint: .2, 1        
                 md_bg_color: 0.4, 0.4, 0.4, 1  # Grey
                 on_release: root.go_to('tool confirm screen')
 
