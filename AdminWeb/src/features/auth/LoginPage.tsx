@@ -5,8 +5,8 @@ import { login } from './api/login';
 
 export const LoginPage = () => {
   // Local state for form inputs
+  const [email, setEmail] = useState('');
   const [ucid, setUcid] = useState('');
-  const [password, setPassword] = useState('');
 
   const navigate = useNavigate();
 
@@ -21,7 +21,7 @@ export const LoginPage = () => {
   const handleLogin = (e: React.FormEvent) => {
     e.preventDefault();
     // Start login request with the form values
-    loginMutation.mutate({ ucid, password });
+    loginMutation.mutate({ email, ucid });
   };
 
   return (
@@ -37,24 +37,24 @@ export const LoginPage = () => {
       <div className="w-full max-w-md p-8 bg-white rounded-lg border border-gray-100 shadow-sm">
         <form onSubmit={handleLogin} className="space-y-6">
 
-          {/* UCID / Email Input */}
+          {/* User Email Input */}
           <div>
             <input
-              type="text"
-              placeholder="UCID / Email"
-              value={ucid}
-              onChange={(e) => setUcid(e.target.value)}
+              type="email"
+              placeholder="User Email"
+              value={email}
+              onChange={(e) => setEmail(e.target.value)}
               className="w-full px-4 py-3 rounded-md border border-gray-200 focus:outline-none focus:ring-2 focus:ring-gray-200 focus:border-transparent transition-all bg-white text-gray-800 placeholder-gray-400"
             />
           </div>
 
-          {/* Password Input */}
+          {/* UCID Input */}
           <div>
             <input
               type="password"
-              placeholder="Password"
-              value={password}
-              onChange={(e) => setPassword(e.target.value)}
+              placeholder="UCID"
+              value={ucid}
+              onChange={(e) => setUcid(e.target.value)}
               className="w-full px-4 py-3 rounded-md border border-gray-200 focus:outline-none focus:ring-2 focus:ring-gray-200 focus:border-transparent transition-all bg-white text-gray-800 placeholder-gray-400"
             />
           </div>

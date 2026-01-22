@@ -6,8 +6,8 @@ const apiClient = axios.create({
 });
 
 export type LoginPayload = {
+    email: string;
     ucid: string;
-    password: string;
 };
 
 export type LoginResponse = {

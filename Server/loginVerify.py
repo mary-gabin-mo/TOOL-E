@@ -28,8 +28,8 @@ app.add_middleware(
 
 
 class LoginPayload(BaseModel):
+    email: str
     ucid: str
-    password: str
 
 
 class User(BaseModel):
@@ -70,20 +70,20 @@ def build_db_pool():
 db_pool = build_db_pool()
 
 
-def fetch_user(ucid: str) -> Optional[Dict[str, str]]:
-    # Get single user row by UCID
-    ucid_normalized = ucid.strip()
+def fetch_user(email: str) -> Optional[Dict[str, str]]:
+    # Get single user row by email
+    email_normalized = email.strip()
     conn = db_pool.get_connection()
     try:
         with conn.cursor(dictionary=True) as cur:
             cur.execute(
                 """
-                SELECT ucid, FirstName, LastName, password
+                SELECT ucid, FirstName, LastName, email
                 FROM users
-                WHERE LOWER(ucid) = LOWER(%s)
+                WHERE LOWER(email) = LOWER(%s)
                 LIMIT 1
                 """,
-                (ucid_normalized,),
+                (email_normalized,),
             )
             return cur.fetchone()
     finally:
@@ -93,9 +93,9 @@ def fetch_user(ucid: str) -> Optional[Dict[str, str]]:
 @app.post("/api/auth/login", response_model=LoginResponse)
 def login(payload: LoginPayload) -> LoginResponse:
     # Validate credentials against the DB row; swap to hashed verify for real use
-    user_record = fetch_user(payload.ucid)
+    user_record = fetch_user(payload.email)
 
-    if not user_record or payload.password != user_record["password"]:
+    if not user_record or payload.ucid != user_record["ucid"]:
         # Deliberately vague to avoid leaking which field failed.
         raise HTTPException(status_code=401, detail="Invalid credentials")
 
@@ -104,7 +104,7 @@ def login(payload: LoginPayload) -> LoginResponse:
     return LoginResponse(
         token=token,
         user=User(
-            ucid=payload.ucid,
+            ucid=user_record["ucid"],
             FirstName=user_record["FirstName"],
             LastName=user_record["LastName"],
         ),
