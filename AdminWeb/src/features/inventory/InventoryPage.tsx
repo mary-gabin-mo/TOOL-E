@@ -25,11 +25,18 @@ export const InventoryPage = () => {
   const [searchQuery, setSearchQuery] = useState('');
   
   // Fetch Tools
-  const { data: tools = [], isLoading, isError } = useQuery<Tool[]>({
+  const { data: tools = [], isLoading, isError, error } = useQuery<Tool[]>({
     queryKey: ['tools'],
     queryFn: async () => {
-      const { data } = await api.get('/tools');
-      return data;
+      console.log('Fetching tools from:', api.defaults.baseURL + '/tools');
+      try {
+        const { data } = await api.get('/tools');
+        console.log('API Response Data:', data);
+        return data;
+      } catch (err) {
+        console.error('API Fetch Error:', err);
+        throw err;
+      }
     },
   });
 
@@ -229,8 +236,8 @@ export const InventoryPage = () => {
             </tr>
           </thead>
           <tbody className="">
-            {filteredAndSortedData.map((item) => (
-              <tr key={item.id} className="border-b border-gray-100 hover:bg-gray-50 transition-colors">
+            {filteredAndSortedData.map((item, index) => (
+              <tr key={`${item.id}-${index}`} className="border-b border-gray-100 hover:bg-gray-50 transition-colors">
                 <td className="py-4 px-6 text-sm text-gray-500">
                   #{item.id}
                 </td>

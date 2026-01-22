@@ -1,6 +1,6 @@
 import React from 'react';
 import { NavLink, Outlet } from 'react-router-dom';
-import { LayoutDashboard, Package, ArrowRightLeft, PenTool, FileBarChart } from 'lucide-react';
+import { LayoutDashboard, Package, ArrowRightLeft, PenTool, FileBarChart, Terminal } from 'lucide-react';
 import clsx from 'clsx';
 
 export const DashboardLayout = () => {
@@ -10,6 +10,7 @@ export const DashboardLayout = () => {
     { name: 'Transactions', path: '/transactions', icon: ArrowRightLeft },
     { name: 'Manual Transaction', path: '/manual-transaction', icon: PenTool },
     { name: 'Reports', path: '/reports', icon: FileBarChart },
+    { name: 'Access Debug', path: '/debug-ml', icon: Terminal },
   ];
 
   return (
