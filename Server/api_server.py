@@ -6,6 +6,7 @@ from sqlalchemy import create_engine, text
 from sqlalchemy.orm import sessionmaker
 import uvicorn
 import os
+import secrets
 import io
 import json
 import torch
@@ -14,7 +15,7 @@ from torchvision import transforms, models
 from torchvision.models import EfficientNet_V2_S_Weights
 from PIL import Image
 from dotenv import load_dotenv
-from datetime import date, timedelta
+from datetime import datetime, date, timedelta
 
 load_dotenv('.env.local')
 
@@ -23,8 +24,8 @@ load_dotenv('.env.local')
 # ==========================================
 # Calculate paths relative to this file so it works regardless of where you run it from
 BASE_DIR = os.path.dirname(os.path.abspath(__file__))
-MODEL_PATH = os.path.join(BASE_DIR, '..', 'ML', 'efficientnet_finetuned_sprint2.pth')
-CLASS_NAMES_PATH = os.path.join(BASE_DIR, '..', 'ML', 'class_names.json')
+MODEL_PATH = os.path.join(BASE_DIR, 'efficientnet_finetuned_sprint2.pth')
+CLASS_NAMES_PATH = os.path.join(BASE_DIR, 'class_names.json')
 
 IMG_SIZE = 384
 NORMALIZE_MEAN = [0.485, 0.456, 0.406]
@@ -101,7 +102,7 @@ app = FastAPI(title="TOOL-E Backend Server")
 # Configure CORS
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["http://localhost:5173", "http://127.0.0.1:5173", "*"], # Explicitly add localhost
+    allow_origins=["http://localhost:5173", "http://127.0.0.1:5173"],
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],
@@ -115,6 +116,19 @@ class UserRequest(BaseModel):
 class ServerResponse(BaseModel):
     success: bool
     message: str
+
+class LoginPayload(BaseModel):
+    email: str
+    password: str
+
+class LoginUser(BaseModel):
+    user_id: int
+    user_name: str
+    email: str
+
+class LoginResponse(BaseModel):
+    token: str
+    user: LoginUser
 
 # --- Tools Models ---
 class ToolInput(BaseModel):
@@ -136,6 +150,29 @@ class ToolUpdate(BaseModel):
     available_quantity: Optional[int] = None
     consumed_quantity: Optional[int] = None
     trained: Optional[bool] = None
+
+# --- Transactions Models ---
+class TransactionInput(BaseModel):
+    user_id: Optional[int] = None
+    tool_id: Optional[int] = None
+    desired_return_date: Optional[str] = None
+    return_timestamp: Optional[str] = None
+    quantity: int = 1
+    purpose: Optional[str] = None
+    image_path: Optional[str] = None
+    classification_correct: Optional[bool] = None
+    weight: int = 0
+
+class TransactionUpdate(BaseModel):
+    user_id: Optional[int] = None
+    tool_id: Optional[int] = None
+    desired_return_date: Optional[str] = None
+    return_timestamp: Optional[str] = None
+    quantity: Optional[int] = None
+    purpose: Optional[str] = None
+    image_path: Optional[str] = None
+    classification_correct: Optional[bool] = None
+    weight: Optional[int] = None
 
 # --------------------
 
@@ -189,6 +226,41 @@ async def validate_user_route(request: UserRequest):
             success=True,
             message=f"Access Granted, {first_name}"
         )
+
+@app.post("/api/auth/login", response_model=LoginResponse)
+async def login(payload: LoginPayload):
+    """
+    Temporary login for Admin Web using tool_e_db.users.
+    Username: email
+    Password: user_id (as string)
+    """
+    engine = create_engine(TOOLS_DB_URL)
+    with engine.connect() as conn:
+        user = conn.execute(
+            text(
+                """
+                SELECT user_id, user_name, email
+                FROM users
+                WHERE LOWER(email) = LOWER(:email)
+                LIMIT 1
+                """
+            ),
+            {"email": payload.email.strip()},
+        ).fetchone()
+
+    if not user or payload.password != str(user.user_id):
+        raise HTTPException(status_code=401, detail="Invalid credentials")
+
+    token = secrets.token_urlsafe(32)
+
+    return LoginResponse(
+        token=token,
+        user=LoginUser(
+            user_id=user.user_id,
+            user_name=user.user_name,
+            email=user.email,
+        ),
+    )
 
 # --- ML Prediction Endpoint ---
 @app.post("/identify_tool")
@@ -258,7 +330,7 @@ async def get_tools():
                  "total_quantity": row.total_quantity,
                  "available_quantity": row.available_quantity,
                  "consumed_quantity": row.consumed_quantity,
-                 "trained": bool(row.trained)
+                 "trained": True if (row.trained == 1 or str(row.trained) == '1') else False
              })
         return tools
 
@@ -331,6 +403,252 @@ async def update_tool(tool_id: int, tool: ToolUpdate):
         conn.commit()
     
     return {"success": True, "message": "Tool updated successfully"}
+
+# --- Transaction Management Endpoints ---
+
+@app.get("/transactions")
+async def get_transactions(user_id: Optional[int] = None, page: int = 1, limit: int = 50):
+    """Get transactions with pagination"""
+    offset = (page - 1) * limit
+    engine = create_engine(TOOLS_DB_URL)
+    with engine.connect() as conn:
+        # 1. Get Total Count
+        if user_id is not None:
+            count_query = text("SELECT COUNT(*) FROM transactions WHERE user_id = :user_id")
+            count_params = {"user_id": user_id}
+        else:
+            count_query = text("SELECT COUNT(*) FROM transactions")
+            count_params = {}
+        
+        total = conn.execute(count_query, count_params).scalar()
+
+        # 2. Get Paginated Data
+        if user_id is not None:
+            query = text("""
+                SELECT transaction_id, user_id, tool_id, checkout_timestamp, desired_return_date,
+                       return_timestamp, quantity, purpose, image_path, classification_correct, weight
+                FROM transactions
+                WHERE user_id = :user_id
+                ORDER BY transaction_id DESC
+                LIMIT :limit OFFSET :offset
+            """)
+            params = {"user_id": user_id, "limit": limit, "offset": offset}
+        else:
+            query = text("""
+                SELECT transaction_id, user_id, tool_id, checkout_timestamp, desired_return_date,
+                       return_timestamp, quantity, purpose, image_path, classification_correct, weight
+                FROM transactions
+                ORDER BY transaction_id DESC
+                LIMIT :limit OFFSET :offset
+            """)
+            params = {"limit": limit, "offset": offset}
+
+        result = conn.execute(query, params)
+        
+        transactions = []
+        for row in result:
+            transactions.append({
+                "transaction_id": row.transaction_id,
+                "user_id": row.user_id,
+                "tool_id": row.tool_id,
+                "checkout_timestamp": row.checkout_timestamp,
+                "desired_return_date": row.desired_return_date,
+                "return_timestamp": row.return_timestamp,
+                "quantity": row.quantity,
+                "purpose": row.purpose,
+                "image_path": row.image_path,
+                "classification_correct": row.classification_correct,
+                "weight": row.weight,
+            })
+            
+        return {
+            "items": transactions,
+            "total": total,
+            "page": page,
+            "size": limit,
+            "pages": (total + limit - 1) // limit if limit > 0 else 0
+        }
+
+@app.post("/transactions")
+async def create_transaction(transaction: TransactionInput):
+    """Create a new transaction"""
+    engine = create_engine(TOOLS_DB_URL)
+    with engine.connect() as conn:
+        query = text("""
+            INSERT INTO transactions
+            (user_id, tool_id, desired_return_date, return_timestamp, quantity, purpose,
+             image_path, classification_correct, weight)
+            VALUES
+            (:user_id, :tool_id, :desired_return_date, :return_timestamp, :quantity, :purpose,
+             :image_path, :classification_correct, :weight)
+        """)
+        conn.execute(query, {
+            "user_id": transaction.user_id,
+            "tool_id": transaction.tool_id,
+            "desired_return_date": transaction.desired_return_date,
+            "return_timestamp": transaction.return_timestamp,
+            "quantity": transaction.quantity,
+            "purpose": transaction.purpose,
+            "image_path": transaction.image_path,
+            "classification_correct": transaction.classification_correct,
+            "weight": transaction.weight,
+        })
+        conn.commit()
+
+    return {"success": True, "message": "Transaction created successfully"}
+
+@app.delete("/transactions/{transaction_id}")
+async def delete_transaction(transaction_id: int):
+    """Delete a transaction"""
+    engine = create_engine(TOOLS_DB_URL)
+    with engine.connect() as conn:
+        check = conn.execute(
+            text("SELECT transaction_id FROM transactions WHERE transaction_id = :id"),
+            {"id": transaction_id},
+        ).fetchone()
+        if not check:
+            raise HTTPException(status_code=404, detail="Transaction not found")
+
+        conn.execute(
+            text("DELETE FROM transactions WHERE transaction_id = :id"),
+            {"id": transaction_id},
+        )
+        conn.commit()
+
+    return {"success": True, "message": "Transaction deleted successfully"}
+
+@app.put("/transactions/{transaction_id}")
+async def update_transaction(transaction_id: int, transaction: TransactionUpdate):
+    """Update fields of a transaction"""
+    engine = create_engine(TOOLS_DB_URL)
+    with engine.connect() as conn:
+        check = conn.execute(
+            text("SELECT transaction_id FROM transactions WHERE transaction_id = :id"),
+            {"id": transaction_id},
+        ).fetchone()
+        if not check:
+            raise HTTPException(status_code=404, detail="Transaction not found")
+
+        updates = []
+        params = {"id": transaction_id}
+
+        if transaction.user_id is not None:
+            updates.append("user_id = :user_id")
+            params["user_id"] = transaction.user_id
+        if transaction.tool_id is not None:
+            updates.append("tool_id = :tool_id")
+            params["tool_id"] = transaction.tool_id
+        if transaction.desired_return_date is not None:
+            updates.append("desired_return_date = :desired_return_date")
+            params["desired_return_date"] = transaction.desired_return_date
+        if transaction.return_timestamp is not None:
+            updates.append("return_timestamp = :return_timestamp")
+            params["return_timestamp"] = transaction.return_timestamp
+        if transaction.quantity is not None:
+            updates.append("quantity = :quantity")
+            params["quantity"] = transaction.quantity
+        if transaction.purpose is not None:
+            updates.append("purpose = :purpose")
+            params["purpose"] = transaction.purpose
+        if transaction.image_path is not None:
+            updates.append("image_path = :image_path")
+            params["image_path"] = transaction.image_path
+        if transaction.classification_correct is not None:
+            updates.append("classification_correct = :classification_correct")
+            params["classification_correct"] = transaction.classification_correct
+        if transaction.weight is not None:
+            updates.append("weight = :weight")
+            params["weight"] = transaction.weight
+
+        if not updates:
+            return {"success": True, "message": "No changes provided"}
+
+        sql = f"UPDATE transactions SET {', '.join(updates)} WHERE transaction_id = :id"
+        conn.execute(text(sql), params)
+        conn.commit()
+
+    return {"success": True, "message": "Transaction updated successfully"}
+
+
+# --- Analytics Endpoints ---
+
+@app.get("/analytics/dashboard")
+async def get_dashboard_analytics(period: str = "1_month"):
+    """
+    Get dashboard analytics.
+    period options: '1_month', 'winter_2026', 'fall_2025', 'summer_2025', etc.
+    """
+    engine = create_engine(TOOLS_DB_URL)
+    with engine.connect() as conn:
+        # 1. Determine Date Range
+        now = datetime.now()
+        start_date = None
+        end_date = now # Default end is now
+        
+        if period == "1_month":
+            start_date = now - timedelta(days=30)
+        elif period == "winter_2026":
+            start_date = datetime(2026, 1, 1)
+            end_date = datetime(2026, 4, 30, 23, 59, 59)
+        elif period == "fall_2025":
+            start_date = datetime(2025, 9, 1)
+            end_date = datetime(2025, 12, 31, 23, 59, 59)
+        elif period == "summer_2025":
+            start_date = datetime(2025, 5, 1)
+            end_date = datetime(2025, 8, 31, 23, 59, 59)
+        elif period == "winter_2025":
+            start_date = datetime(2025, 1, 1)
+            end_date = datetime(2025, 4, 30, 23, 59, 59)
+        else:
+            # Fallback to 1 month
+            start_date = now - timedelta(days=30)
+
+        params = {"start_date": start_date, "end_date": end_date}
+        
+        # 2. Live Stats (Current State of System)
+        total_tools = conn.execute(text("SELECT COUNT(*) FROM tools")).scalar()
+        current_borrowed = conn.execute(
+            text("SELECT COUNT(*) FROM transactions WHERE return_timestamp IS NULL")
+        ).scalar()
+        current_overdue = conn.execute(
+            text("SELECT COUNT(*) FROM transactions WHERE return_timestamp IS NULL AND desired_return_date < NOW()")
+        ).scalar()
+
+        # 3. Period Stats (Activity within range)
+        period_checkouts = conn.execute(
+            text("SELECT COUNT(*) FROM transactions WHERE checkout_timestamp >= :start_date AND checkout_timestamp <= :end_date"),
+            params
+        ).scalar()
+
+        # Top Tools in Period
+        top_tools_result = conn.execute(
+            text("""
+                SELECT t.tool_name, COUNT(tr.tool_id) as usage_count
+                FROM transactions tr
+                JOIN tools t ON tr.tool_id = t.tool_id
+                WHERE tr.checkout_timestamp >= :start_date AND tr.checkout_timestamp <= :end_date
+                GROUP BY tr.tool_id, t.tool_name
+                ORDER BY usage_count DESC
+                LIMIT 10
+            """),
+            params
+        ).fetchall()
+        
+        top_tools = [{"name": row.tool_name, "uses": row.usage_count} for row in top_tools_result]
+
+        return {
+            "live_stats": {
+                "total_tools": total_tools,
+                "current_borrowed": current_borrowed,
+                "current_overdue": current_overdue,
+            },
+            "period_stats": {
+                "checkouts": period_checkouts,
+                "top_tools": top_tools,
+                "start_date": start_date.isoformat(),
+                "end_date": end_date.isoformat()
+            }
+        }
 
 if __name__ == '__main__':
     uvicorn.run(app, host="0.0.0.0", port=5000)
