@@ -28,15 +28,8 @@ export const InventoryPage = () => {
   const { data: tools = [], isLoading, isError, error } = useQuery<Tool[]>({
     queryKey: ['tools'],
     queryFn: async () => {
-      console.log('Fetching tools from:', api.defaults.baseURL + '/tools');
-      try {
-        const { data } = await api.get('/tools');
-        console.log('API Response Data:', data);
-        return data;
-      } catch (err) {
-        console.error('API Fetch Error:', err);
-        throw err;
-      }
+      const { data } = await api.get('/tools');
+      return data;
     },
   });
 
@@ -242,10 +235,10 @@ export const InventoryPage = () => {
                   #{item.id}
                 </td>
                 <td className="py-4 px-6 text-sm font-medium text-gray-900">
-                  <div className="flex flex-col">
+                  <div className="flex flex-col items-start gap-1">
                     <span>{item.name}</span>
                     {item.trained && (
-                      <span className="w-fit px-2 py-0.5 text-xs bg-amber-100 text-amber-700 rounded-full mt-1">
+                      <span className="inline-flex items-center px-2 py-0.5 rounded text-xs font-medium bg-amber-100 text-amber-800">
                         Training Required
                       </span>
                     )}

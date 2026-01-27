@@ -101,10 +101,10 @@ app = FastAPI(title="TOOL-E Backend Server")
 # Configure CORS
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["*"],  # Allows all origins
+    allow_origins=["http://localhost:5173", "http://127.0.0.1:5173", "*"], # Explicitly add localhost
     allow_credentials=True,
-    allow_methods=["*"],  # Allows all methods
-    allow_headers=["*"],  # Allows all headers
+    allow_methods=["*"],
+    allow_headers=["*"],
 )
 
 #--- Pydantic Model for Incoming Data ---

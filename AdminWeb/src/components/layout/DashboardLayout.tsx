@@ -1,9 +1,32 @@
-import React from 'react';
-import { NavLink, Outlet } from 'react-router-dom';
-import { LayoutDashboard, Package, ArrowRightLeft, PenTool, FileBarChart, Terminal } from 'lucide-react';
+import React, { useState } from 'react';
+import { NavLink, Outlet, useNavigate } from 'react-router-dom';
+import { LayoutDashboard, Package, ArrowRightLeft, PenTool, FileBarChart, Terminal, LogOut, User, RefreshCw } from 'lucide-react';
+import { useQueryClient } from '@tanstack/react-query';
 import clsx from 'clsx';
+import { useAuthStore } from '../../lib/authStore';
 
 export const DashboardLayout = () => {
+  const navigate = useNavigate();
+  const { user, logout } = useAuthStore();
+  const queryClient = useQueryClient();
+  const [isSyncing, setIsSyncing] = useState(false);
+
+  const handleLogout = () => {
+    logout();
+    navigate('/login');
+  };
+
+  const handleSync = async () => {
+    setIsSyncing(true);
+    try {
+        // Invalidate all queries to trigger a refetch of active ones
+        await queryClient.invalidateQueries();
+    } finally {
+        // specific timeout to show the animation for a bit
+        setTimeout(() => setIsSyncing(false), 1000);
+    }
+  };
+
   const navItems = [
     { name: 'Dashboard', path: '/dashboard', icon: LayoutDashboard },
     { name: 'Inventory', path: '/inventory', icon: Package },
@@ -35,14 +58,45 @@ export const DashboardLayout = () => {
                 )
               }
             >
-              {/* Icon placeholder if needed, though screenshot doesn't explicitly show icons, standard admin panels usually have them. 
-                  I'll hide them for now to match the screenshot exactly if it's text-only, 
-                  but keeping the structure ready. The screenshot shows text only. */}
-              {/* <item.icon className="w-5 h-5 mr-3" /> */}
+              <item.icon className="w-5 h-5 mr-3" />
               {item.name}
             </NavLink>
           ))}
         </nav>
+
+        {/* User Info & Logout Footer */}
+        <div className="p-4 bg-[#1e293b] border-t border-gray-700 space-y-3">
+          <button
+            onClick={handleSync}
+            disabled={isSyncing}
+            className="w-full flex items-center px-4 py-2 text-sm font-medium text-blue-400 bg-blue-900/20 hover:bg-blue-900/40 border border-blue-900/50 rounded-md transition-all hover:text-blue-300 disabled:opacity-50"
+          >
+            <RefreshCw className={clsx("w-4 h-4 mr-2", isSyncing && "animate-spin")} />
+            {isSyncing ? 'Syncing...' : 'Sync Data'}
+          </button>
+
+          <div className="flex items-center gap-3">
+            <div className="w-8 h-8 rounded-full bg-blue-600 flex items-center justify-center">
+              <User className="w-4 h-4 text-white" />
+            </div>
+            <div className="overflow-hidden">
+              <p className="text-sm font-medium text-white truncate">
+                {user?.user_name || 'Admin User'}
+              </p>
+              <p className="text-xs text-gray-400 truncate">
+                {user?.email || 'admin@schulich.edu'}
+              </p>
+            </div>
+          </div>
+          
+          <button
+            onClick={handleLogout}
+            className="w-full flex items-center px-4 py-2 text-sm font-medium text-red-400 hover:bg-gray-800 hover:text-red-300 rounded-md transition-colors"
+          >
+            <LogOut className="w-4 h-4 mr-2" />
+            Logout
+          </button>
+        </div>
       </aside>
 
       {/* Main Content */}

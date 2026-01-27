@@ -2,18 +2,21 @@ import React, { useState } from 'react';
 import { useMutation } from '@tanstack/react-query';
 import { useNavigate } from 'react-router-dom';
 import { login } from './api/login';
+import { useAuthStore } from '../../lib/authStore';
 
 export const LoginPage = () => {
   // Local state for form inputs
-  const [ucid, setUcid] = useState('');
+  const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
 
   const navigate = useNavigate();
+  const setAuth = useAuthStore((state) => state.login);
 
   const loginMutation = useMutation({
     mutationFn: login,
     // Redirect to dashboard only after a successful login API call
-    onSuccess: () => {
+    onSuccess: (data) => {
+      setAuth(data.user, data.token);
       navigate('/dashboard');
     },
   });
@@ -21,7 +24,7 @@ export const LoginPage = () => {
   const handleLogin = (e: React.FormEvent) => {
     e.preventDefault();
     // Start login request with the form values
-    loginMutation.mutate({ ucid, password });
+    loginMutation.mutate({ email, password });
   };
 
   return (
@@ -37,13 +40,13 @@ export const LoginPage = () => {
       <div className="w-full max-w-md p-8 bg-white rounded-lg border border-gray-100 shadow-sm">
         <form onSubmit={handleLogin} className="space-y-6">
 
-          {/* UCID / Email Input */}
+          {/* Email Input */}
           <div>
             <input
               type="text"
-              placeholder="UCID / Email"
-              value={ucid}
-              onChange={(e) => setUcid(e.target.value)}
+              placeholder="Email"
+              value={email}
+              onChange={(e) => setEmail(e.target.value)}
               className="w-full px-4 py-3 rounded-md border border-gray-200 focus:outline-none focus:ring-2 focus:ring-gray-200 focus:border-transparent transition-all bg-white text-gray-800 placeholder-gray-400"
             />
           </div>
