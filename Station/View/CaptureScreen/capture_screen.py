@@ -28,7 +28,26 @@ class CaptureScreen(BaseScreen):
             
         # 2. Initialize Camera
         if IS_RASPBERRY_PI:
-            pass
+            try:
+                # Option A: standard index 0 (works on many Pi setups if legacy camera support is enabled)
+                self.capture = cv2.VideoCapture(0)
+
+                # Check if it actually opened
+                if not self.capture.isOpened():
+                    print("[UI] Standard index 0 failed. Attempting GStreamer pipeline for libcamera...")
+                    
+                # Option B: Pi 5 / libcamera GStreamer Pipeline
+                # tells OpenCV to use the GStreamer backend to talk to libcamerasrc directly
+                    pipeline = (
+                        "libcamerasrc ! "
+                        "video/x-raw, width=640, height=480, framerate=30/1 ! "
+                        "videoconvert ! "
+                        "appsink"
+                    )
+                    self.capture = cv2.VideoCapture(pipeline, cv2.CAP_GSTREAMER)
+            
+            except Exception as e:
+                print(f"[UI] CRITICAL Error initializing Pi Camera: {e}")
         else:
             # On Mac/Windows/Linux Desktop -> Use Laptop Webcam
             print(f"[UI] Running on Desktop/Laptop. Initializing default Webcam for testing...")
@@ -118,7 +137,7 @@ class CaptureScreen(BaseScreen):
         if self.capture:
             ret, frame = self.capture.read()
             if ret:
-                filename = "capture.jpg"
+                filename = "capture.jpg" # rename the file name to ucid and transaction
                 # Save the raw frame (not flipped) so the ML model sees it normally
                 cv2.imwrite(filename, frame)
                 print(f"[UI] Image saved to {filename}")
