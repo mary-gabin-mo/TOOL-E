@@ -32,7 +32,7 @@ LOAD_CELL_DEBOUNCE  = 2.0   # Seconds weight must be stable
 # --- UI SETTINGS ---
 # Paths
 ASSETS_DIR = os.path.join(os.path.dirname(__file__), 'assets')
-LOGO_PATH  = os.path.join(ASSETS_DIR, '/iamges/logo_black.png')
+LOGO_PATH  = os.path.join(ASSETS_DIR, '/images/logo_black.png')
 FONT_PATH  = os.path.join(ASSETS_DIR, 'fonts')
 
 # # Camera ##### NEED #####
