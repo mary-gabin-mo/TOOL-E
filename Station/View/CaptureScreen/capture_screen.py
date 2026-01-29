@@ -104,6 +104,9 @@ class CaptureScreen(BaseScreen):
                 # Update the widget
                 if self.ids.get('camera_preview'):
                     self.ids.camera_preview.texture = texture
+            else:
+                # for debugging if the camera drops out
+                print("[UI] From read failed")
             
     def handle_load_cell_trigger(self, instance, weight):
         """
@@ -112,7 +115,7 @@ class CaptureScreen(BaseScreen):
         print(f"[UI] Capture Screen detected load cell trigger: {weight}")
         
         # 1. Save the *current* frame from the camera
-        self.save_current_fame()
+        self.save_current_frame()
         
         # 2. Move to processing (simulated)
         Clock.schedule_once(lambda dt: self.go_to('tool confirm screen'), 1)
