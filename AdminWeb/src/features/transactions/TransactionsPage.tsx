@@ -51,14 +51,28 @@ export const TransactionsPage = () => {
   const [page, setPage] = useState(1);
   const queryClient = useQueryClient();
 
+  // Sorting State
+  const [sortConfig, setSortConfig] = useState<{ key: 'dateOut' | 'dateDue'; direction: 'asc' | 'desc' }>({
+    key: 'dateOut',
+    direction: 'desc',
+  });
+
   const { data, isLoading, isError, error } = useQuery<TransactionsResponse>({
-    queryKey: ['transactions', page],
+    queryKey: ['transactions', page, searchTerm, sortConfig, selectedStatuses],
     queryFn: async () => {
       const { data } = await api.get('/transactions', {
-        params: { page, limit: 50 }
+        params: { 
+          page, 
+          limit: 50,
+          search_term: searchTerm,
+          sort_by: sortConfig.key,
+          sort_order: sortConfig.direction,
+          status: selectedStatuses.length > 0 ? selectedStatuses.join(',') : undefined
+        }
       });
       return data;
     },
+    placeholderData: (previousData) => previousData, // Keep previous data while fetching new sorted data
   });
 
   const transactions = data?.items || [];
@@ -73,18 +87,12 @@ export const TransactionsPage = () => {
     },
   });
   
-  // Sorting State
-  const [sortConfig, setSortConfig] = useState<{ key: 'dateOut' | 'dateDue'; direction: 'asc' | 'desc' }>({
-    key: 'dateOut',
-    direction: 'desc',
-  });
-
   // Filtering State
   const [isStatusDropdownOpen, setIsStatusDropdownOpen] = useState(false);
   const [selectedStatuses, setSelectedStatuses] = useState<string[]>([]);
   const dropdownRef = useRef<HTMLDivElement>(null);
 
-  const uniqueStatuses = Array.from(new Set(transactions.map((tx) => deriveStatus(tx))));
+  const uniqueStatuses = ['Borrowed', 'Returned', 'Overdue'];
 
   // Close dropdown when clicking outside
   useEffect(() => {
@@ -116,50 +124,6 @@ export const TransactionsPage = () => {
     }));
   };
 
-  // Filter transactions based on search term and status
-  const filteredAndSortedTransactions = useMemo(() => {
-    const data = transactions.filter((tx) => {
-      const searchLower = searchTerm.toLowerCase();
-      const matchesSearch = 
-        String(tx.user_id ?? '').includes(searchLower) ||
-        String(tx.tool_id ?? '').includes(searchLower) ||
-        (tx.purpose ?? '').toLowerCase().includes(searchLower);
-      
-      const matchesStatus = selectedStatuses.length === 0 || selectedStatuses.includes(deriveStatus(tx));
-
-      return matchesSearch && matchesStatus;
-    });
-
-    // Sort
-    return data.sort((a, b) => {
-      if (sortConfig.key === 'dateOut') {
-        return sortConfig.direction === 'asc'
-          ? a.checkout_timestamp.localeCompare(b.checkout_timestamp)
-          : b.checkout_timestamp.localeCompare(a.checkout_timestamp);
-      } else if (sortConfig.key === 'dateDue') {
-        const valA = a.desired_return_date || 'N/A';
-        const valB = b.desired_return_date || 'N/A';
-
-        // If values are different, sort by Date Due
-        if (valA !== valB) {
-          // Handle N/A: Always put N/A at the bottom regardless of sort direction
-          if (valA === 'N/A') return 1;
-          if (valB === 'N/A') return -1;
-          
-          return sortConfig.direction === 'asc'
-            ? valA.localeCompare(valB)
-            : valB.localeCompare(valA);
-        }
-
-        // If Date Due is the same (e.g. both 'N/A' or same date), sort by Date Out
-        return sortConfig.direction === 'asc'
-          ? a.checkout_timestamp.localeCompare(b.checkout_timestamp)
-          : b.checkout_timestamp.localeCompare(a.checkout_timestamp);
-      }
-      return 0;
-    });
-  }, [searchTerm, selectedStatuses, sortConfig, transactions]);
-
   function deriveStatus(tx: Transaction) {
     if (tx.return_timestamp) return 'Returned';
     if (tx.desired_return_date) {
@@ -168,6 +132,12 @@ export const TransactionsPage = () => {
     }
     return 'Borrowed';
   }
+
+  // Handle Search Input Change with Debounce or Page Reset
+  const handleSearchChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    setSearchTerm(e.target.value);
+    setPage(1); // Reset to page 1 on new search
+  };
 
   return (
     <div className="space-y-6">
@@ -181,7 +151,7 @@ export const TransactionsPage = () => {
           type="text"
           placeholder="Search by user ID, tool ID, or purpose"
           value={searchTerm}
-          onChange={(e) => setSearchTerm(e.target.value)}
+          onChange={handleSearchChange}
           className="w-full pl-4 pr-4 py-3 rounded-lg border border-gray-200 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent bg-white"
         />
       </div>
@@ -270,26 +240,38 @@ export const TransactionsPage = () => {
                   {error instanceof Error ? ` ${error.message}` : ''}
                 </td>
               </tr>
-            ) : filteredAndSortedTransactions.length === 0 ? (
+            ) : transactions.length === 0 ? (
               <tr>
-                <td colSpan={6} className="py-10 text-center text-sm text-gray-500">
+                <td colSpan={7} className="py-10 text-center text-sm text-gray-500">
                   No transactions found.
                 </td>
               </tr>
             ) : (
-              filteredAndSortedTransactions.map((tx) => (
+              transactions.map((tx) => (
               <tr key={tx.transaction_id} className="border-b border-gray-100 hover:bg-gray-50 transition-colors">
                 <td className="py-4 px-6 text-sm font-medium text-gray-900">
-                  {tx.user_id ?? 'N/A'}
+                   <div className="flex flex-col">
+                      <span>{tx.user_name || 'Unknown'}</span>
+                      <span className="text-xs text-gray-400">ID: {tx.user_id}</span>
+                   </div>
                 </td>
                 <td className="py-4 px-6 text-sm text-gray-500">
-                  {tx.tool_id ?? 'N/A'}
+                   <div className="flex flex-col">
+                      <span>{tx.tool_name || 'Unknown'}</span>
+                      <span className="text-xs text-gray-400">ID: {tx.tool_id}</span>
+                   </div>
                 </td>
                 <td className="py-4 px-6 text-sm text-gray-500">
-                  {tx.checkout_timestamp}
+                  {new Date(tx.checkout_timestamp).toLocaleDateString()}
+                  <span className="text-xs text-gray-400 block">
+                    {new Date(tx.checkout_timestamp).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
+                  </span>
                 </td>
                 <td className="py-4 px-6 text-sm text-gray-500">
-                  {tx.desired_return_date ?? 'N/A'}
+                   {tx.desired_return_date ? new Date(tx.desired_return_date).toLocaleDateString() : 'N/A'}
+                </td>
+                <td className="py-4 px-6 text-sm text-gray-500 max-w-[200px] truncate" title={tx.purpose || ''}>
+                   {tx.purpose || '-'}
                 </td>
                 <td className="py-4 px-6 text-sm">
                   <StatusBadge status={deriveStatus(tx)} />
@@ -297,7 +279,11 @@ export const TransactionsPage = () => {
                 <td className="py-4 px-6 text-sm text-right">
                   <button
                     className="text-gray-400 hover:text-red-500 transition-colors"
-                    onClick={() => deleteMutation.mutate(tx.transaction_id)}
+                    onClick={() => {
+                        if(window.confirm('Are you sure you want to delete this transaction record?')) {
+                            deleteMutation.mutate(tx.transaction_id);
+                        }
+                    }}
                     disabled={deleteMutation.isPending}
                   >
                     {deleteMutation.isPending ? (

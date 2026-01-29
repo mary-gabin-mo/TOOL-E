@@ -96,6 +96,11 @@ TOOL_E_DB_USERNAME = os.getenv('TOOL_E_DB_USERNAME')
 TOOL_E_DB_PASSWORD = os.getenv('TOOL_E_DB_PASSWORD')
 TOOLS_DB_URL = f"mysql+pymysql://{TOOL_E_DB_USERNAME}:{TOOL_E_DB_PASSWORD}@localhost:3306/tool_e_db"
 
+# --- Global Database Engines ---
+# Create engines once to maintain connection pools
+engine_users = create_engine(USER_DB_URL, pool_pre_ping=True, pool_recycle=3600)
+engine_tools = create_engine(TOOLS_DB_URL, pool_pre_ping=True, pool_recycle=3600)
+
 
 app = FastAPI(title="TOOL-E Backend Server")
 
@@ -179,9 +184,7 @@ class TransactionUpdate(BaseModel):
 @app.post("/validate_user", response_model=ServerResponse)
 async def validate_user_route(request: UserRequest):
     # Receives a user ID, checks the database for existence and status, and returns validation status
-    engine = create_engine(USER_DB_URL)
-
-    with engine.connect() as conn:
+    with engine_users.connect() as conn:
         print(f"CONNECTED TO DATABASE")
 
         if request.UCID:
@@ -234,8 +237,7 @@ async def login(payload: LoginPayload):
     Username: email
     Password: user_id (as string)
     """
-    engine = create_engine(TOOLS_DB_URL)
-    with engine.connect() as conn:
+    with engine_tools.connect() as conn:
         user = conn.execute(
             text(
                 """
@@ -316,8 +318,7 @@ async def identify_tool(file: UploadFile = File(...)):
 @app.get("/tools")
 async def get_tools():
     """Get all tools from the database"""
-    engine = create_engine(TOOLS_DB_URL)
-    with engine.connect() as conn:
+    with engine_tools.connect() as conn:
         result = conn.execute(text("SELECT tool_id, tool_name, tool_size, tool_type, current_status, total_quantity, available_quantity, consumed_quantity, trained FROM tools"))
         tools = []
         for row in result:
@@ -337,8 +338,7 @@ async def get_tools():
 @app.post("/tools")
 async def create_tool(tool: ToolInput):
     """Add a new tool to the inventory"""
-    engine = create_engine(TOOLS_DB_URL)
-    with engine.connect() as conn:
+    with engine_tools.connect() as conn:
         query = text("""
             INSERT INTO tools (tool_name, tool_size, tool_type, current_status, total_quantity, available_quantity, consumed_quantity, trained)
             VALUES (:name, :size, :type, :status, :total, :available, :consumed, :trained)
@@ -359,8 +359,7 @@ async def create_tool(tool: ToolInput):
 @app.put("/tools/{tool_id}")
 async def update_tool(tool_id: int, tool: ToolUpdate):
     """Update fields of an existing tool"""
-    engine = create_engine(TOOLS_DB_URL)
-    with engine.connect() as conn:
+    with engine_tools.connect() as conn:
         # Check if tool exists
         check = conn.execute(text("SELECT tool_id FROM tools WHERE tool_id = :id"), {"id": tool_id}).fetchone()
         if not check:
@@ -412,12 +411,15 @@ async def get_transactions(
     page: int = 1, 
     limit: int = 50,
     start_date: Optional[str] = None,
-    end_date: Optional[str] = None
+    end_date: Optional[str] = None,
+    sort_by: str = 'dateOut',
+    sort_order: str = 'desc',
+    search_term: Optional[str] = None,
+    status: Optional[str] = None
 ):
-    """Get transactions with pagination and date filtering"""
+    """Get transactions with pagination, sorting, and filtering"""
     offset = (page - 1) * limit
-    engine = create_engine(TOOLS_DB_URL)
-    with engine.connect() as conn:
+    with engine_tools.connect() as conn:
         # Build base query conditions
         conditions = []
         params = {}
@@ -435,10 +437,43 @@ async def get_transactions(
             conditions.append("t.checkout_timestamp < DATE_ADD(:end_date, INTERVAL 1 DAY)")
             params["end_date"] = end_date
 
+        if status:
+            status_list = status.split(',')
+            status_conditions = []
+            for s in status_list:
+                s = s.strip()
+                if s == 'Returned':
+                    status_conditions.append("t.return_timestamp IS NOT NULL")
+                elif s == 'Overdue':
+                    status_conditions.append("(t.return_timestamp IS NULL AND t.desired_return_date < NOW())")
+                elif s == 'Borrowed':
+                    status_conditions.append("(t.return_timestamp IS NULL AND (t.desired_return_date >= NOW() OR t.desired_return_date IS NULL))")
+            
+            if status_conditions:
+                conditions.append(f"({' OR '.join(status_conditions)})")
+
+        if search_term:
+            # Search by user_id, tool_id, or purpose
+            conditions.append("(CAST(t.user_id AS CHAR) LIKE :search OR CAST(t.tool_id AS CHAR) LIKE :search OR LOWER(t.purpose) LIKE :search)")
+            params["search"] = f"%{search_term.lower()}%"
+
         where_clause = " WHERE " + " AND ".join(conditions) if conditions else ""
 
+        # Determine Order By
+        order_clause = "ORDER BY t.checkout_timestamp DESC" # Default
+        if sort_by == 'dateOut':
+            order_clause = f"ORDER BY t.checkout_timestamp {sort_order.upper()}"
+        elif sort_by == 'dateDue':
+            order_clause = f"ORDER BY t.desired_return_date {sort_order.upper()}"
+
         # 1. Get Total Count
-        count_sql = f"SELECT COUNT(*) FROM transactions t {where_clause}"
+        count_sql = f"""
+            SELECT COUNT(*) 
+            FROM transactions t 
+            LEFT JOIN users u ON t.user_id = u.user_id
+            LEFT JOIN tools tl ON t.tool_id = tl.tool_id
+            {where_clause}
+        """
         total = conn.execute(text(count_sql), params).scalar()
 
         # 2. Get Data
@@ -452,7 +487,7 @@ async def get_transactions(
             LEFT JOIN users u ON t.user_id = u.user_id
             LEFT JOIN tools tl ON t.tool_id = tl.tool_id
             {where_clause}
-            ORDER BY t.transaction_id DESC
+            {order_clause}
         """
         
         if limit > 0:
@@ -496,8 +531,7 @@ async def get_transactions(
 @app.post("/transactions")
 async def create_transaction(transaction: TransactionInput):
     """Create a new transaction"""
-    engine = create_engine(TOOLS_DB_URL)
-    with engine.connect() as conn:
+    with engine_tools.connect() as conn:
         query = text("""
             INSERT INTO transactions
             (user_id, tool_id, desired_return_date, return_timestamp, quantity, purpose,
@@ -524,8 +558,7 @@ async def create_transaction(transaction: TransactionInput):
 @app.delete("/transactions/{transaction_id}")
 async def delete_transaction(transaction_id: int):
     """Delete a transaction"""
-    engine = create_engine(TOOLS_DB_URL)
-    with engine.connect() as conn:
+    with engine_tools.connect() as conn:
         check = conn.execute(
             text("SELECT transaction_id FROM transactions WHERE transaction_id = :id"),
             {"id": transaction_id},
@@ -544,8 +577,7 @@ async def delete_transaction(transaction_id: int):
 @app.put("/transactions/{transaction_id}")
 async def update_transaction(transaction_id: int, transaction: TransactionUpdate):
     """Update fields of a transaction"""
-    engine = create_engine(TOOLS_DB_URL)
-    with engine.connect() as conn:
+    with engine_tools.connect() as conn:
         check = conn.execute(
             text("SELECT transaction_id FROM transactions WHERE transaction_id = :id"),
             {"id": transaction_id},
@@ -602,8 +634,7 @@ async def get_dashboard_analytics(period: str = "1_month"):
     Get dashboard analytics.
     period options: '1_month', 'winter_2026', 'fall_2025', 'summer_2025', etc.
     """
-    engine = create_engine(TOOLS_DB_URL)
-    with engine.connect() as conn:
+    with engine_tools.connect() as conn:
         # 1. Determine Date Range
         now = datetime.now()
         start_date = None
