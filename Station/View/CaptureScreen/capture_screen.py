@@ -33,11 +33,19 @@ class CaptureScreen(BaseScreen):
                 self.capture = cv2.VideoCapture(0)
 
                 # Check if it actually opened
-                if not self.capture.isOpened():
-                    print("[UI] Standard index 0 failed. Attempting GStreamer pipeline for libcamera...")
+                # Validate that we can actually read a frame.
+                if self.capture.isOpened():
+                    ret, test_frame = self.capture.read()
+                    if not ret:
+                        print("[UI] Index 0 opened but failed to read frame. Releasing...")
+                        self.capture.release()
+                        self.capture = None
                     
                 # Option B: Pi 5 / libcamera GStreamer Pipeline
                 # tells OpenCV to use the GStreamer backend to talk to libcamerasrc directly
+                if self.capture is None or not self.capture.isOpened():
+                    print("[UI] Attempting GStreamer pipeline for libcamera...")
+                    
                     pipeline = (
                         "libcamerasrc ! "
                         "video/x-raw, width=640, height=480, framerate=30/1 ! "
