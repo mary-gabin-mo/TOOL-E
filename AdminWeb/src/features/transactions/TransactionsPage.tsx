@@ -192,7 +192,7 @@ export const TransactionsPage = () => {
           <thead>
             <tr className="border-b border-gray-100">
               <th className="py-4 px-6 text-xs font-semibold text-gray-500 uppercase tracking-wider">
-                User
+                UCID
               </th>
               <th className="py-4 px-6 text-xs font-semibold text-gray-500 uppercase tracking-wider">
                 Tool

@@ -1,15 +1,19 @@
-import React, { useState, useRef, useEffect, useMemo } from 'react';
-import { ChevronDown } from 'lucide-react';
+import React, { useState } from 'react';
+import { Download, Loader2, Calendar } from 'lucide-react';
+import { useQuery } from '@tanstack/react-query';
 import clsx from 'clsx';
+import { api } from '../../lib/axios';
 
-// Mock Data
-const reportData = [
-  { id: 1, user: 'Mary Mo', tool: 'Tape Measure', dateOut: '2025-10-28', dateDue: '2025-11-03', status: 'Borrowed' },
-  { id: 2, user: 'Hajin Kim', tool: 'Box Cutter', dateOut: '2025-10-28', dateDue: '2025-10-31', status: 'Borrowed' },
-  { id: 3, user: 'Jason Pang', tool: 'Super Glue', dateOut: '2025-10-20', dateDue: 'N/A', status: 'Consumed' },
-  { id: 4, user: 'Hongwoo Yoon', tool: 'Side Cutting Pliers', dateOut: '2025-10-24', dateDue: '2025-10-27', status: 'Returned' },
-  { id: 5, user: 'Howard Kim', tool: 'Tape Measure', dateOut: '2025-10-26', dateDue: '2025-10-27', status: 'Overdue' },
-];
+interface Transaction {
+  transaction_id: number;
+  user_name: string;
+  tool_name: string;
+  checkout_timestamp: string;
+  desired_return_date: string | null;
+  return_timestamp: string | null;
+  status: string;
+  quantity: number;
+}
 
 const StatusBadge = ({ status }: { status: string }) => {
   const styles = {
@@ -32,170 +36,180 @@ const StatusBadge = ({ status }: { status: string }) => {
 };
 
 export const ReportsPage = () => {
+  // Date state
   const [startDate, setStartDate] = useState('');
   const [endDate, setEndDate] = useState('');
+  
+  // Trigger for refetching
+  const [enabled, setEnabled] = useState(false);
 
-  // Filtering State
-  const [isStatusDropdownOpen, setIsStatusDropdownOpen] = useState(false);
-  const [selectedStatuses, setSelectedStatuses] = useState<string[]>([]);
-  const dropdownRef = useRef<HTMLDivElement>(null);
-
-  const uniqueStatuses = Array.from(new Set(reportData.map((row) => row.status)));
-
-  // Close dropdown when clicking outside
-  useEffect(() => {
-    const handleClickOutside = (event: MouseEvent) => {
-      if (dropdownRef.current && !dropdownRef.current.contains(event.target as Node)) {
-        setIsStatusDropdownOpen(false);
-      }
-    };
-
-    document.addEventListener('mousedown', handleClickOutside);
-    return () => {
-      document.removeEventListener('mousedown', handleClickOutside);
-    };
-  }, []);
-
-  const toggleStatusFilter = (status: string) => {
-    setSelectedStatuses((prev) =>
-      prev.includes(status)
-        ? prev.filter((s) => s !== status)
-        : [...prev, status]
-    );
-  };
-
-  // Filter data based on status
-  const filteredReportData = useMemo(() => {
-    return reportData.filter((row) => {
-      return selectedStatuses.length === 0 || selectedStatuses.includes(row.status);
-    });
-  }, [selectedStatuses]);
+  // Fetch Data
+  const { data, isLoading, isError, refetch } = useQuery({
+    queryKey: ['reports', startDate, endDate],
+    queryFn: async () => {
+      const params: any = { limit: 1000 }; // Fetch up to 1000 records for the report
+      if (startDate) params.start_date = startDate;
+      if (endDate) params.end_date = endDate;
+      
+      const response = await api.get<{ items: Transaction[] }>('/transactions', { params });
+      return response.data.items;
+    },
+    enabled: enabled, // Only run when enabled (after clicking Generate)
+  });
 
   const handleGenerate = () => {
-    console.log('Generating report for:', startDate, 'to', endDate);
+    if (!startDate || !endDate) return;
+    setEnabled(true);
+    refetch();
+  };
+
+  const handleDownload = () => {
+    if (!data || data.length === 0) return;
+
+    const headers = ['Transaction ID', 'User', 'Tool', 'Date Out', 'Due Date', 'Returned Date', 'Status', 'Quantity'];
+    const rows = data.map(item => [
+      item.transaction_id,
+      `"${item.user_name || 'Unknown'}"`,
+      `"${item.tool_name || 'Unknown'}"`,
+      new Date(item.checkout_timestamp).toLocaleString(),
+      item.desired_return_date ? new Date(item.desired_return_date).toLocaleDateString() : 'N/A',
+      item.return_timestamp ? new Date(item.return_timestamp).toLocaleString() : 'N/A',
+      item.status,
+      item.quantity
+    ]);
+
+    const csvContent = "data:text/csv;charset=utf-8," 
+      + [headers.join(','), ...rows.map(e => e.join(','))].join("\n");
+
+    const encodedUri = encodeURI(csvContent);
+    const link = document.createElement("a");
+    link.setAttribute("href", encodedUri);
+    link.setAttribute("download", `report_${startDate || 'all'}_to_${endDate || 'all'}.csv`);
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
   };
 
   return (
     <div className="space-y-8">
-      <h2 className="text-2xl font-bold text-black">Generate Reports</h2>
+      <div className="flex justify-between items-center">
+        <h2 className="text-2xl font-bold text-black">Generate Reports</h2>
+      </div>
 
       {/* Filter Card */}
-      <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-6 max-w-3xl">
-        <div className="flex items-end gap-6">
-          <div className="flex-1">
+      <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-6">
+        <div className="flex flex-col sm:flex-row items-end gap-6">
+          <div className="flex-1 w-full">
             <label className="block text-sm font-medium text-gray-700 mb-1">
               Start Date
             </label>
-            <input
-              type="date"
-              value={startDate}
-              onChange={(e) => setStartDate(e.target.value)}
-              className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent text-gray-500"
-            />
+            <div className="relative">
+              <Calendar className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400" />
+              <input
+                type="date"
+                value={startDate}
+                onChange={(e) => setStartDate(e.target.value)}
+                className="w-full pl-10 pr-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent text-gray-600"
+              />
+            </div>
           </div>
-          <div className="flex-1">
+          <div className="flex-1 w-full">
             <label className="block text-sm font-medium text-gray-700 mb-1">
               End Date
             </label>
-            <input
-              type="date"
-              value={endDate}
-              onChange={(e) => setEndDate(e.target.value)}
-              className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent text-gray-500"
-            />
+            <div className="relative">
+              <Calendar className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400" />
+              <input
+                type="date"
+                value={endDate}
+                onChange={(e) => setEndDate(e.target.value)}
+                className="w-full pl-10 pr-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent text-gray-600"
+              />
+            </div>
           </div>
-          <div>
+          <div className="flex gap-3">
             <button
               onClick={handleGenerate}
-              className="px-6 py-2 bg-blue-600 text-white font-medium rounded-md hover:bg-blue-700 transition-colors"
+              disabled={!startDate || !endDate}
+              className={`px-6 py-2 rounded-md transition-colors font-medium ${
+                !startDate || !endDate
+                  ? 'bg-gray-300 text-gray-500 cursor-not-allowed'
+                  : 'bg-blue-600 text-white hover:bg-blue-700'
+              }`}
             >
               Generate Report
             </button>
+            {data && data.length > 0 && (
+              <button
+                onClick={handleDownload}
+                className="px-6 py-2 border border-green-600 text-green-600 bg-green-50 rounded-md hover:bg-green-100 transition-colors font-medium flex items-center gap-2"
+              >
+                <Download className="w-4 h-4" />
+                Export CSV
+              </button>
+            )}
           </div>
         </div>
       </div>
 
-      {/* Results Section */}
-      <div className="space-y-4">
-        <div className="flex justify-between items-center">
-          <h3 className="text-lg font-bold text-black">
-            Report Results (2025-10-01 to 2025-10-28)
-          </h3>
-          <button className="px-4 py-2 bg-blue-600 text-white text-sm font-medium rounded-md hover:bg-blue-700 transition-colors">
-            Download
-          </button>
+      {/* Results Table */}
+      {isLoading ? (
+        <div className="flex justify-center py-12">
+          <Loader2 className="w-8 h-8 animate-spin text-blue-600" />
         </div>
-
+      ) : isError ? (
+        <div className="text-red-500 bg-red-50 p-4 rounded-md">
+          Failed to load report data. Please try again.
+        </div>
+      ) : data ? (
         <div className="bg-white rounded-lg shadow-sm border border-gray-200 overflow-hidden">
-          <table className="w-full text-left border-collapse">
-            <thead>
-              <tr className="border-b border-gray-100">
-                <th className="py-4 px-6 text-xs font-semibold text-gray-500 uppercase tracking-wider">
-                  User
-                </th>
-                <th className="py-4 px-6 text-xs font-semibold text-gray-500 uppercase tracking-wider">
-                  Tool
-                </th>
-                <th className="py-4 px-6 text-xs font-semibold text-gray-500 uppercase tracking-wider">
-                  Date Out
-                </th>
-                <th className="py-4 px-6 text-xs font-semibold text-gray-500 uppercase tracking-wider">
-                  Date Due
-                </th>
-                <th className="py-4 px-6 text-xs font-semibold text-gray-500 uppercase tracking-wider relative">
-                  <div ref={dropdownRef} className="relative inline-block">
-                    <div 
-                      className="flex items-center cursor-pointer hover:text-gray-700"
-                      onClick={() => setIsStatusDropdownOpen(!isStatusDropdownOpen)}
-                    >
-                      Status
-                      <ChevronDown className="w-3 h-3 ml-1" />
-                    </div>
-
-                    {/* Status Filter Dropdown */}
-                    {isStatusDropdownOpen && (
-                      <div className="absolute top-full right-0 mt-2 w-48 bg-white rounded-md shadow-lg border border-gray-100 z-10 p-2">
-                        {uniqueStatuses.map((status) => (
-                          <label key={status} className="flex items-center px-2 py-2 hover:bg-gray-50 rounded cursor-pointer">
-                            <input
-                              type="checkbox"
-                              checked={selectedStatuses.includes(status)}
-                              onChange={() => toggleStatusFilter(status)}
-                              className="w-4 h-4 text-blue-600 border-gray-300 rounded focus:ring-blue-500"
-                            />
-                            <span className="ml-2 text-sm text-gray-700">{status}</span>
-                          </label>
-                        ))}
-                      </div>
-                    )}
-                  </div>
-                </th>
-              </tr>
-            </thead>
-            <tbody className="">
-              {filteredReportData.map((row) => (
-                <tr key={row.id} className="border-b border-gray-100 hover:bg-gray-50 transition-colors">
-                  <td className="py-4 px-6 text-sm font-medium text-gray-900">
-                    {row.user}
-                  </td>
-                  <td className="py-4 px-6 text-sm text-gray-500">
-                    {row.tool}
-                  </td>
-                  <td className="py-4 px-6 text-sm text-gray-500">
-                    {row.dateOut}
-                  </td>
-                  <td className="py-4 px-6 text-sm text-gray-500">
-                    {row.dateDue}
-                  </td>
-                  <td className="py-4 px-6 text-sm">
-                    <StatusBadge status={row.status} />
-                  </td>
-                </tr>
-              ))}
-            </tbody>
-          </table>
+          {data.length === 0 ? (
+            <div className="p-12 text-center text-gray-500">
+              No transactions found for the selected period.
+            </div>
+          ) : (
+            <div className="overflow-x-auto">
+              <table className="w-full text-left border-collapse">
+                <thead>
+                  <tr className="bg-gray-50 border-b border-gray-100">
+                    <th className="py-4 px-6 text-xs font-semibold text-gray-500 uppercase tracking-wider">Transaction ID</th>
+                    <th className="py-4 px-6 text-xs font-semibold text-gray-500 uppercase tracking-wider">User</th>
+                    <th className="py-4 px-6 text-xs font-semibold text-gray-500 uppercase tracking-wider">Tool</th>
+                    <th className="py-4 px-6 text-xs font-semibold text-gray-500 uppercase tracking-wider">Date Out</th>
+                    <th className="py-4 px-6 text-xs font-semibold text-gray-500 uppercase tracking-wider">Due Date</th>
+                    <th className="py-4 px-6 text-xs font-semibold text-gray-500 uppercase tracking-wider">Status</th>
+                  </tr>
+                </thead>
+                <tbody className="divide-y divide-gray-100">
+                  {data.map((item) => (
+                    <tr key={item.transaction_id} className="hover:bg-gray-50 transition-colors">
+                      <td className="py-4 px-6 text-sm text-gray-900 font-medium">#{item.transaction_id}</td>
+                      <td className="py-4 px-6 text-sm text-gray-600">{item.user_name || 'Unknown'}</td>
+                      <td className="py-4 px-6 text-sm text-gray-600">{item.tool_name || 'Unknown'}</td>
+                      <td className="py-4 px-6 text-sm text-gray-600">
+                        {new Date(item.checkout_timestamp).toLocaleDateString()}
+                        <span className="text-gray-400 text-xs ml-1">
+                            {new Date(item.checkout_timestamp).toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'})}
+                        </span>
+                      </td>
+                      <td className="py-4 px-6 text-sm text-gray-600">
+                        {item.desired_return_date ? new Date(item.desired_return_date).toLocaleDateString() : '-'}
+                      </td>
+                      <td className="py-4 px-6 text-sm">
+                        <StatusBadge status={item.status} />
+                      </td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+          )}
         </div>
-      </div>
+      ) : (
+        <div className="text-center py-12 bg-gray-50 rounded-lg border border-dashed border-gray-300">
+          <div className="text-gray-500">Select dates and click "Generate Report" to view transactions.</div>
+        </div>
+      )}
     </div>
   );
 };

@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { useMutation } from '@tanstack/react-query';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, Navigate } from 'react-router-dom';
 import { login } from './api/login';
 import { useAuthStore } from '../../lib/authStore';
 
@@ -10,7 +10,12 @@ export const LoginPage = () => {
   const [password, setPassword] = useState('');
 
   const navigate = useNavigate();
-  const setAuth = useAuthStore((state) => state.login);
+  const { login: setAuth, token } = useAuthStore();
+
+  // Redirect if already logged in
+  if (token) {
+    return <Navigate to="/dashboard" replace />;
+  }
 
   const loginMutation = useMutation({
     mutationFn: login,

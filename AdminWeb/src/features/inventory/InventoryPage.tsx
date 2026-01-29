@@ -237,9 +237,9 @@ export const InventoryPage = () => {
                 <td className="py-4 px-6 text-sm font-medium text-gray-900">
                   <div className="flex flex-col items-start gap-1">
                     <span>{item.name}</span>
-                    {item.trained && (
+                    {!item.trained && (
                       <span className="inline-flex items-center px-2 py-0.5 rounded text-xs font-medium bg-amber-100 text-amber-800">
-                        Training Required
+                        ML Training Required
                       </span>
                     )}
                   </div>

@@ -76,7 +76,7 @@ export const ManualTransactionPage = () => {
     queryKey: ['transactions', lookupUserId],
     queryFn: async () => {
       const parsedId = parseInt(lookupUserId, 10);
-      if (isNaN(parsedId)) throw new Error('Invalid User ID');
+      if (isNaN(parsedId)) throw new Error('Invalid UCID');
       
       const { data } = await api.get('/transactions', {
         params: { user_id: parsedId, limit: 50 },
@@ -144,10 +144,10 @@ export const ManualTransactionPage = () => {
             className="space-y-4"
           >
             <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1">User ID</label>
+              <label className="block text-sm font-medium text-gray-700 mb-1">UCID</label>
               <input
                 type="text"
-                placeholder="e.g., 101"
+                placeholder="e.g., 12345678"
                 value={userId}
                 onChange={(e) => setUserId(e.target.value)}
                 className="w-full px-3 py-2 border border-gray-300 rounded-md"
@@ -183,12 +183,22 @@ export const ManualTransactionPage = () => {
 
             <div>
               <label className="block text-sm font-medium text-gray-700 mb-1">Purpose</label>
-              <input
-                type="text"
-                value={purpose}
-                onChange={(e) => setPurpose(e.target.value)}
-                className="w-full px-3 py-2 border border-gray-300 rounded-md"
-              />
+              <div className="flex gap-3">
+                {['Academic Course', 'Personal Project'].map((option) => (
+                  <button
+                    key={option}
+                    type="button"
+                    onClick={() => setPurpose(option)}
+                    className={`px-4 py-2 rounded-md text-sm font-medium border transition-colors ${
+                      purpose === option
+                        ? 'bg-blue-600 text-white border-blue-600'
+                        : 'bg-white text-gray-700 border-gray-300 hover:bg-gray-50'
+                    }`}
+                  >
+                    {option}
+                  </button>
+                ))}
+              </div>
             </div>
 
             <div className="pt-2 flex justify-end">
@@ -204,11 +214,11 @@ export const ManualTransactionPage = () => {
         ) : (
           <div className="space-y-4">
             <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1">User ID</label>
+              <label className="block text-sm font-medium text-gray-700 mb-1">UCID</label>
               <div className="flex gap-2">
                 <input
                   type="text"
-                  placeholder="Search user ID"
+                  placeholder="Search UCID"
                   value={returnUserId}
                   onChange={(e) => setReturnUserId(e.target.value)}
                   onKeyDown={(e) => {
@@ -232,16 +242,16 @@ export const ManualTransactionPage = () => {
             <div className="border rounded-md overflow-hidden bg-white shadow-sm min-h-[400px]">
               <div className="px-4 py-3 text-sm font-medium bg-gray-50 border-b border-gray-200 flex justify-between items-center">
                 <span>Select a Transaction to Return</span>
-                {lookupUserId && <span className="text-xs text-gray-500 font-normal">Showing results for User ID: {lookupUserId}</span>}
+                {lookupUserId && <span className="text-xs text-gray-500 font-normal">Showing results for UCID: {lookupUserId}</span>}
               </div>
               
               {isFetchingReturns ? (
                 <div className="p-10 text-center text-sm text-gray-500">Loading transactions...</div>
               ) : isError ? (
                  <div className="p-10 text-center text-sm text-red-500">
-                  {error instanceof Error && error.message === 'Invalid User ID' 
-                    ? 'Please enter a valid numeric User ID.' 
-                    : 'Failed to load transactions. Check connection or User ID.'}
+                  {error instanceof Error && error.message === 'Invalid UCID' 
+                    ? 'Please enter a valid numeric UCID.' 
+                    : 'Failed to load transactions. Check connection or UCID.'}
                  </div>
               ) : userTransactions.length === 0 ? (
                 <div className="p-10 text-center text-sm text-gray-500">
@@ -253,7 +263,7 @@ export const ManualTransactionPage = () => {
                     <thead className="bg-gray-50 text-gray-500 font-medium border-b border-gray-100 sticky top-0 z-10 shadow-sm">
                       <tr>
                         <th className="px-4 py-3 whitespace-nowrap">ID</th>
-                        <th className="px-4 py-3 whitespace-nowrap">User</th>
+                        <th className="px-4 py-3 whitespace-nowrap">UCID</th>
                         <th className="px-4 py-3 whitespace-nowrap">Tool</th>
                         <th className="px-4 py-3 whitespace-nowrap">Date Out</th>
                         <th className="px-4 py-3 whitespace-nowrap">Purpose</th>
@@ -323,15 +333,25 @@ export const ManualTransactionPage = () => {
                 </div>
 
 
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1">Purpose</label>
-                  <input
-                    type="text"
-                    value={returnPurpose}
-                    onChange={(e) => setReturnPurpose(e.target.value)}
-                    className="w-full px-3 py-2 border border-gray-300 rounded-md"
-                  />
-                </div>
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-1">Purpose</label>
+              <div className="flex gap-3">
+                {['Academic Course', 'Personal Project'].map((option) => (
+                  <button
+                    key={option}
+                    type="button"
+                    onClick={() => setReturnPurpose(option)}
+                    className={`px-4 py-2 rounded-md text-sm font-medium border transition-colors ${
+                      returnPurpose === option
+                        ? 'bg-blue-600 text-white border-blue-600'
+                        : 'bg-white text-gray-700 border-gray-300 hover:bg-gray-50'
+                    }`}
+                  >
+                    {option}
+                  </button>
+                ))}
+              </div>
+            </div>
 
                 <div>
                   <label className="block text-sm font-medium text-gray-700 mb-1">Weight</label>

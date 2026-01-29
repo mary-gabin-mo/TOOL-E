@@ -103,7 +103,7 @@ export const MLDebugPage: React.FC = () => {
                                     <strong>Detected:</strong> {prediction.prediction}
                                 </p>
                                 <p>
-                                    <strong>Confidence:</strong> {(prediction.confidence * 100).toFixed(2)}%
+                                    <strong>Score:</strong> {(prediction.score * 100).toFixed(2)}%
                                 </p>
                             </div>
                         )}

@@ -24,7 +24,7 @@ load_dotenv('.env.local')
 # ==========================================
 # Calculate paths relative to this file so it works regardless of where you run it from
 BASE_DIR = os.path.dirname(os.path.abspath(__file__))
-MODEL_PATH = os.path.join(BASE_DIR, 'efficientnet_finetuned_sprint2.pth')
+MODEL_PATH = os.path.join(BASE_DIR, 'efficientnet_finetuned_v2.pth')
 CLASS_NAMES_PATH = os.path.join(BASE_DIR, 'class_names.json')
 
 IMG_SIZE = 384
@@ -267,7 +267,7 @@ async def login(payload: LoginPayload):
 async def identify_tool(file: UploadFile = File(...)):
     """
     Receives an image file, runs it through the loaded ML model, 
-    and returns the predicted tool class and confidence.
+    and returns the predicted tool class and classification score.
     """
     if ml_model is None:
          raise HTTPException(status_code=503, detail="ML Model is not loaded (check server logs/paths)")
@@ -303,7 +303,7 @@ async def identify_tool(file: UploadFile = File(...)):
         return {
             "success": True,
             "prediction": class_name,
-            "confidence": score,
+            "score": score,
             "all_probabilities": all_probs
         }
 
@@ -407,58 +407,82 @@ async def update_tool(tool_id: int, tool: ToolUpdate):
 # --- Transaction Management Endpoints ---
 
 @app.get("/transactions")
-async def get_transactions(user_id: Optional[int] = None, page: int = 1, limit: int = 50):
-    """Get transactions with pagination"""
+async def get_transactions(
+    user_id: Optional[int] = None, 
+    page: int = 1, 
+    limit: int = 50,
+    start_date: Optional[str] = None,
+    end_date: Optional[str] = None
+):
+    """Get transactions with pagination and date filtering"""
     offset = (page - 1) * limit
     engine = create_engine(TOOLS_DB_URL)
     with engine.connect() as conn:
-        # 1. Get Total Count
-        if user_id is not None:
-            count_query = text("SELECT COUNT(*) FROM transactions WHERE user_id = :user_id")
-            count_params = {"user_id": user_id}
-        else:
-            count_query = text("SELECT COUNT(*) FROM transactions")
-            count_params = {}
+        # Build base query conditions
+        conditions = []
+        params = {}
         
-        total = conn.execute(count_query, count_params).scalar()
-
-        # 2. Get Paginated Data
         if user_id is not None:
-            query = text("""
-                SELECT transaction_id, user_id, tool_id, checkout_timestamp, desired_return_date,
-                       return_timestamp, quantity, purpose, image_path, classification_correct, weight
-                FROM transactions
-                WHERE user_id = :user_id
-                ORDER BY transaction_id DESC
-                LIMIT :limit OFFSET :offset
-            """)
-            params = {"user_id": user_id, "limit": limit, "offset": offset}
-        else:
-            query = text("""
-                SELECT transaction_id, user_id, tool_id, checkout_timestamp, desired_return_date,
-                       return_timestamp, quantity, purpose, image_path, classification_correct, weight
-                FROM transactions
-                ORDER BY transaction_id DESC
-                LIMIT :limit OFFSET :offset
-            """)
-            params = {"limit": limit, "offset": offset}
+            conditions.append("t.user_id = :user_id")
+            params["user_id"] = user_id
+            
+        if start_date:
+            conditions.append("t.checkout_timestamp >= :start_date")
+            params["start_date"] = start_date
+            
+        if end_date:
+            # Add one day to end_date to include the full day
+            conditions.append("t.checkout_timestamp < DATE_ADD(:end_date, INTERVAL 1 DAY)")
+            params["end_date"] = end_date
 
-        result = conn.execute(query, params)
+        where_clause = " WHERE " + " AND ".join(conditions) if conditions else ""
+
+        # 1. Get Total Count
+        count_sql = f"SELECT COUNT(*) FROM transactions t {where_clause}"
+        total = conn.execute(text(count_sql), params).scalar()
+
+        # 2. Get Data
+        # Join with users and tools to get names
+        base_sql = f"""
+            SELECT t.transaction_id, t.user_id, t.tool_id, t.checkout_timestamp, 
+                   t.desired_return_date, t.return_timestamp, t.quantity, t.purpose, 
+                   t.image_path, t.classification_correct, t.weight,
+                   u.user_name, tl.tool_name
+            FROM transactions t
+            LEFT JOIN users u ON t.user_id = u.user_id
+            LEFT JOIN tools tl ON t.tool_id = tl.tool_id
+            {where_clause}
+            ORDER BY t.transaction_id DESC
+        """
+        
+        if limit > 0:
+            base_sql += " LIMIT :limit OFFSET :offset"
+            params["limit"] = limit
+            params["offset"] = offset
+            
+        result = conn.execute(text(base_sql), params)
         
         transactions = []
         for row in result:
+            # Determine status
+            status = "Borrowed"
+            if row.return_timestamp:
+                status = "Returned"
+            elif row.desired_return_date and row.desired_return_date < datetime.now():
+                status = "Overdue"
+            
             transactions.append({
                 "transaction_id": row.transaction_id,
                 "user_id": row.user_id,
+                "user_name": row.user_name,
                 "tool_id": row.tool_id,
+                "tool_name": row.tool_name,
                 "checkout_timestamp": row.checkout_timestamp,
                 "desired_return_date": row.desired_return_date,
                 "return_timestamp": row.return_timestamp,
                 "quantity": row.quantity,
                 "purpose": row.purpose,
-                "image_path": row.image_path,
-                "classification_correct": row.classification_correct,
-                "weight": row.weight,
+                "status": status
             })
             
         return {
@@ -466,7 +490,7 @@ async def get_transactions(user_id: Optional[int] = None, page: int = 1, limit: 
             "total": total,
             "page": page,
             "size": limit,
-            "pages": (total + limit - 1) // limit if limit > 0 else 0
+            "pages": (total + limit - 1) // limit if limit > 0 else 1
         }
 
 @app.post("/transactions")

@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { NavLink, Outlet, useNavigate } from 'react-router-dom';
+import { NavLink, Outlet, useNavigate, Navigate } from 'react-router-dom';
 import { LayoutDashboard, Package, ArrowRightLeft, PenTool, FileBarChart, Terminal, LogOut, User, RefreshCw } from 'lucide-react';
 import { useQueryClient } from '@tanstack/react-query';
 import clsx from 'clsx';
@@ -7,7 +7,12 @@ import { useAuthStore } from '../../lib/authStore';
 
 export const DashboardLayout = () => {
   const navigate = useNavigate();
-  const { user, logout } = useAuthStore();
+  const { user, token, logout } = useAuthStore();
+  
+  if (!token) {
+    return <Navigate to="/login" replace />;
+  }
+
   const queryClient = useQueryClient();
   const [isSyncing, setIsSyncing] = useState(false);
 
