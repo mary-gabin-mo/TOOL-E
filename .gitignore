@@ -5,6 +5,8 @@ env/
 *.env
 station_venv/
 
+node_modules/
+
 # python cache
 pycache/ 
 *.pycache
