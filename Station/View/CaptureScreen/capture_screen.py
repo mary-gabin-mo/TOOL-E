@@ -44,7 +44,7 @@ class CaptureScreen(BaseScreen):
         """Native Pi 5 Camera Initialization using Picamera2"""
         try:
             from picamera2 import Picamera2
-            fself.picam2 = Picamera2()
+            self.picam2 = Picamera2()
             
             # Configure: 'main' for high-res capture, 'lores' for the UI preview
             config = self.picam2.create_still_configuration(
@@ -55,7 +55,7 @@ class CaptureScreen(BaseScreen):
             self.picam2.start()
             print("[UI] Picamera2 started successfully.")
         except Exception as e:
-            print("[UI] CRITICAL Picamera2 Error: {e}.")
+            print(f"[UI] CRITICAL Picamera2 Error: {e}.")
             
     def init_laptop_camera(self):
         """Fallback to OpenCV for non-pi devices"""
@@ -65,48 +65,6 @@ class CaptureScreen(BaseScreen):
                 print("[UI] Laptop Webcam opened.")
         except Exception as e:
             print(f"[UI] Webcam Error: {e}")
-            
-        # if IS_RASPBERRY_PI:
-        #     try:
-        #         # Option A: standard index 0 (works on many Pi setups if legacy camera support is enabled)
-        #         self.capture = cv2.VideoCapture(0)
-
-        #         # Check if it actually opened
-        #         # Validate that we can actually read a frame.
-        #         if self.capture.isOpened():
-        #             ret, test_frame = self.capture.read()
-        #             if not ret:
-        #                 print("[UI] Index 0 opened but failed to read frame. Releasing...")
-        #                 self.capture.release()
-        #                 self.capture = None
-                    
-        #         # Option B: Pi 5 / libcamera GStreamer Pipeline
-        #         # tells OpenCV to use the GStreamer backend to talk to libcamerasrc directly
-        #         if self.capture is None or not self.capture.isOpened():
-        #             print("[UI] Attempting GStreamer pipeline for libcamera...")
-                    
-        #             pipeline = (
-        #                 "libcamerasrc ! "
-        #                 "video/x-raw, width=640, height=480, framerate=30/1 ! "
-        #                 "videoconvert ! "
-        #                 "appsink"
-        #             )
-        #             self.capture = cv2.VideoCapture(pipeline, cv2.CAP_GSTREAMER)
-            
-        #     except Exception as e:
-        #         print(f"[UI] CRITICAL Error initializing Pi Camera: {e}")
-        # else:
-        #     # On Mac/Windows/Linux Desktop -> Use Laptop Webcam
-        #     print(f"[UI] Running on Desktop/Laptop. Initializing default Webcam for testing...")
-        #     # Index 0 is usually the built-in webcam
-        #     self.capture = cv2.VideoCapture(0)
-            
-        # # 3. Start the Update Loop (30 FPS)
-        # if self.capture and self.capture.isOpened():
-        #     print("[UI] Camera opened successfully.")
-        #     self.update_event = Clock.schedule_interval(self.update_feed, 1.0/30.0)
-        # else:
-        #     print("[UI] Error: Camera could not be opened. Check permissions or connection.")
     
     def on_leave(self):
         """
@@ -168,7 +126,7 @@ class CaptureScreen(BaseScreen):
                 colorfmt='rgb'
             )
             # Convert to bytes
-            texture.blit_buffer(frame.tobytes(), colorfmt='rgb', bufferfmt='ubyte')
+            texture.blit_buffer(frame.tobytes(), colorfmt='bgr', bufferfmt='ubyte')
             
             # Update Widget
             if self.ids.get('camera_preview'):
