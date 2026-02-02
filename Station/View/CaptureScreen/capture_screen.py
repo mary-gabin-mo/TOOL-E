@@ -137,10 +137,14 @@ class CaptureScreen(BaseScreen):
         print(f"[UI] Capture Screen detected load cell trigger: {weight}")
         
         # 1. Save the *current* frame from the camera
-        self.save_current_frame()
+        filepath = self.save_current_frame()
         
-        # 2. Move to processing (simulated)
-        Clock.schedule_once(lambda dt: self.go_to('tool confirm screen'), 1)
+        if filepath:
+            print(f"[DEBUG] Image saved successfully at {filepath}. Starting API thread...")
+            # 2. Start the API upload in a background thread
+            threading.Thread(target=self.run_identification_task, args=(filepath,)).start()
+        else:
+            print("[DEBUG] Failed to save image. Aborting API call.")
     
     # --- DEV - CAPTURE WITH BUTTON - REMOVE LATER --- 
     def capture_btn(self, weight):
@@ -150,10 +154,14 @@ class CaptureScreen(BaseScreen):
         print(f"[UI] Capture Screen detected CAPTURE BTN trigger: {weight}")
         
         # 1. Save the *current* frame from the camera
-        self.save_current_frame()
+        filepath = self.save_current_frame()
         
-        # 2. Move to processing (simulated)
-        Clock.schedule_once(lambda dt: self.go_to('tool confirm screen'), 1)
+        if filepath:
+            print(f"[DEBUG] Image saved successfully at {filepath}. Starting API thread...")
+            # 2. Start the API upload in a background thread
+            threading.Thread(target=self.run_identification_task, args=(filepath,)).start()
+        else:
+            print("[DEBUG] Failed to save image. Aborting API call.")
     
     def save_current_frame(self):
         """
