@@ -28,20 +28,20 @@ class CalendarPopup(ModalView):
         layout = MDBoxLayout(orientation='vertical', padding='10dp', spacing='10dp', md_bg_color=(1,1,1,1))
         
         # 1. Header (Month Navigation)
-        header = MDBoxLayout(orentation='horizontal', size_hint_y=None, height='50dp', spacing='10dp')
-        header.add_widget(MDIconButton(icon='chevron-left', on_release=lambda x: self.change_momnth(-1)))
+        header = MDBoxLayout(orientation='horizontal', size_hint_y=None, height='50dp', spacing='10dp')
+        header.add_widget(MDIconButton(icon='chevron-left', on_release=lambda x: self.change_month(-1)))
         
         self.month_label = MDLabel(text="", halign='center', font_style='H6', theme_text_color='Primary')
         header.add_widget(self.month_label)
         
-        header.add_widget(MDIconButton(icon='chevron-right', on_release=lambda x: self.change_mongth(1)))
+        header.add_widget(MDIconButton(icon='chevron-right', on_release=lambda x: self.change_month(1)))
         layout.add_widget(header)
         
         # 2. Days Header (Mo, Tu, We, ...)
         days_header = MDGridLayout(cols=7, size_hint_y=None, height='30dp')
         for day in ("Mo", "Tu", "We", "Th", "Fr", "Sa", "Sun"):
             days_header.add_widget(MDLabel(text=day, halign='center', bold=True))
-        layout.addd_widget(days_header)
+        layout.add_widget(days_header)
         
         # 3. Calendar Grid
         self.grid = MDGridLayout(cols=7, spacing='5dp')
@@ -57,8 +57,6 @@ class CalendarPopup(ModalView):
         )
         layout.add_widget(self.confirm_btn)
         
-        self.add_widget(self.confirm_btn)
-        
         self.add_widget(layout)
         
     def change_month(self, delta):
@@ -69,7 +67,7 @@ class CalendarPopup(ModalView):
             month = 1
             year += 1
         elif month < 1:
-            month - 12
+            month = 12
             year -= 1
             
         self.view_date = date(year, month, 1)
@@ -96,8 +94,7 @@ class CalendarPopup(ModalView):
                     
                     btn = MDFillRoundFlatButton(
                         text=str(day),
-                        font_size="16sp",
-                        elevation=0
+                        font_size="16sp"
                     )
                     
                     if is_selected:
