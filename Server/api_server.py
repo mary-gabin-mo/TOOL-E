@@ -16,6 +16,9 @@ from torchvision.models import EfficientNet_V2_S_Weights
 from PIL import Image
 from dotenv import load_dotenv
 from datetime import datetime, date, timedelta
+import shutil
+import uuid
+import time
 
 load_dotenv('.env.local')
 
@@ -27,9 +30,34 @@ BASE_DIR = os.path.dirname(os.path.abspath(__file__))
 MODEL_PATH = os.path.join(BASE_DIR, 'efficientnet_finetuned_v2.pth')
 CLASS_NAMES_PATH = os.path.join(BASE_DIR, 'class_names.json')
 
+# Image Storage Paths
+CAPTURED_IMAGES_DIR = os.path.join(BASE_DIR, 'captured_images')
+TEMP_IMAGES_DIR = os.path.join(CAPTURED_IMAGES_DIR, 'temp')
+os.makedirs(TEMP_IMAGES_DIR, exist_ok=True)
+
 IMG_SIZE = 384
 NORMALIZE_MEAN = [0.485, 0.456, 0.406]
 NORMALIZE_STD = [0.229, 0.224, 0.225]
+
+# --- Helper: Cleanup Old Temp Files ---
+def cleanup_temp_files(max_age_hours=24):
+    """Deletes files in temp directory older than max_age_hours"""
+    print("[SERVER] Running cleanup of old temp images...")
+    now = time.time()
+    count = 0
+    if os.path.exists(TEMP_IMAGES_DIR):
+        for filename in os.listdir(TEMP_IMAGES_DIR):
+            file_path = os.path.join(TEMP_IMAGES_DIR, filename)
+            if os.path.isfile(file_path):
+                file_age = now - os.path.getmtime(file_path)
+                if file_age > (max_age_hours * 3600):
+                    try:
+                        os.remove(file_path)
+                        count += 1
+                    except Exception as e:
+                        print(f"[SERVER] Error deleting {filename}: {e}")
+    if count > 0:
+        print(f"[SERVER] Cleaned up {count} old temp images.")
 
 # Load Class Names
 CLASS_NAMES = []
@@ -82,6 +110,12 @@ def load_ml_model():
 
 # Load the model immediately on startup
 load_ml_model()
+
+@app.on_event("startup")
+async def startup_event():
+    # Run cleanup on background to avoid blocking startup too long, 
+    # though it's usually fast. 
+    cleanup_temp_files(max_age_hours=24)
 
 # --- Database 1: User Database (Museum/Makerspace) ---
 MAKERSPACE_DB_USERNAME = os.getenv('MAKERSPACE_DB_USERNAME')
@@ -277,6 +311,13 @@ async def identify_tool(file: UploadFile = File(...)):
     try:
         # 1. Read the file content
         contents = await file.read()
+        
+        # Save temp image
+        filename = f"{uuid.uuid4()}.jpg"
+        temp_path = os.path.join(TEMP_IMAGES_DIR, filename)
+        with open(temp_path, "wb") as f:
+            f.write(contents)
+            
         image = Image.open(io.BytesIO(contents)).convert('RGB')
         
         # 2. Preprocess
@@ -306,7 +347,8 @@ async def identify_tool(file: UploadFile = File(...)):
             "success": True,
             "prediction": class_name,
             "score": score,
-            "all_probabilities": all_probs
+            "all_probabilities": all_probs,
+            "image_filename": filename
         }
 
     except Exception as e:
@@ -532,6 +574,44 @@ async def get_transactions(
 async def create_transaction(transaction: TransactionInput):
     """Create a new transaction"""
     with engine_tools.connect() as conn:
+        # --- Handle Image Move Logic ---
+        if transaction.image_path:
+            # Check if it exists in temp
+            temp_file_path = os.path.join(TEMP_IMAGES_DIR, transaction.image_path)
+            if os.path.exists(temp_file_path):
+                # We need the tool name to organize folders
+                if transaction.tool_id:
+                     tool_row = conn.execute(text("SELECT tool_name FROM tools WHERE tool_id = :id"), {"id": transaction.tool_id}).fetchone()
+                     if tool_row:
+                         tool_name = tool_row[0]
+                         # Sanitize tool name for folder creation
+                         safe_tool_name = "".join([c for c in tool_name if c.isalnum() or c in (' ', '-', '_')]).strip()
+                         
+                         # Determine target folder (Yes/No -> ToolName)
+                         # Default to 'No' if classification_correct is None/False, 'Yes' if True
+                         is_correct = transaction.classification_correct if transaction.classification_correct is not None else False
+                         base_target_dir = os.path.join(CAPTURED_IMAGES_DIR, 'Yes' if is_correct else 'No')
+                         tool_target_dir = os.path.join(base_target_dir, safe_tool_name)
+                         
+                         os.makedirs(tool_target_dir, exist_ok=True)
+                         
+                         # Generate new filename: ToolName_Date_Unique.jpg
+                         new_filename = f"{safe_tool_name}_{datetime.now().strftime('%Y%m%d_%H%M%S')}_{uuid.uuid4().hex[:6]}.jpg"
+                         target_path = os.path.join(tool_target_dir, new_filename)
+                         
+                         try:
+                             shutil.move(temp_file_path, target_path)
+                             print(f"[SERVER] Moved image to {target_path}")
+                             
+                             # Update the transaction object so the DB saves the new relative path
+                             # Storing relative path is better for portability
+                             relative_path = os.path.relpath(target_path, BASE_DIR)
+                             transaction.image_path = relative_path
+                         except Exception as e:
+                             print(f"[SERVER] Failed to move image: {e}")
+            else:
+                 print(f"[SERVER] Warning: Image path provided {transaction.image_path} but file not found in temp.")
+
         query = text("""
             INSERT INTO transactions
             (user_id, tool_id, desired_return_date, return_timestamp, quantity, purpose,
