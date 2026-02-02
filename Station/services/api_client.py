@@ -87,6 +87,7 @@ class APIClient(EventDispatcher):
             # Open file in binary mode
             with open(image_path, 'rb') as img_file:
                 # 'file' matches the parameter name in the FastAPI endpoint
+                # Value is a tuple: (filename, file_object, content_type)
                 files = {'file': ('capture.jpg', img_file, 'image/jpeg')}
                 
                 response = requests.post(

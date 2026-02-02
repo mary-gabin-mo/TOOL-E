@@ -2,10 +2,11 @@ import cv2
 import platform
 import os
 import time
+import threading
 import numpy as np
 from datetime import datetime
 from kivy.app import App
-from kivy.clock import Clock
+from kivy.clock import Clock, mainthread
 from kivy.graphics.texture import Texture
 from View.baseScreen import BaseScreen
 from PIL import Image, ImageOps
@@ -100,10 +101,9 @@ class CaptureScreen(BaseScreen):
         Reads a frame from OpenCV and updates the Kivy Image widget.
         """
         frame = None
-        
         # 1. Get the frame (as numpy array)
         if IS_RASPBERRY_PI and self.picam2:
-            # CApture from the law-res stream for speed
+            # Capture from the law-res stream for speed
             try: 
                 frame = self.picam2.capture_array("lores")
             except Exception:
@@ -127,8 +127,6 @@ class CaptureScreen(BaseScreen):
             )
             # Convert to bytes
             texture.blit_buffer(frame.tobytes(), colorfmt='bgr', bufferfmt='ubyte')
-            
-            # Update Widget
             if self.ids.get('camera_preview'):
                 self.ids.camera_preview.texture = texture
             
@@ -162,6 +160,8 @@ class CaptureScreen(BaseScreen):
         Save high-res photo and resize using the PIL logic
         """
         filename = "capture_example.jpg"
+        full_path = os.path.abspath(filename)
+        success = False
         
         try:
             if IS_RASPBERRY_PI and self.picam2:
@@ -169,6 +169,7 @@ class CaptureScreen(BaseScreen):
                 self.picam2.capture_file(filename)
                 print(f"[UI] Raw Pi image saved to {filename}")
                 self.process_image_pil(filename)
+                success = True
                 
             elif self.capture:
                 # Laptop Capture
@@ -176,14 +177,18 @@ class CaptureScreen(BaseScreen):
                 if ret:
                     cv2.imwrite(filename, frame)
                     self.process_image_pil(filename)
+                    success = True
                     
-            # Save path to session
-            app = App.get_running_app()
-            if hasattr(app, 'session'):
-                app.session.current_image_path = os.path.abspath(filename)
+            if success:
+                # Update Session
+                app = App.get_running_app()
+                if hasattr(app, 'session'):
+                    app.session.current_image_path = full_path
+                return full_path
                 
         except Exception as e:
             print(f"[UI] Save Error: {e}")
+            return None
             
     def process_image_pil(self, filepath):
         """
@@ -207,3 +212,36 @@ class CaptureScreen(BaseScreen):
             
         except Exception as e:
             print(f"[UI] PIL Error: {e}")
+
+    def run_identification_task(self, filepath):
+        """Background Thread: uploads image to server."""
+        print(f"[Background] Uploading {filepath}...")
+        app = App.get_running_app()
+        
+        # Call the API Client
+        # Assumes app.api_client.upload_tool_image returns {'success': ..., 'data': ...}
+        result = app.api_client.upload_tool_image(filepath)
+        
+        # Pass result back to Main UI Thread
+        self.handle_identification_result(result)
+        
+    @mainthread
+    def handle_identification_result(self, result):
+        """
+        Main Thread: Handle API response and navigate.
+        """
+        print(f"[UI] Identification Result: {result}")
+        
+        app = App.get_running_app()
+        
+        if result and result.get('success'):
+            # Save the prediction to the session so the Confirm Screen can see it
+            if hasattr(app, 'session'):
+                app.session.identified_tool_data = result.get('data', {})
+                
+            # Navigate to Confirmation
+            self.go_to('tool confirm screen')
+        else:
+            # Handle Error (e.g. show error screen or text)
+            error_msg = result.get('error', 'Unknown Error') if result else "Connection Failed"
+            print(f"[UI Error] {error_msg}")
