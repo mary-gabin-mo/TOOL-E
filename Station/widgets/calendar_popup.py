@@ -44,7 +44,7 @@ class CalendarPopup(ModalView):
         layout.add_widget(days_header)
         
         # 3. Calendar Grid
-        self.grid = MDGridLayout(cols=7, spacing='5dp')
+        self.grid = MDGridLayout(cols=7, spacing='5dp', row_force_default=True, row_default_height=50)
         layout.add_widget(self.grid)
         
         # 4. Footer (Confirm Button)
@@ -86,7 +86,7 @@ class CalendarPopup(ModalView):
         for week in cal:
             for day in week:
                 if day == 0:
-                    self.grid.add_widget(MDLabel(text=""))
+                    self.grid.add_widget(MDLabel(text="", size_hint=(1, 1)))
                 else:
                     btn_date = date(year, month, day)
                     is_past = btn_date < today
@@ -94,7 +94,8 @@ class CalendarPopup(ModalView):
                     
                     btn = MDFillRoundFlatButton(
                         text=str(day),
-                        font_size="16sp"
+                        font_size="16sp",
+                        size_hint=(1, 1)
                     )
                     
                     if is_selected:
