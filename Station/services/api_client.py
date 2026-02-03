@@ -48,6 +48,7 @@ class APIClient(EventDispatcher):
             
             # Success!
             res = response.json()
+            print(f"{res=}")
             if res.success: 
                 print(f"[API] Success: {res}")
                 return res
