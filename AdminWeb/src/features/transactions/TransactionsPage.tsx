@@ -57,6 +57,12 @@ export const TransactionsPage = () => {
     direction: 'desc',
   });
 
+  // Filtering State
+  const [isStatusDropdownOpen, setIsStatusDropdownOpen] = useState(false);
+  const [selectedStatuses, setSelectedStatuses] = useState<string[]>([]);
+  const dropdownRef = useRef<HTMLDivElement>(null);
+  const uniqueStatuses = ['Borrowed', 'Returned', 'Overdue'];
+
   const { data, isLoading, isError, error } = useQuery<TransactionsResponse>({
     queryKey: ['transactions', page, searchTerm, sortConfig, selectedStatuses],
     queryFn: async () => {
@@ -86,13 +92,6 @@ export const TransactionsPage = () => {
       queryClient.invalidateQueries({ queryKey: ['transactions'] });
     },
   });
-  
-  // Filtering State
-  const [isStatusDropdownOpen, setIsStatusDropdownOpen] = useState(false);
-  const [selectedStatuses, setSelectedStatuses] = useState<string[]>([]);
-  const dropdownRef = useRef<HTMLDivElement>(null);
-
-  const uniqueStatuses = ['Borrowed', 'Returned', 'Overdue'];
 
   // Close dropdown when clicking outside
   useEffect(() => {
