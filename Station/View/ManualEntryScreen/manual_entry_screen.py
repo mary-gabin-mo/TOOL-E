@@ -13,6 +13,12 @@ class ManualEntryScreen(MDScreen):
     def clear_input(self):
         self.ids.ucid_input.text = ""
 
+    def delete_last(self):
+        """Remove the last character from the UCID input."""
+        current_text = self.ids.ucid_input.text
+        if len(current_text) > 0:
+            self.ids.ucid_input.text = current_text[:-1]
+
     def submit_ucid(self):
         ucid = self.ids.ucid_input.text
         print(f"Submitting UCID: {ucid}")

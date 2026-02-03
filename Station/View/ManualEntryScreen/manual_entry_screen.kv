@@ -42,10 +42,12 @@
         # --- NUMBER PAD GRID ---
         MDGridLayout:
             cols: 3
-            spacing: "15dp"
-            padding: "20dp"
-            size_hint_y: 0.7
+            spacing: "8dp"
+            padding: "120dp", "20dp"
+            size_hint_y: 0.55
             pos_hint: {"center_x": .5}
+            row_force_default: True
+            row_default_height: 100
 
             # Row 1
             NumpadButton:
@@ -80,30 +82,46 @@
                 text: "9"
                 on_release: root.add_digit("9")
 
-            # Row 4 (Control Row)
-            MDFillRoundFlatButton:
+            # Row 4
+            NumpadButton:
                 text: "CLEAR"
-                font_size: "24sp"
-                # size_hint: 1, 1
-                md_bg_color: 0.8, 0.2, 0.2, 1  # Red
+                font_size: "22sp"
                 on_release: root.clear_input()
 
             NumpadButton:
                 text: "0"
                 on_release: root.add_digit("0")
 
-            MDFillRoundFlatButton:
+            NumpadButton:
+                text: "DEL"
+                font_size: "22sp"
+                on_release: root.delete_last()
+
+        # --- CONTROL BUTTONS ---
+        MDBoxLayout:
+            orientation: 'horizontal'
+            spacing: "20dp"
+            padding: "120dp", "10dp", "120dp", "20dp"
+            size_hint_y: 0.18
+            pos_hint: {"center_x": .5}
+
+            NumpadButton:
+                text: "CANCEL"
+                font_size: "22sp"
+                md_bg_color: 0.9, 0.2, 0.2, 1  # Red
+                on_release: root.back_to_main()
+
+            NumpadButton:
                 text: "ENTER"
-                font_size: "24sp"
-                # size_hint: 1, 1
-                md_bg_color: 0.2, 0.7, 0.2, 1  # Green
+                font_size: "22sp"
+                md_bg_color: 0.2, 0.8, 0.2, 1  # Green
                 on_release: root.submit_ucid()
 
 # --- Custom Button Component ---
 # This prevents code duplication for the number keys
-<NumpadButton@MDRaisedButton>:
-    font_size: "32sp"
+<NumpadButton@MDFillRoundFlatButton>:
+    font_size: "28sp"
     size_hint: 1, 1
-    elevation: 2
-    md_bg_color: 0.9, 0.9, 0.9, 1  # Light Grey
+    md_bg_color: 0.82, 0.82, 0.82, 1  # Light Grey
     text_color: 0, 0, 0, 1         # Black Text
+    radius: [15, 15, 15, 15]
