@@ -45,9 +45,19 @@
         Widget:
             size_hint_y: 0.3
 
+        # --- Continue Button (Keep User Logged In) ---
+        MDFillRoundFlatButton:
+            text: "RETURN TO SELECTION"
+            font_size: "24sp"
+            size_hint: 0.7, None
+            height: "80dp"
+            pos_hint: {"center_x": .5}
+            md_bg_color: 0.2, 0.6, 0.8, 1  # Blue
+            on_release: root.continue_with_user()
+
         # --- Return Button ---
         MDFillRoundFlatButton:
-            text: "RETURN TO MENU"
+            text: "RETURN TO START"
             font_size: "24sp"
             size_hint: 0.7, None
             height: "80dp"
