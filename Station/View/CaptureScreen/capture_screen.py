@@ -194,8 +194,14 @@ class CaptureScreen(BaseScreen):
         """
         Save high-res photo and resize using the PIL logic
         """
-        filename = "capture_example.jpg"
+        # 1. Generate Transaction ID (Timestamp)
+        # Format: YYYYMMDD_HHMMSS(e.g., 20260202_183005)
+        timestamp_id = datetime.now().strftime("%Y%m%d_%H%M%S")
+        
+        # 2. Create Filename
+        filename = f"{timestamp_id}.jpg"
         full_path = os.path.abspath(filename)
+        
         success = False
         
         try:
@@ -215,10 +221,16 @@ class CaptureScreen(BaseScreen):
                     success = True
                     
             if success:
-                # Update Session
+                print (f"[UI] Image saved: {filename}")
+                
+                # 3. Update Session
                 app = App.get_running_app()
                 if hasattr(app, 'session'):
-                    app.session.current_image_path = full_path
+                    # Start the transaction now with ID and filename
+                    app.session.start_new_transaction(
+                        transaction_id=timestamp_id,
+                        img_filename=full_path
+                    )
                 return full_path
                 
         except Exception as e:
