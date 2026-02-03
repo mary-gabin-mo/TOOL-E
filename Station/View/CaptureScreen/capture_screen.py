@@ -196,10 +196,10 @@ class CaptureScreen(BaseScreen):
         """
         # 1. Generate Transaction ID (Timestamp)
         # Format: YYYYMMDD_HHMMSS(e.g., 20260202_183005)
-        timestamp_id = datetime.now().strftime("%Y%m%d_%H%M%S")
-        
+        timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
+        milliseconds = int(datetime.now().microsecond / 1000)
         # 2. Create Filename
-        filename = f"{timestamp_id}.jpg"
+        filename = f"{timestamp}-{milliseconds:03d}.jpg"        
         full_path = os.path.abspath(filename)
         
         success = False
