@@ -27,7 +27,7 @@ class ManualEntryScreen(MDScreen):
         result = app.api_client.validate_user(ucid)
         if result['success'] == True:
             # Save the user info to the session once validated
-            app.session.user_data = result['data']
+            app.session.user_data = result['user']
             self.go_to('action selection screen')
             
         else:

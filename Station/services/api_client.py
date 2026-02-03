@@ -8,6 +8,7 @@ from config import (
     API_VALIDATE_USER,
     API_IDENTIFY_TOOL,
     API_TRANSACTION,
+    API_GET_TOOLS,
     NETWORK_TIMEOUT
 )
 
@@ -72,6 +73,26 @@ class APIClient(EventDispatcher):
             print(f"[API] Error: {e}")
             return {'success': False, 'error': f"System Error: {e}"}
         
+    def get_tools(self):
+        """
+        Get all tools from the database.
+        
+        Returns:
+            list: List of tool dictionaries
+        """
+        print("[API] Fetching all tools...")
+        try:
+            response = requests.get(
+                API_GET_TOOLS,
+                timeout=NETWORK_TIMEOUT
+            )
+            response.raise_for_status()
+            return response.json()
+            
+        except Exception as e:
+            print(f"[API] Error fetching tools: {e}")
+            return []
+
     def upload_tool_image(self, image_path):
         """
         Uploads the captured image for recognition.
