@@ -8,7 +8,7 @@ CREATE TABLE IF NOT EXISTS `transactions` (
     `quantity` INT DEFAULT 1,
     `purpose` TEXT,
     `image_path` VARCHAR(255) DEFAULT NULL,
-    `classification_correct` TINYINT(1) DEFAULT NULL,
+    `classification_correct` BOOLEAN DEFAULT NULL,
     `weight` INT DEFAULT 0,
     PRIMARY KEY (`transaction_id`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;

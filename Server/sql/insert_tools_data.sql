@@ -12,5 +12,5 @@ INSERT INTO `tools` (`tool_id`, `tool_name`, `tool_size`, `tool_type`, `current_
 (11, 'Safety Glasses', 'onesize', 'Borrowable', 'Available', 5, 5, 0, 1),
 (12, 'Scissors', 'onesize', 'Borrowable', 'Available', 5, 5, 0, 1),
 (13, 'Screwdriver', 'onesize', 'Borrowable', 'Available', 5, 5, 0, 1),
-(14, 'Super Glue', 'onesize', 'consumable', 'Available', 5, 5, 0, 1),
+(14, 'Super Glue', 'onesize', 'Consumable', 'Available', 5, 5, 0, 1),
 (15, 'Tape Measure', 'onesize', 'Borrowable', 'Available', 5, 5, 0, 1);
