@@ -2,7 +2,7 @@ from fastapi import APIRouter, HTTPException
 from sqlalchemy import text
 from typing import Optional
 from datetime import datetime
-from app.models import TransactionInput, TransactionUpdate
+from app.models import TransactionInput, TransactionUpdate, TransactionBatchInput
 from app.database import engine_tools
 from app.services import image_service
 
@@ -125,45 +125,71 @@ async def get_transactions(
 @router.post("/transactions")
 async def create_transaction(transaction: TransactionInput):
     with engine_tools.connect() as conn:
-        # --- Handle Image Move Logic ---
-        if transaction.image_path:
-            # We need the tool name to organize folders
-            if transaction.tool_id:
-                  tool_row = conn.execute(text("SELECT tool_name FROM tools WHERE tool_id = :id"), {"id": transaction.tool_id}).fetchone()
-                  if tool_row:
-                      tool_name = tool_row[0]
-                      is_correct = transaction.classification_correct if transaction.classification_correct is not None else False
-                      
-                      new_path = image_service.move_image_to_permanent(transaction.image_path, tool_name, is_correct)
-                      
-                      if new_path:
-                          print(f"[SERVER] Moved image to {new_path}")
-                          transaction.image_path = new_path
-                      else:
-                          print(f"[SERVER] Warning: Image path provided {transaction.image_path} but file not found in temp.")
-
-        query = text("""
-            INSERT INTO transactions
-            (user_id, tool_id, desired_return_date, return_timestamp, quantity, purpose,
-             image_path, classification_correct, weight)
-            VALUES
-            (:user_id, :tool_id, :desired_return_date, :return_timestamp, :quantity, :purpose,
-             :image_path, :classification_correct, :weight)
-        """)
-        conn.execute(query, {
-            "user_id": transaction.user_id,
-            "tool_id": transaction.tool_id,
-            "desired_return_date": transaction.desired_return_date,
-            "return_timestamp": transaction.return_timestamp,
-            "quantity": transaction.quantity,
-            "purpose": transaction.purpose,
-            "image_path": transaction.image_path,
-            "classification_correct": transaction.classification_correct,
-            "weight": transaction.weight,
-        })
+        _process_single_transaction(conn, transaction)
         conn.commit()
 
     return {"success": True, "message": "Transaction created successfully"}
+
+@router.post("/transactions/batch")
+async def create_transaction_batch(batch: TransactionBatchInput):
+    """
+    Creates multiple transactions in one atomic operation.
+    If any transaction fails, the entire batch is rolled back.
+    """
+    with engine_tools.begin() as conn: # 'begin()' starts a transaction
+        count = 0
+        for transaction in batch.transactions:
+            try:
+                _process_single_transaction(conn, transaction)
+                count += 1
+            except Exception as e:
+                # SQLAlchemy's context manager will auto-rollback on exception
+                print(f"[SERVER] Batch Error on item {count}: {e}")
+                raise HTTPException(status_code=500, detail=f"Failed to process item {count+1}: {str(e)}")
+    
+    return {"success": True, "message": f"Successfully created {count} transactions"}
+
+def _process_single_transaction(conn, transaction: TransactionInput):
+    """Helper to process logic for a single transaction inside an existing connection"""
+    
+    # --- Handle Image Move Logic ---
+    if transaction.image_path:
+        # We need the tool name to organize folders
+        # Note: image moving is not transactional on the filesystem, 
+        # but if DB fails, we just have an orphan file (better than missing file)
+        if transaction.tool_id:
+              tool_row = conn.execute(text("SELECT tool_name FROM tools WHERE tool_id = :id"), {"id": transaction.tool_id}).fetchone()
+              if tool_row:
+                  tool_name = tool_row[0]
+                  is_correct = transaction.classification_correct if transaction.classification_correct is not None else False
+                  
+                  new_path = image_service.move_image_to_permanent(transaction.image_path, tool_name, is_correct)
+                  
+                  if new_path:
+                      print(f"[SERVER] Moved image to {new_path}")
+                      transaction.image_path = new_path
+                  else:
+                      print(f"[SERVER] Warning: Image path provided {transaction.image_path} but file not found in temp.")
+
+    query = text("""
+        INSERT INTO transactions
+        (user_id, tool_id, desired_return_date, return_timestamp, quantity, purpose,
+            image_path, classification_correct, weight)
+        VALUES
+        (:user_id, :tool_id, :desired_return_date, :return_timestamp, :quantity, :purpose,
+            :image_path, :classification_correct, :weight)
+    """)
+    conn.execute(query, {
+        "user_id": transaction.user_id,
+        "tool_id": transaction.tool_id,
+        "desired_return_date": transaction.desired_return_date,
+        "return_timestamp": transaction.return_timestamp,
+        "quantity": transaction.quantity,
+        "purpose": transaction.purpose,
+        "image_path": transaction.image_path,
+        "classification_correct": transaction.classification_correct,
+        "weight": transaction.weight,
+    })
 
 @router.delete("/transactions/{transaction_id}")
 async def delete_transaction(transaction_id: int):

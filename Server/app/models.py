@@ -10,6 +10,17 @@ class ServerResponse(BaseModel):
     success: bool
     message: str
 
+class UserDetails(BaseModel):
+    first_name: str
+    last_name: str
+    ucid: int
+    email: str
+
+class ValidateUserResponse(BaseModel):
+    success: bool
+    message: Optional[str] = None
+    user: Optional[UserDetails] = None
+
 class LoginPayload(BaseModel):
     email: str
     password: str
@@ -66,3 +77,6 @@ class TransactionUpdate(BaseModel):
     image_path: Optional[str] = None
     classification_correct: Optional[bool] = None
     weight: Optional[int] = None
+
+class TransactionBatchInput(BaseModel):
+    transactions: list[TransactionInput]
