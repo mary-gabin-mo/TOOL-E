@@ -56,8 +56,13 @@ class TransactionConfirmScreen(BaseScreen):
         
     def finish_transaction(self):
         print(f"Transaction Confirmed! Date: {self.return_date}")
+        
+        # Save return date to session
+        app = App.get_running_app()
+        app.session.return_date = self.return_date
+        
         # Call API logic here to send the transaction to the server/db
         # app.api_client.submit_transaction(...)
         
-        # Go back home
-        # self.go_to('welcome screen')
+        # Go to confirmation screen
+        self.go_to('checkout confirmation screen')
