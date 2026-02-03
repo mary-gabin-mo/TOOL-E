@@ -140,7 +140,12 @@ class CaptureScreen(BaseScreen):
         if self.capture:
             ret, frame = self.capture.read()
             if ret:
-                filename = "capture.jpg" # rename the file name to ucid and transaction
+                # Generate filename with current date-time including milliseconds
+                now = datetime.now()
+                timestamp = now.strftime("%Y-%m-%d_%H-%M-%S")
+                milliseconds = int(now.microsecond / 1000)
+                filename = f"{timestamp}-{milliseconds:03d}.jpg"
+                
                 # Save the raw frame (not flipped) so the ML model sees it normally
                 cv2.imwrite(filename, frame)
                 print(f"[UI] Image saved to {filename}")
