@@ -25,47 +25,56 @@ class CaptureScreen(BaseScreen):
         Called when this screen is displayed.
         Starts listeining to hardware events here.
         """
-        app = App.get_running_app()
+        print(f"[DEBUG] CaptureScreen: on_enter called.")
         
-        # 1. Bind hardware Events
+        # 1. Reset UI to "Initializing" State
+        self.set_processing_mode(True, message="Initializing Camera...")
+        
+        # 2. Bind hardware Events
+        app = App.get_running_app()
         if hasattr(app, 'hardware'):
             app.hardware.bind(on_load_cell_detect=self.handle_load_cell_trigger)
             
-        print(f"[UI] Initializing Camera (Pi Mode: {IS_RASPBERRY_PI})...")
+        # 3. Start Camera in Background (So UI doesn't freeze)
+        threading.Thread(target=self._init_camera_async).start()
         
-        if IS_RASPBERRY_PI:
-            self.init_pi_camera()
-        else:
-            self.init_laptop_camera()
-            
-        # Start the Update Loop (30 FPS)
-        self.update_event = Clock.schedule_interval(self.update_feed, 1.0/30.0)
-    
-    def init_pi_camera(self):
-        """Native Pi 5 Camera Initialization using Picamera2"""
+    def _init_camera_async(self):
+        """background init to prevent UI freeze"""
+        print(f"[UI] Initializing Camera (Pi Mode: {IS_RASPBERRY_PI})...")
+        success = False
         try:
-            from picamera2 import Picamera2
-            self.picam2 = Picamera2()
-            
-            # Configure: 'main' for high-res capture, 'lores' for the UI preview
-            config = self.picam2.create_still_configuration(
-                main={"size": (1920, 1080), "format": "RGB888"},
-                lores={"size": (640, 480), "format": "RGB888"},
-            )
-            self.picam2.configure(config)
-            self.picam2.start()
-            print("[UI] Picamera2 started successfully.")
+            if IS_RASPBERRY_PI:
+                from picamera2 import Picamera2
+                self.picam2 = Picamera2()
+                
+                # Configure: 'main' for high-res capture, 'lores' for the UI preview
+                config = self.picam2.create_still_configuration(
+                    main={"size": (1920, 1080), "format": "RGB888"},
+                    lores={"size": (640, 480), "format": "RGB888"},
+                )
+                self.picam2.configure(config)
+                self.picam2.start()
+                success = True
+            else:
+                self.capture = cv2.VideoCapture(0)
+                if self.capture.isOpened():
+                    success = True
         except Exception as e:
             print(f"[UI] CRITICAL Picamera2 Error: {e}.")
+        
+        # Report back to Main Thread
+        self._on_camera_ready(success)
+        
+    @mainthread
+    def _on_camera_ready(self, success):
+        """Called on Main Thread after initializing"""
+        if success:
+            # Turn off spinner, show camera
+            self.set_processing_mode(False)
+            self.update_event = Clock.schedule_interval(self.update_feed, 1.0/30.0)
             
-    def init_laptop_camera(self):
-        """Fallback to OpenCV for non-pi devices"""
-        try:
-            self.capture = cv2.VideoCapture(0)
-            if self.capture.isOpened():
-                print("[UI] Laptop Webcam opened.")
-        except Exception as e:
-            print(f"[UI] Webcam Error: {e}")
+        else:
+            self.ids.loading_label.text = "Camera Error!"
     
     def on_leave(self):
         """
@@ -95,6 +104,31 @@ class CaptureScreen(BaseScreen):
             self.capture.release()
             self.capture = None
             print("[UI] WebCame released.")
+
+    @mainthread
+    def set_processing_mode(self, is_processing, message="Processing..."):
+        """
+        Toggles the UI between 'Live Feed' and 'Loading Spinner'.
+        """
+        if is_processing:
+            # Show Spinner Overlay
+            self.ids.processing_overlay.opacity = 1
+            self.ids.loading_spinner.active = True
+            self.ids.loading_label.text = message
+            
+            # Dim the camera feed slightly to focus on spinner
+            self.ids.camera_preview.opacity = 0.3
+            
+            # Stop the feed update to save CPU while processing
+            if self.update_event:
+                self.update_event.cancel()
+                self.update_event = None
+            
+        else:
+            # Show live feed
+            self.ids.processing_overlay.opacity = 0
+            self.ids.loading_spinner.active = False
+            self.ids.camera_preview.opacity = 1
             
     def update_feed(self, dt):
         """
@@ -136,32 +170,25 @@ class CaptureScreen(BaseScreen):
         """
         print(f"[UI] Capture Screen detected load cell trigger: {weight}")
         
-        # 1. Save the *current* frame from the camera
+        # 1. Update UI to "Processing" state immeidately
+        self.set_processing_mode(True, message="Analyzing Image...")
+        
+        # 2. Capture Image
         filepath = self.save_current_frame()
         
         if filepath:
+            # 3. Start API upload in background
             print(f"[DEBUG] Image saved successfully at {filepath}. Starting API thread...")
-            # 2. Start the API upload in a background thread
             threading.Thread(target=self.run_identification_task, args=(filepath,)).start()
         else:
             print("[DEBUG] Failed to save image. Aborting API call.")
+            self.set_processing_mode(False) # Reset if save failed
+            self.update_event = Clock.schedule_interval(self.update_feed, 1.0, 30.0) # Restart camera
     
     # --- DEV - CAPTURE WITH BUTTON - REMOVE LATER --- 
     def capture_btn(self, weight):
-        """
-        Logic for when the DEV - CAPTURE button is pressedd
-        """
-        print(f"[UI] Capture Screen detected CAPTURE BTN trigger: {weight}")
-        
-        # 1. Save the *current* frame from the camera
-        filepath = self.save_current_frame()
-        
-        if filepath:
-            print(f"[DEBUG] Image saved successfully at {filepath}. Starting API thread...")
-            # 2. Start the API upload in a background thread
-            threading.Thread(target=self.run_identification_task, args=(filepath,)).start()
-        else:
-            print("[DEBUG] Failed to save image. Aborting API call.")
+        """Dev Button Wrapper"""
+        self.handle_load_cell_trigger(None, weight)
     
     def save_current_frame(self):
         """
@@ -228,7 +255,10 @@ class CaptureScreen(BaseScreen):
         
         # Call the API Client
         # Assumes app.api_client.upload_tool_image returns {'success': ..., 'data': ...}
-        result = app.api_client.upload_tool_image(filepath)
+        try:
+            result = app.api_client.upload_tool_image(filepath)
+        except Exception as e:
+            result = {'success': False, 'error': str(e)}
         
         # Pass result back to Main UI Thread
         self.handle_identification_result(result)
@@ -253,3 +283,7 @@ class CaptureScreen(BaseScreen):
             # Handle Error (e.g. show error screen or text)
             error_msg = result.get('error', 'Unknown Error') if result else "Connection Failed"
             print(f"[UI Error] {error_msg}")
+            
+    def reset_feed(self):
+        self.set_processing_mode(False) # hide spinner
+        self.update_event = Clock.schedule_interval(self.update_feed, 1.0/30.0)
