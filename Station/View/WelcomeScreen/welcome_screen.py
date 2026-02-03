@@ -73,10 +73,11 @@ class WelcomeScreen(BaseScreen):
         
     @mainthread
     def _handle_validation_result(self, result):
+        app = App.get_running_app()
         """RESULT HANDLER: Runs back on the Main UI Thread"""
         if result['success']: # Success Logic
             # Once the user is validated, save the user info in SessionManager.
-            app.session.user_data = result['data']
+            app.session.user_data = result['user']
             self.go_to('action selection screen')
         else: # Failure Logic
             # if the validation failed, show the appropriate error message

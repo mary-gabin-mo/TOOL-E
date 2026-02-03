@@ -47,10 +47,13 @@ class APIClient(EventDispatcher):
             response.raise_for_status() # Raise error for 4xx/5xx codes
             
             # Success!
-            data = response.json()
-            # success = data['success']
-            print(f"[API] Success: {data}")
-            return {'success': True, 'data': data}
+            res = response.json()
+            if res.success: 
+                print(f"[API] Success: {res}")
+                return res
+            else:
+                print(f"[API] Waiver Expired Error: {res.message}")
+                return {'success': False, 'error': res.message}
         
         except requests.exceptions.ConnectionError:
             print("[API] Connection Error: Is the server running?")
