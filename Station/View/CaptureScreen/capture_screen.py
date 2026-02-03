@@ -270,12 +270,14 @@ class CaptureScreen(BaseScreen):
         """
         print(f"[UI] Identification Result: {result}")
         
-        app = App.get_running_app()
-        
         if result and result.get('success'):
-            # Save the prediction to the session so the Confirm Screen can see it
+            app = App.get_running_app()
             if hasattr(app, 'session'):
-                app.session.identified_tool_data = result.get('data', {})
+                # Extract the nested dictionary from 'data'
+                # API returns: {'success': True, 'data: {'prediction': '...', ...}}
+                tool_data = result.get('data', {})
+                app.session.identified_tool_data = tool_data
+                print(f"[DEBUG] Saved tool info to session: {tool_data}")
                 
             # Navigate to Confirmation
             self.go_to('tool confirm screen')
