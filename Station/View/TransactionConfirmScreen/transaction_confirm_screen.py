@@ -76,9 +76,9 @@ class TransactionConfirmScreen(BaseScreen):
 
         # Construct the final payload for the API
         final_payload = {
-            "user_data": app.session.user_data, # Assuming this is stored
-            "return_date": str(self.return_date),
-            "transactions": app.session.transactions
+            "user_id": str(user_id), 
+            "return_date": formatted_date,
+            "transactions": getattr(app.session, 'transactions', [])
         }
         
         print(f"[UI] Submitting Transaction via APIClient...")
