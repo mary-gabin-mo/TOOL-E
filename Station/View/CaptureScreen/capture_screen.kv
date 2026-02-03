@@ -16,35 +16,45 @@
             font_style: "H4"
             size_hint_y: 0.1
 
-        # --- Live Feed Window ---
-        # Image:
-        #     id: camera_preview
-        #     source: "assets/images/logo_white.png" # Placeholder for now
-        #     allow_stretch: True
-        #     keep_ratio: True
-        #     size_hint_y: 0.7
-
-        BoxLayout:
+        # --- CAMERA CONTAINER ---
+        MDRelativeLayout:
             size_hint_y: 0.7
-            padding: "2dp"
 
-            # border to frame the window
-            canvas.before:
-                Color: 
-                    rgba: 0, 0, 0, 1 # Black border/background
-                Rectangle:
-                    pos: self.pos
-                    size: self.size
-
+            # 1. The Camera Feed
             Image:
                 id: camera_preview
                 source: "assets/images/logo_white.png"
                 allow_stretch: True
                 keep_ratio: True
+                opacity: 0 
 
-                # Line:
-                #     width: 2
-                #     rectangle: self.x, self.y, self.width, self.height
+            # 2. Processing Overlay (Spinner + Text)
+            MDBoxLayout:
+                id: processing_overlay
+                orientation: 'vertical'
+                adaptive_size: True
+                pos_hint: {'center_x': 0.5, 'center_y': 0.5}
+                spacing: "15dp"
+
+                # Hidden by default (opacity 0)
+                opacity: 0
+
+                MDSpinner:
+                    id: loading_spinner
+                    size_hint: None, None
+                    size: "60dp", "60dp"
+                    pos_hint: {'center_x': .5}
+                    active: False
+                    palette: [ [0.2, 0.6, 0.8, 1] ]
+
+                MDLabel:
+                    id: loading_label
+                    text: "Initializing..."
+                    halign: "center"
+                    theme_text_color: "Custom"
+                    text_color: 0.2, 0.6, 0.8, 1 # Match Spinner Blue
+                    font_style: "H5"
+                    bold: True
 
         MDBoxLayout:
             orientation: 'horizontal'

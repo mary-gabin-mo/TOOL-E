@@ -8,6 +8,7 @@ from config import (
     API_VALIDATE_USER,
     API_IDENTIFY_TOOL,
     API_TRANSACTION,
+    API_GET_TOOLS,
     NETWORK_TIMEOUT
 )
 
@@ -47,10 +48,14 @@ class APIClient(EventDispatcher):
             response.raise_for_status() # Raise error for 4xx/5xx codes
             
             # Success!
-            data = response.json()
-            # success = data['success']
-            print(f"[API] Success: {data}")
-            return {'success': True, 'data': data}
+            res = response.json()
+            print(f"{res=}")
+            if res.get('success'): 
+                print(f"[API] Success: {res}")
+                return res
+            else:
+                print(f"[API] Waiver Expired Error: {res.get('message')}")
+                return {'success': False, 'error': res.get('message')}
         
         except requests.exceptions.ConnectionError:
             print("[API] Connection Error: Is the server running?")
@@ -68,6 +73,26 @@ class APIClient(EventDispatcher):
             print(f"[API] Error: {e}")
             return {'success': False, 'error': f"System Error: {e}"}
         
+    def get_tools(self):
+        """
+        Get all tools from the database.
+        
+        Returns:
+            list: List of tool dictionaries
+        """
+        print("[API] Fetching all tools...")
+        try:
+            response = requests.get(
+                API_GET_TOOLS,
+                timeout=NETWORK_TIMEOUT
+            )
+            response.raise_for_status()
+            return response.json()
+            
+        except Exception as e:
+            print(f"[API] Error fetching tools: {e}")
+            return []
+
     def upload_tool_image(self, image_path):
         """
         Uploads the captured image for recognition.
@@ -87,6 +112,7 @@ class APIClient(EventDispatcher):
             # Open file in binary mode
             with open(image_path, 'rb') as img_file:
                 # 'file' matches the parameter name in the FastAPI endpoint
+                # Value is a tuple: (filename, file_object, content_type)
                 files = {'file': ('capture.jpg', img_file, 'image/jpeg')}
                 
                 response = requests.post(

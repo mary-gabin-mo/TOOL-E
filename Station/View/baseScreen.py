@@ -11,10 +11,10 @@ class BaseScreen(MDScreen):
         # 'self.manager' is automatically available in all Screens
         if self.manager:
             self.manager.transition.direction = 'left'
-            self.manager.current = screen_name
+            self.manager.current = screen_name 
             
     def go_back(self, screen_name):
-        """Backward navigation (Slide Right)"""
+        """Backward navigation (Slide Right)"""   
         if self.manager:
             self.manager.transition.direction = 'right'
             self.manager.current = screen_name

@@ -21,7 +21,7 @@
         MDCard:
             orientation: 'vertical'
             padding: '5dp'
-            size_hint: .5, .6
+            size_hint: .9, .6
             pos_hint: {"center_x": .5}
 
             style: "outlined"
@@ -45,31 +45,24 @@
             spacing: "20dp"             # Gap between buttons
             size_hint_y: None           # Don't expand vertically
             height: '80dp'              # Fixed height for this row
-            pos_hint: {"centre_x": .5}
+            pos_hint: {"center_x": .5}
             padding: '10dp'             # Optional padding around the row
 
             MDFillRoundFlatButton:
-                text: "DEV - BACK\n(Tool Confim Screen)"
+                text: "Back"
                 font_size: "20sp"
-                size_hint: 0.3, 1        
-                md_bg_color: 0.4, 0.4, 0.4, 1  # Grey
+                size_hint: 0.4, 1        
+                md_bg_color: 0.7, 0.7, 0.7, 1  # Grey
                 on_release: root.go_back('tool confirm screen')
 
             MDFillRoundFlatButton:
-                text: "DEV - NEXT\n(Return Date Screen)"
+                id: next_button
+                text: "Next"
                 font_size: "20sp"
-                size_hint: 0.3, 1        
-                md_bg_color: 0.4, 0.4, 0.4, 1  # Grey
-                on_release: root.go_to('transaction confirm screen')
-
-        # -- Cancel Button --
-        MDFillRoundFlatButton:
-            text: "Cancel"
-            font_size: "24sp"
-            size_hint: 1, 0.01
-            pos_hint: {"center_x": .5}
-            md_bg_color: 0.9, 0.17, 0.25, 1  # Red
-            on_release: root.go_back('welcome screen')
+                size_hint: 0.4, 1        
+                md_bg_color: 0.2, 0.7, 0.2, 1  # Green
+                disabled: True
+                on_release: root.proceed()
 
         # Widget:
         #     size_hint_y: 0.01
