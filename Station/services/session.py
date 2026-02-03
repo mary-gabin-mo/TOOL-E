@@ -12,8 +12,8 @@ class SessionManager(EventDispatcher):
     # 'borrow' or 'return'
     transaction_type = StringProperty("borrow")
     
-    # # The User ID (e.g. "30012345")
-    # user_id = StringProperty(None, allownone=True)
+    # The User ID (e.g. "30012345")
+    user_id = StringProperty(None, allownone=True)
     
     # Full user details from DB (Name, Photo URL, etc.)
     user_data = ObjectProperty(None, allownone=True)
@@ -30,6 +30,7 @@ class SessionManager(EventDispatcher):
         print("[SESSION] Resetting settion state...")
         self.transaction_type = "borrow" # Default
         self.user_data = None
+        self.user_id = None
         self.transactions = []
         self.current_transaction = []
         
