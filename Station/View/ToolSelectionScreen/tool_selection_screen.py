@@ -25,22 +25,31 @@ class ToolSelectionScreen(BaseScreen):
         all_tools = app.api_client.get_tools()
         
         if not all_tools:
-            scroll_list.add_widget(TwoLineListItem(text="No tools found", secondary_text="Check server connection"))
-            return
+            scroll_list.add_widget(TwoLineListItem(text="No API tools found", secondary_text="Check server connection"))
         
-        # 3. Create items
-        for tool_obj in all_tools:
-            # Display name and status
-            item = TwoLineListItem(
-                text=f"{tool_obj['name']} (ID: {tool_obj['id']})",
-                secondary_text=f"Status: {tool_obj['status']} | Available: {tool_obj['available_quantity']}"
-            )
-            
-            # bind the click event
-            item.bind(on_release=lambda x, t=tool_obj: self.on_tool_selected(x, t))
-            
-            # Add to the scroll view
-            scroll_list.add_widget(item)
+        else:
+            # 3. Create items
+            for tool_obj in all_tools:
+                # Display name and status
+                item = TwoLineListItem(
+                    text=f"{tool_obj['name']} (ID: {tool_obj['id']})",
+                    secondary_text=f"Status: {tool_obj['status']} | Available: {tool_obj['available_quantity']}"
+                )
+                
+                # bind the click event
+                item.bind(on_release=lambda x, t=tool_obj: self.on_tool_selected(x, t))
+                
+                # Add to the scroll view
+                scroll_list.add_widget(item)
+
+        # 4. Add "Other" Option to the bottom
+        other_tool = {"id": 0, "name": "Other", "status": "Manual", "available_quantity": "-"}
+        other_item = TwoLineListItem(
+            text="Other / Not Listed",
+            secondary_text="Select this if you can't find the tool"
+        )
+        other_item.bind(on_release=lambda x, t=other_tool: self.on_tool_selected(x, t))
+        scroll_list.add_widget(other_item)
             
     def on_tool_selected(self, item_widget, tool_data):
         """
