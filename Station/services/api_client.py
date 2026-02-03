@@ -49,12 +49,12 @@ class APIClient(EventDispatcher):
             # Success!
             res = response.json()
             print(f"{res=}")
-            if res.success: 
+            if res.get('success'): 
                 print(f"[API] Success: {res}")
                 return res
             else:
-                print(f"[API] Waiver Expired Error: {res.message}")
-                return {'success': False, 'error': res.message}
+                print(f"[API] Waiver Expired Error: {res.get('message')}")
+                return {'success': False, 'error': res.get('message')}
         
         except requests.exceptions.ConnectionError:
             print("[API] Connection Error: Is the server running?")
