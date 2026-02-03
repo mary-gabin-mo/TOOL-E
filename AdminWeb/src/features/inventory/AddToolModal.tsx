@@ -50,7 +50,7 @@ export const AddToolModal = ({ isOpen, onClose }: AddToolModalProps) => {
     setTotal('');
     setAvailable('');
     setConsumed('');
-    setTrained(false);
+    setTrained(true);
     setError('');
   };
 
@@ -77,6 +77,12 @@ export const AddToolModal = ({ isOpen, onClose }: AddToolModalProps) => {
       return;
     }
 
+
+    if (availableQty + consumedQty > totalQty) {
+      setError('Available + Consumed cannot be higher than Total quantity');
+      return;
+    }
+
     // Optional: Add consistency check? 
     // For now, trusting user input as requested.
 
@@ -86,7 +92,7 @@ export const AddToolModal = ({ isOpen, onClose }: AddToolModalProps) => {
       tool_type: isConsumable ? 'Consumable' : 'Borrowable',
       total_quantity: totalQty,
       available_quantity: availableQty,
-      trained: trained,
+      trained: !trained,
       current_status: 'Available',
       consumed_quantity: consumedQty
     });
