@@ -12,9 +12,6 @@ class SessionManager(EventDispatcher):
     # 'borrow' or 'return'
     transaction_type = StringProperty("borrow")
     
-    # # The User ID (e.g. "30012345")
-    # user_id = StringProperty(None, allownone=True)
-    
     # Full user details from DB (Name, Photo URL, etc.)
     user_data = ObjectProperty(None, allownone=True)
     

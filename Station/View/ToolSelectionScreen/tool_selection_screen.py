@@ -69,14 +69,22 @@ class ToolSelectionScreen(BaseScreen):
         item_widget.theme_text_color = "Custom"
         item_widget.text_color = (0, 0, 1, 1) # Blue
         
+    def confirm_scan_more(self):
+        app = App.get_running_app()
+        if hasattr(app, 'session'):
+            # Use the session method we defined earlier
+            app.session.confirm_current_tool(self.selected_tool['name'])
+        self.go_to('capture screen') 
+        
     def proceed(self):
-        if self.selected_tool:
-            # 1. Update Session
-            app = App.get_running_app()
+        """
+        User clicked YES. Confirm this tool and save to transaction list.
+        """
+        app = App.get_running_app()
+        if hasattr(app, 'session'):
+            # Use the session method we defined earlier
+            app.session.confirm_current_tool(self.selected_tool['name'])
             
-            if hasattr(app, 'session'):
-                # Session stores the full object containing the ID
-                app.session.confirm_current_tool(self.selected_tool)
-                        
-            # 2. navigate to Confirmation Screen
-            self.go_to('transaction confirm screen')
+        # Navigate to next step (e.g. Scan More or Finish)
+        # For now, let's say we go back to selection to scan another or finish
+        self.go_to('transaction confirm screen') 
