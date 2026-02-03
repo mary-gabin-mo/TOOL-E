@@ -71,13 +71,14 @@ class TransactionConfirmScreen(BaseScreen):
         user_id = getattr(app.session, 'user_id', '')
         if not user_id and app.session.user_data:
              # Fallback: try to get ID from the user dictionary if user_id property is empty
-             user_id = app.session.user_data.get('id', '')
+             # API returns 'ucid', checking both just in case
+             user_id = app.session.user_data.get('ucid') or app.session.user_data.get('id', '')
 
         # Construct the final payload for the API
         final_payload = {
-            "user_data": app.session.user_data, # Assuming this is stored
-            "return_date": str(self.return_date),
-            "transactions": app.session.transactions
+            "user_id": str(user_id), 
+            "return_date": formatted_date,
+            "transactions": getattr(app.session, 'transactions', [])
         }
         
         print(f"[UI] Submitting Transaction via APIClient...")

@@ -78,6 +78,8 @@ class WelcomeScreen(BaseScreen):
         if result['success']: # Success Logic
             # Once the user is validated, save the user info in SessionManager.
             app.session.user_data = result['user']
+            # Save the specific ID (mapping API 'ucid' to session 'user_id')
+            app.session.user_id = str(result['user'].get('ucid', ''))
             self.go_to('action selection screen')
         else: # Failure Logic
             # if the validation failed, show the appropriate error message
