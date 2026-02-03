@@ -10,7 +10,7 @@ class SessionManager(EventDispatcher):
     # Kivy Properties allow the UI to automatically update if these change
     
     # 'borrow' or 'return'
-    transation_type = StringProperty("borrow")
+    transaction_type = StringProperty("borrow")
     
     # # The User ID (e.g. "30012345")
     # user_id = StringProperty(None, allownone=True)

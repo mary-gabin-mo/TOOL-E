@@ -194,13 +194,13 @@ class CaptureScreen(BaseScreen):
         """
         Save high-res photo and resize using the PIL logic
         """
-
         # 1. Generate Transaction ID (Timestamp)
         # Format: YYYYMMDD_HHMMSS(e.g., 20260202_183005)
         timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
         milliseconds = int(datetime.now().microsecond / 1000)
+        timestamp_id = f"{timestamp}-{milliseconds:03d}"
         # 2. Create Filename
-        filename = f"{timestamp}-{milliseconds:03d}.jpg"        
+        filename = f"{timestamp_id}.jpg"        
         full_path = os.path.abspath(filename)
         
         success = False

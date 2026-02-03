@@ -76,7 +76,7 @@ class ToolSelectionScreen(BaseScreen):
             
             if hasattr(app, 'session'):
                 # Session stores the full object containing the ID
-                app.session.add_tool(self.selected_tool)
+                app.session.confirm_current_tool(self.selected_tool)
                         
             # 2. navigate to Confirmation Screen
             self.go_to('transaction confirm screen')

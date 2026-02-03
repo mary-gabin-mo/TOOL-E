@@ -19,20 +19,20 @@ class TransactionConfirmScreen(BaseScreen):
         
         # Load tool info from session
         app = App.get_running_app()
-        tools = getattr(app.session, 'scanned_tools', [])
+        transactions = getattr(app.session, 'transactions', [])
         
         # Clear existing items in the list
         list_container = self.ids.tool_list_container
         list_container.clear_widgets()
         
-        if not tools:
+        if not transactions:
             # Fallback if list is empty (shouldn't happen in flow)
             list_container.add_widget(OneLineListItem(text="No tools scanned"))
         else:
             # Populate list with all scanned tools
-            for tool in tools:
+            for tx in transactions:
                 # Handle dictionary or simple string
-                tool_name = tool.get('name', 'Unknown') # if isinstance(tool, dict) else str(tool)
+                tool_name = tx.get('tool_name', 'Unknown Tool') # if isinstance(tool, dict) else str(tool)
                 list_container.add_widget(OneLineListItem(text=tool_name))
         
     def open_calendar(self):
@@ -59,7 +59,13 @@ class TransactionConfirmScreen(BaseScreen):
         
         # Save return date to session
         app = App.get_running_app()
-        app.session.return_date = self.return_date
+        
+        # Construct the final payload for the API
+        final_payload = {
+            "user_id": app.session.user_id, # Assuming this is stored
+            "return_date": str(self.return_date),
+            "transactions": app.session.transactions
+        }
         
         # Call API logic here to send the transaction to the server/db
         # app.api_client.submit_transaction(...)
