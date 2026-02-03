@@ -194,6 +194,7 @@ class CaptureScreen(BaseScreen):
         """
         Save high-res photo and resize using the PIL logic
         """
+
         # 1. Generate Transaction ID (Timestamp)
         # Format: YYYYMMDD_HHMMSS(e.g., 20260202_183005)
         timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
