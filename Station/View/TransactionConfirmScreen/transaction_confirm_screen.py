@@ -44,6 +44,11 @@ class TransactionConfirmScreen(BaseScreen):
         """Called by the popup when user hits Confirm."""
         self.return_date = date_obj
         
+        # Save return date to session and update JSON
+        app = App.get_running_app()
+        app.session.return_date = date_obj
+        app.session.save_to_json()
+        
         # Update UI to show success
         self.ids.date_label.text = f"Returning on: {date_obj.strftime('%b %d, %Y')}"
         self.ids.date_label.text_color = (0, 0, 0, 1) # Black text
@@ -57,18 +62,15 @@ class TransactionConfirmScreen(BaseScreen):
     def finish_transaction(self):
         print(f"Transaction Confirmed! Date: {self.return_date}")
         
-        # Save return date to session
         app = App.get_running_app()
         
-        # Construct the final payload for the API
-        final_payload = {
-            "user_id": app.session.user_id, # Assuming this is stored
-            "return_date": str(self.return_date),
-            "transactions": app.session.transactions
-        }
+        # Final save to JSON before sending to server
+        app.session.save_to_json()
+        print(f"[TRANSACTION] Transaction ID: {app.session.transaction_id}")
         
-        # Call API logic here to send the transaction to the server/db
-        # app.api_client.submit_transaction(...)
+        # Send the transaction JSON to the server
+        # TODO: Implement API call to submit transaction.json to server
+        # app.api_client.submit_transaction(app.session.load_from_json())
         
         # Go to confirmation screen
         self.go_to('checkout confirmation screen')
