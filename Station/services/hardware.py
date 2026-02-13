@@ -6,6 +6,13 @@ from smartcard.util import toHexString
 from kivy.clock import Clock
 from kivy.core.window import Window
 
+# Import settings from your config.py
+from config import (
+    PIN_LOAD_CELL_DAT, PIN_LOAD_CELL_CLK,
+    PIN_LED_GREEN, PIN_LED_RED, PIN_LED_YELLOW,
+    LOAD_CELL_THRESHOLD
+)
+
 # Check system type
 IS_PI = platform.machine() in ("aarch64", "armv7l")
 
@@ -21,6 +28,12 @@ class HardwareManager(EventDispatcher):
     def __init__(self, **kwargs):
         super().__init__(*kwargs)
         self.is_pi = IS_PI
+        
+        # Load Cell State
+        self.lgpio_handle = None
+        self.stable_reads = 0
+        self.offset = 382000  # From your calibration script
+        self.STABLE_READS_REQUIRED = 3
         
         if self.is_pi:
             self._setup_real_hardware()

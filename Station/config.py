@@ -3,7 +3,7 @@ import os
 # --- NETWORK SETTINGS ---
 # The IP address of your FastAPI Server (PC)
 # Use "localhost" for testing on Mac, or the actual IP (e.g., "192.168.1.10") for Pi
-SERVER_IP = "192.168.1.6" 
+SERVER_IP = "192.168.1.21" 
 SERVER_PORT = 5000
 BASE_URL = f"http://{SERVER_IP}:{SERVER_PORT}"
 

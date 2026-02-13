@@ -6,6 +6,17 @@ from View.baseScreen import BaseScreen
 
 class ActionSelectionScreen(BaseScreen):
     
+    def on_enter(self):
+        """
+        Reset partial transaction data if returning here.
+        Does NOT clear user_data (user stays logged in).
+        """
+        app = App.get_running_app()
+        if hasattr(app, 'session'):
+            app.session.transactions = []
+            app.session.current_transaction = {}
+            print("[UI] ActionSelection: Cleared partial transactions.")
+
     def select_borrow(self):
         """persist borrow state"""
         app = App.get_running_app()

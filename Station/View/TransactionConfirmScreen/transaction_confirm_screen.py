@@ -2,6 +2,7 @@ from kivy.app import App
 from kivymd.uix.list import OneLineListItem
 from View.baseScreen import BaseScreen
 from widgets.calendar_popup import CalendarPopup
+from datetime import datetime, date
 
 class TransactionConfirmScreen(BaseScreen):
     
@@ -64,13 +65,36 @@ class TransactionConfirmScreen(BaseScreen):
         
         app = App.get_running_app()
         
-        # Final save to JSON before sending to server
-        app.session.save_to_json()
-        print(f"[TRANSACTION] Transaction ID: {app.session.transaction_id}")
+        # Format Date for Backend (YYYY-MM-DD HH:MM:SS)
+        # If only a date is provided, default to noon or end of day
+        if isinstance(self.return_date, date) and not isinstance(self.return_date, datetime):
+             formatted_date = f"{self.return_date.strftime('%Y-%m-%d')} 12:00:00"
+        else:
+             formatted_date = self.return_date.strftime("%Y-%m-%d %H:%M:%S")
+
+        # Safe User ID retrieval
+        user_id = getattr(app.session, 'user_id', '')
+        if not user_id and app.session.user_data:
+             # Fallback: try to get ID from the user dictionary if user_id property is empty
+             # API returns 'ucid', checking both just in case
+             user_id = app.session.user_data.get('ucid') or app.session.user_data.get('id', '')
+
+        # Construct the final payload for the API
+        final_payload = {
+            "user_id": str(user_id), 
+            "return_date": formatted_date,
+            "transactions": getattr(app.session, 'transactions', [])
+        }
         
-        # Send the transaction JSON to the server
-        # TODO: Implement API call to submit transaction.json to server
-        # app.api_client.submit_transaction(app.session.load_from_json())
-        
-        # Go to confirmation screen
-        self.go_to('checkout confirmation screen')
+        print(f"[UI] Submitting Transaction via APIClient...")
+
+        # Call API logic using the centralized API Client
+        response = app.api_client.submit_transaction(final_payload)
+             
+        if response.get('success'):
+             print("Transaction Success")
+             # Go to confirmation screen only on success
+             self.go_to('checkout confirmation screen')
+        else:
+             print(f"Transaction Failed: {response.get('error')}")
+             # You might want to add a UI popup here to alert the user
