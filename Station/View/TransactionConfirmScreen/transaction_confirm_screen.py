@@ -45,6 +45,11 @@ class TransactionConfirmScreen(BaseScreen):
         """Called by the popup when user hits Confirm."""
         self.return_date = date_obj
         
+        # Save return date to session and update JSON
+        app = App.get_running_app()
+        app.session.return_date = date_obj
+        app.session.save_to_json()
+        
         # Update UI to show success
         self.ids.date_label.text = f"Returning on: {date_obj.strftime('%b %d, %Y')}"
         self.ids.date_label.text_color = (0, 0, 0, 1) # Black text

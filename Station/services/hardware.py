@@ -1,4 +1,5 @@
 import platform
+import time
 from kivy.event import EventDispatcher
 from smartcard.System import readers
 from smartcard.util import toHexString
@@ -50,104 +51,18 @@ class HardwareManager(EventDispatcher):
     
     # --- REAL HARDWARE (Raspberry Pi) ---
     def _setup_real_hardware(self):
-        print("[HARDWARE] Initializing Real Pi Hardware (LGPIO)...")
+        print("[HARDWARE] Initializing Real Pi Hardware...")
         
-        try:
-            import lgpio
-            
-            # 1. Open GPIO Chip (usually 0 on Pi 5)
-            self.lgpio_handle = lgpio.gpiochip_open(0)
-            
-            # 2. Setup Load Cell Pins
-            lgpio.gpio_claim_input(self.lgpio_handle, PIN_LOAD_CELL_DAT)
-            lgpio.gpio_claim_output(self.lgpio_handle, PIN_LOAD_CELL_CLK, 0)
-            
-            # 3. Setup LEDs (Claiming them for output)
-            lgpio.gpio_claim_output(self.lgpio_handle, PIN_LED_GREEN, 0)
-            lgpio.gpio_claim_output(self.lgpio_handle, PIN_LED_RED, 0)
-            lgpio.gpio_claim_output(self.lgpio_handle, PIN_LED_YELLOW, 0)
-            
-            # Turn on Yellow (Idle) initially
-            self.set_leds('idle')
-
-            # 4. Start polling the load cell 
-            # Run 10 times a second (0.1s interval)
-            Clock.schedule_interval(self._poll_load_cell, 0.1)
-
-        except ImportError:
-            print("[ERROR] lgpio not found. Hardware control disabled.")
-        except Exception as e:
-            print(f"[ERROR] GPIO Setup failed: {e}")
+        # Initialize load cell
+        self._setup_load_cell()
         
-        # implement GPIO setup...
-        # implement other methods for the real hardware
-        barcode = "#barcode_test#" ### Replace with the card reader input
-        self.dispatch('on_card_scanned', barcode)
-        
-        # # Start checking for smart cards every .5 second
+        # Start checking for smart cards every .5 second
         print("[HARDWARE] Starting PC/SC Reader Polling...")
         Clock.schedule_interval(self._check_pcsc_reader, 0.5)
         
-    def _read_hx711_raw(self):
-        """
-        Bit-banging logic to read from HX711 using lgpio.
-        Ported from your provided script.
-        """
-        import lgpio
-        import time
-        
-        # Wait for DOUT to go low (ready)
-        # Timeout loop to prevent UI freezing if sensor is disconnected
-        timeout = 0
-        while lgpio.gpio_read(self.lgpio_handle, PIN_LOAD_CELL_DAT) == 1:
-            time.sleep(0.0001)
-            timeout += 1
-            if timeout > 1000: # approx 0.1s timeout
-                return None
-
-        value = 0
-        # Pulse clock 24 times to read data
-        for _ in range(24):
-            lgpio.gpio_write(self.lgpio_handle, PIN_LOAD_CELL_CLK, 1)
-            value = (value << 1) | lgpio.gpio_read(self.lgpio_handle, PIN_LOAD_CELL_DAT)
-            lgpio.gpio_write(self.lgpio_handle, PIN_LOAD_CELL_CLK, 0)
-
-        # Pulse clock 1 more time to set gain to 128 (standard)
-        lgpio.gpio_write(self.lgpio_handle, PIN_LOAD_CELL_CLK, 1)
-        lgpio.gpio_write(self.lgpio_handle, PIN_LOAD_CELL_CLK, 0)
-
-        # Convert 24-bit 2's complement to signed int
-        if value & 0x800000:
-            value -= 1 << 24
-
-        return value    
-    
-    def _poll_load_cell(self, dt):
-        """
-        Periodically checks weight. Replaces 'wait_for_object' loop.
-        """
-        if not self.lgpio_handle:
-            return
-
-        raw_val = self._read_hx711_raw()
-        if raw_val is None:
-            return # Sensor not ready
-
-        current_weight = raw_val - self.offset
-
-        # Check Threshold
-        if current_weight > LOAD_CELL_THRESHOLD:
-            self.stable_reads += 1
-        else:
-            self.stable_reads = 0
-
-        # Trigger Event
-        if self.stable_reads >= self.STABLE_READS_REQUIRED:
-            print(f"[HARDWARE] Object Detected! Weight: {current_weight}")
-            self.dispatch('on_load_cell_detect', current_weight)
-            # Reset stable reads so we don't trigger 30 times a second while object sits there
-            # Or you can add logic to wait for removal before triggering again.
-            self.stable_reads = -50 # Simple "debounce" delay
+        # Start monitoring load cell every 0.1 seconds
+        print("[HARDWARE] Starting Load Cell Monitoring...")
+        Clock.schedule_interval(self._check_load_cell, 0.1)
         
     def _check_pcsc_reader(self, dt):
         try:
@@ -183,14 +98,100 @@ class HardwareManager(EventDispatcher):
         
         except Exception as e:
             print(f"Error polling reader: {e}")
-            
-    def cleanup(self):
-        """Release GPIO resources on app exit."""
-        if self.lgpio_handle is not None:
+    
+    def _setup_load_cell(self):
+        """Initialize HX711 load cell on GPIO pins"""
+        try:
             import lgpio
-            lgpio.gpiochip_close(self.lgpio_handle)
-            self.lgpio_handle = None
-            print("[HARDWARE] GPIO handle closed.")
+            
+            # HX711 wiring
+            self.DOUT_PIN = 5   # DOUT → GPIO 5
+            self.SCK_PIN  = 6   # SCK  → GPIO 6
+            self.CHIP = 0       # /dev/gpiochip0
+            
+            # Detection parameters
+            self.STABLE_READS = 3
+            self.OBJECT_THRESHOLD = 1000  # minimum raw weight
+            self.offset = 382000  # calibration offset
+            
+            # State tracking
+            self.stable_count = 0
+            self.object_detected = False
+            self.detection_time = None
+            
+            # Setup GPIO
+            self.gpio_handle = lgpio.gpiochip_open(self.CHIP)
+            lgpio.gpio_claim_input(self.gpio_handle, self.DOUT_PIN)
+            lgpio.gpio_claim_output(self.gpio_handle, self.SCK_PIN, 0)
+            
+            print("[HARDWARE] Load cell initialized")
+        except Exception as e:
+            print(f"[HARDWARE] Load cell init error: {e}")
+            self.gpio_handle = None
+    
+    def _hx711_read_raw(self):
+        """Read raw value from HX711"""
+        import lgpio
+        
+        while lgpio.gpio_read(self.gpio_handle, self.DOUT_PIN) == 1:
+            time.sleep(0.0001)
+        
+        value = 0
+        for _ in range(24):
+            lgpio.gpio_write(self.gpio_handle, self.SCK_PIN, 1)
+            value = (value << 1) | lgpio.gpio_read(self.gpio_handle, self.DOUT_PIN)
+            lgpio.gpio_write(self.gpio_handle, self.SCK_PIN, 0)
+        
+        lgpio.gpio_write(self.gpio_handle, self.SCK_PIN, 1)
+        lgpio.gpio_write(self.gpio_handle, self.SCK_PIN, 0)
+        
+        if value & 0x800000:
+            value -= 1 << 24
+        
+        return value
+    
+    def _get_raw_weight(self):
+        """Get calibrated weight reading"""
+        return self._hx711_read_raw() - self.offset
+    
+    def _check_load_cell(self, dt):
+        """Poll load cell and dispatch event after 2-second delay"""
+        if not hasattr(self, 'gpio_handle') or self.gpio_handle is None:
+            return
+        
+        try:
+            weight = self._get_raw_weight()
+            
+            # Object detected logic
+            if weight > self.OBJECT_THRESHOLD:
+                self.stable_count += 1
+                
+                # Once stable reads achieved, start timer
+                if self.stable_count >= self.STABLE_READS and not self.object_detected:
+                    self.object_detected = True
+                    self.detection_time = time.time()
+                    print(f"[HARDWARE] Object detected! Weight: {weight:.0f}. Waiting 2 seconds...")
+                
+                # Check if 2 seconds have passed since detection
+                if self.object_detected and self.detection_time:
+                    elapsed = time.time() - self.detection_time
+                    if elapsed >= 2.0:
+                        print(f"[HARDWARE] 2 seconds elapsed. Triggering camera!")
+                        self.dispatch('on_load_cell_detect', weight)
+                        # Reset detection state
+                        self.object_detected = False
+                        self.detection_time = None
+                        self.stable_count = 0
+            else:
+                # Object removed or not present
+                if self.object_detected:
+                    print("[HARDWARE] Object removed before 2 seconds")
+                self.stable_count = 0
+                self.object_detected = False
+                self.detection_time = None
+                
+        except Exception as e:
+            print(f"[HARDWARE] Load cell read error: {e}")
     
     # --- MOCK HARDWARE (Mac/Windows) ---
     def _setup_mock_hardware(self):
