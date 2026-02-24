@@ -1,0 +1,56 @@
+<UserErrorScreen>:
+    md_bg_color: 1, 1, 1, 1  # White background
+
+    MDBoxLayout:
+        orientation: 'vertical'
+        padding: "40dp"
+        spacing: "30dp"
+        pos_hint: {"center_x": .5, "center_y": .5}
+
+        # -- Logo Area --
+        Image:
+            source: "assets/images/logo_black.png"
+            size_hint_y: 0.3
+            allow_stretch: True
+            keep_ratio: True
+
+        # --- Error Icon ---
+        MDIcon:
+            icon: "alert-circle-outline"
+            halign: "center"
+            theme_text_color: "Custom"
+            text_color: 0.8, 0.2, 0.2, 1  # Red color
+            font_size: "100sp"
+            size_hint_y: 0.3
+
+        # --- Title ---
+        MDLabel:
+            text: "Access Denied"
+            halign: "center"
+            font_style: "H4"
+            theme_text_color: "Custom"
+            text_color: 0.2, 0.2, 0.2, 1
+            bold: True
+            size_hint_y: 0.1
+
+        # --- Dynamic Error Message ---
+        MDLabel:
+            id: error_label
+            text: "Unknown Error Occurred."  # Default text
+            halign: "center"
+            font_style: "H5"
+            theme_text_color: "Secondary"
+            size_hint_y: 0.2
+
+        # --- Spacer ---
+        Widget:
+            size_hint_y: 0.2
+
+        # --- Action Button ---
+        MDFillRoundFlatButton:
+            text: "TRY AGAIN"
+            font_size: "24sp"
+            size_hint: 0.6, 0.15
+            pos_hint: {"center_x": .5}
+            md_bg_color: 0.2, 0.6, 0.8, 1  # Standard Blue
+            on_release: root.go_to_main()

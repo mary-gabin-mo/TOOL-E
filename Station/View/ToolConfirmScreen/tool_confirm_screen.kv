@@ -1,0 +1,112 @@
+<ToolConfirmScreen>:
+    md_bg_color: 1, 1, 1, 1
+
+    MDBoxLayout:
+        orientation: 'vertical'
+        padding: "20dp"
+        spacing: "20dp"
+        pos_hint: {"center_x": .5, "center_y": .5}
+
+        # -- Logo Area Placeholder --
+        Widget:
+            size_hint_y: 0.15
+
+        # -- Header --
+        MDLabel:
+            text: "Confirm Tool"
+            halign: "center"
+            font_style: "H4"
+            bold: True
+            size_hint_y: 0.1
+
+        # -- Content Card --
+        MDCard:
+            orientation: "vertical"
+            padding: "10dp"
+            spacing: "5dp"
+            size_hint: 0.85, 0.3
+            pos_hint: {"center_x": .5}
+            radius: [20, 20, 20, 20]
+            elevation: 2
+            
+            # 1. Captured Image
+            Image:
+                id: tool_image
+                source: "assets/images/logo_white.png"
+                allow_stretch: True
+                keep_ratio: True
+                size_hint_y: 0.6
+                radius: [20, 20, 0, 0]
+
+            # 2. Prediction Info
+            MDBoxLayout:
+                orientation: "vertical"
+                size_hint_y: 0.4
+                spacing: "5dp"
+                
+                MDLabel:
+                    text: "Is this correct?"
+                    halign: "center"
+                    theme_text_color: "Secondary"
+                    font_style: "Caption"
+                
+                MDLabel:
+                    id: tool_name_label
+                    text: "Loading..."
+                    halign: "center"
+                    font_style: "H4"
+                    bold: True
+                    theme_text_color: "Primary"
+                
+                MDLabel:
+                    id: confidence_label
+                    text: "--%"
+                    halign: "center"
+                    theme_text_color: "Custom"
+                    text_color: 0.2, 0.7, 0.2, 1 # Green
+                    font_style: "Body1"
+
+        Widget:
+            size_hint_y: 0.04
+
+        # -- Action Buttons --
+        MDBoxLayout:
+            orientation: 'horizontal'
+            spacing: "15dp"
+            size_hint: 0.95, 0.16  # Increased height for stacked buttons
+            pos_hint: {"center_x": .5}
+            padding: "5dp"
+
+            # NO Button (Left Side)
+            MDFillRoundFlatButton:
+                text: "NO"
+                font_size: "20sp"
+                size_hint_x: 0.3
+                size_hint_y: 1
+                md_bg_color: 0.8, 0.2, 0.2, 1 # Red
+                on_release: root.reject_tool()
+
+            # YES Actions (Right Side - Stacked)
+            MDBoxLayout:
+                orientation: 'vertical'
+                spacing: "10dp"
+                size_hint_x: 0.7
+                
+                # Option 1: Scan More
+                MDFillRoundFlatButton:
+                    text: "YES, SCAN MORE"
+                    font_size: "18sp"
+                    size_hint: 1, 0.5
+                    md_bg_color: 0.2, 0.6, 0.8, 1 # Blue
+                    on_release: root.confirm_scan_more()
+
+                # Option 2: Finish
+                MDFillRoundFlatButton:
+                    text: "YES, FINISH"
+                    font_size: "18sp"
+                    size_hint: 1, 0.5
+                    md_bg_color: 0.2, 0.7, 0.2, 1 # Green
+                    on_release: root.confirm_finish()
+
+        Widget:
+            size_hint_y: 0.04
