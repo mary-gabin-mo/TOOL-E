@@ -69,14 +69,43 @@ class ToolSelectionScreen(BaseScreen):
         item_widget.theme_text_color = "Custom"
         item_widget.text_color = (0, 0, 1, 1) # Blue
         
+    def confirm_scan_more(self):
+        app = App.get_running_app()
+        if hasattr(app, 'session'):
+            # Use the session method we defined earlier
+            app.session.confirm_current_tool(self.selected_tool['name'])
+        self.go_to('capture screen') 
+        
     def proceed(self):
-        if self.selected_tool:
-            # 1. Update Session
-            app = App.get_running_app()
+        """
+        User clicked Next. Confirm this tool and save to transaction list.
+        Compatible with both 'Camera Flow' and 'Dev Flow'.
+        """
+        app = App.get_running_app()
+        if hasattr(app, 'session'):
+            session = app.session
             
-            if hasattr(app, 'session'):
-                # Session stores the full object containing the ID
-                app.session.confirm_current_tool(self.selected_tool)
-                        
-            # 2. navigate to Confirmation Screen
-            self.go_to('transaction confirm screen')
+            # DEV MODE SUPPORT: 
+            # If we came here directly (skipping camera), there is no 'current_transaction'.
+            # We must start one artificially so 'confirm' has something to work with.
+            if not session.current_transaction:
+                print("[UI] Dev Mode: Creating dummy transaction for manual selection.")
+                
+                from datetime import datetime
+                
+                # 1. Generate Timestamp ID (Same format as CaptureScreen)
+                now = datetime.now()
+                timestamp = now.strftime("%Y%m%d_%H%M%S")
+                milliseconds = int(now.microsecond / 1000)
+                timestamp_id = f"{timestamp}-{milliseconds:03d}"
+                
+                # 2. Create Filename (Placeholder)
+                filename = f"{timestamp_id}.jpg" 
+                
+                session.start_new_transaction(timestamp_id, filename)
+
+            # Now we can safely confirm
+            session.confirm_current_tool(self.selected_tool['name'])
+            
+        # Navigate to completion screen
+        self.go_to('transaction confirm screen') 

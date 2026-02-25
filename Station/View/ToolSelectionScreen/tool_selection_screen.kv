@@ -56,6 +56,13 @@
                 on_release: root.go_back('tool confirm screen')
 
             MDFillRoundFlatButton:
+                text: "Scan More"
+                font_size: "20sp"
+                size_hint: 0.4, 1        
+                md_bg_color: 0.7, 0.7, 0.7, 1  # Grey
+                on_release: root.confirm_scan_more()
+
+            MDFillRoundFlatButton:
                 id: next_button
                 text: "Next"
                 font_size: "20sp"

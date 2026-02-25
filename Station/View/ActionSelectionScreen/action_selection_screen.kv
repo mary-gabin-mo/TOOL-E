@@ -58,7 +58,20 @@
 
         # -- Spacer --
         Widget:
-            size_hint_y: 0.6
+            size_hint_y: 0.1
+
+        # -- Dev Button --
+        MDFillRoundFlatButton:
+            text: "DEV: List Tools"
+            font_size: "18sp"
+            size_hint: 0.5, 0.08
+            pos_hint: {"center_x": .5}
+            md_bg_color: 0.2, 0.2, 0.2, 1
+            on_release: root.go_to('tool select screen')
+
+        # -- Spacer --
+        Widget:
+            size_hint_y: 0.4
 
         # -- Cancel Button --
         MDFillRoundFlatButton:

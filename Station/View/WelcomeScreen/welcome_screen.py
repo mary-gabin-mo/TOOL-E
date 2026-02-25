@@ -13,8 +13,12 @@ class WelcomeScreen(BaseScreen):
         """
         self.set_loading_state(False)
         
-        # Start listening to hardware
+        # Reset Session Data (Safety Net)
         app = App.get_running_app()
+        if hasattr(app, 'session'):
+            app.session.reset()
+        
+        # Start listening to hardware
         if hasattr(app, 'hardware'):
             # Bind the 'on_card_scanned' event to our function
             app.hardware.bind(on_card_scanned=self.handle_card_scan)
@@ -78,6 +82,8 @@ class WelcomeScreen(BaseScreen):
         if result['success']: # Success Logic
             # Once the user is validated, save the user info in SessionManager.
             app.session.user_data = result['user']
+            # Save the specific ID (mapping API 'ucid' to session 'user_id')
+            app.session.user_id = str(result['user'].get('ucid', ''))
             self.go_to('action selection screen')
         else: # Failure Logic
             # if the validation failed, show the appropriate error message
