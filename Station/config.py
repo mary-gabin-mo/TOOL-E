@@ -1,10 +1,14 @@
 import os
+from dotenv import load_dotenv
+
+load_dotenv()
 
 # --- NETWORK SETTINGS ---
 # The IP address of your FastAPI Server (PC)
 # Use "localhost" for testing on Mac, or the actual IP (e.g., "192.168.1.10") for Pi
-SERVER_IP = "192.168.1.21" 
-SERVER_PORT = 5000
+SERVER_IP = os.getenv("SERVER_IP", "127.0.0.1")
+SERVER_PORT = int(os.getenv("SERVER_PORT", 5000))
+
 BASE_URL = f"http://{SERVER_IP}:{SERVER_PORT}"
 
 # API Endpoints
