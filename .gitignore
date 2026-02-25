@@ -30,8 +30,9 @@ MANIFEST
 # Virtual Environments
 venv/
 .venv/
+station_venv/
 env/
-.env/
+*.env/
 ENV/
 env.bak/
 venv.bak/
