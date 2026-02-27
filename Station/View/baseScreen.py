@@ -1,3 +1,4 @@
+from kivy.app import App
 from kivymd.uix.screen import MDScreen
 
 class BaseScreen(MDScreen):
@@ -18,3 +19,12 @@ class BaseScreen(MDScreen):
         if self.manager:
             self.manager.transition.direction = 'right'
             self.manager.current = screen_name
+            
+    def cancel_transaction(self):
+        """
+        User clicked CANCEL. Reset session and go back to welcome screen.
+        """
+        app = App.get_running_app()
+        if hasattr(app, 'session'):
+            app.session.reset()
+        self.go_back('welcome screen')
