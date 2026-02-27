@@ -4,6 +4,9 @@ from kivy.clock import Clock
 
 class ManualEntryScreen(MDScreen):
 
+    def on_leave(self):
+        self.clear_input()
+
     def add_digit(self, digit):
         # Limit length to avoid infinite strings
         current_text = self.ids.ucid_input.text
