@@ -20,9 +20,10 @@ ENABLE_HOT_RELOAD = not IS_RASPBERRY_PI
 if IS_RASPBERRY_PI:
     print("System: Raspberry Pi detected. Setting FULLSCREEN.")
     # Config.set('graphics', 'fullscreen', 'auto')
+    Config.set('graphics', 'fullscreen', '0')
     Config.set('graphics', 'show_cursor', '1')
-    Config.set('graphics', 'width', '500')
-    Config.set('graphics', 'height', '324')
+    Config.set('graphics', 'width', '800')
+    Config.set('graphics', 'height', '600')
 else:
     print("System: Dev Environment detected. Setting WINDOWED.")
     Config.set('graphics', 'fullscreen', '0')
@@ -59,7 +60,13 @@ if ENABLE_HOT_RELOAD:
             
             # Initialize Services (Singleton)
             if not hasattr(self, 'hardware'):
+                print("[MAIN] Creating HardwareManager...")
                 self.hardware = HardwareManager()
+                # Diagnostic check
+                if self.hardware.lgpio_handle is not None:
+                    print("[MAIN] ✓ Hardware initialized successfully with GPIO handle")
+                else:
+                    print("[MAIN] ✗ WARNING: Hardware initialized but GPIO handle is None!")
             if not hasattr(self, 'api_client'):
                 self.api_client = APIClient()
             if not hasattr(self, 'session'):

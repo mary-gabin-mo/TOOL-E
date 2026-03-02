@@ -1,4 +1,5 @@
 import platform
+import traceback
 from kivy.event import EventDispatcher
 from smartcard.System import readers
 from smartcard.util import toHexString
@@ -68,19 +69,23 @@ class HardwareManager(EventDispatcher):
             lgpio.gpio_claim_output(self.lgpio_handle, PIN_LED_RED, 0)
             lgpio.gpio_claim_output(self.lgpio_handle, PIN_LED_YELLOW, 0)
             
-            # Turn on Yellow (Idle) initially
-            self.set_leds('idle')
+            # Set Yellow LED to idle (low for now, can add LED control later)
+            lgpio.gpio_write(self.lgpio_handle, PIN_LED_YELLOW, 1)
+            print("[HARDWARE] LEDs configured. Yellow LED set to ON (idle).")
 
             # 4. Start polling the load cell 
             # Run 10 times a second (0.1s interval)
             print("[HARDWARE] Starting load cell polling (0.1s interval)...")
             Clock.schedule_interval(self._poll_load_cell, 0.1)
-            print("[HARDWARE] Load cell polling started!")
+            print("[HARDWARE] Load cell polling scheduled successfully!")
 
         except ImportError:
             print("[ERROR] lgpio not found. Hardware control disabled.")
+            self.lgpio_handle = None
         except Exception as e:
             print(f"[ERROR] GPIO Setup failed: {e}")
+            print(f"[ERROR] Full traceback: ", exc_info=True)
+            self.lgpio_handle = None
         
         # implement GPIO setup...
         # implement other methods for the real hardware
