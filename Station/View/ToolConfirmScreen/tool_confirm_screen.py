@@ -67,3 +67,9 @@ class ToolConfirmScreen(BaseScreen):
         User clicked NO. Go to the manual selection list.
         """
         self.go_to('tool select screen')
+    
+    def go_back_to_capture(self):
+        """
+        User clicked BACK. Return to capture screen to retake photo.
+        """
+        self.go_back('capture screen')

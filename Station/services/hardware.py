@@ -127,23 +127,32 @@ class HardwareManager(EventDispatcher):
         Periodically checks weight. Replaces 'wait_for_object' loop.
         """
         if not self.lgpio_handle:
+            print("[HARDWARE DEBUG] No lgpio handle, skipping poll")
             return
 
         raw_val = self._read_hx711_raw()
         if raw_val is None:
+            print("[HARDWARE DEBUG] Sensor not ready (raw_val is None)")
             return # Sensor not ready
 
         current_weight = raw_val - self.offset
+        print(f"[HARDWARE DEBUG] Load cell raw: {raw_val}, weight: {current_weight}, threshold: {LOAD_CELL_THRESHOLD}")
 
         # Check Threshold
         if current_weight > LOAD_CELL_THRESHOLD:
             self.stable_reads += 1
+            print(f"[HARDWARE DEBUG] Above threshold! stable_reads: {self.stable_reads}/{self.STABLE_READS_REQUIRED}")
         else:
+            if self.stable_reads > 0:
+                print(f"[HARDWARE DEBUG] Below threshold, reset stable_reads from {self.stable_reads}")
             self.stable_reads = 0
 
         # Trigger Event
         if self.stable_reads >= self.STABLE_READS_REQUIRED:
-            print(f"[HARDWARE] Object Detected! Weight: {current_weight}")
+            print(f"\n{'='*60}")
+            print(f"[HARDWARE] **OBJECT DETECTED!** Weight: {current_weight}")
+            print(f"[HARDWARE] Dispatching on_load_cell_detect event...")
+            print(f"{'='*60}\n")
             self.dispatch('on_load_cell_detect', current_weight)
             # Reset stable reads so we don't trigger 30 times a second while object sits there
             # Or you can add logic to wait for removal before triggering again.

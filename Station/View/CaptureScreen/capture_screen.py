@@ -33,7 +33,11 @@ class CaptureScreen(BaseScreen):
         # 2. Bind hardware Events
         app = App.get_running_app()
         if hasattr(app, 'hardware'):
+            print("[DEBUG] Hardware manager found. Binding to on_load_cell_detect...")
             app.hardware.bind(on_load_cell_detect=self.handle_load_cell_trigger)
+            print("[DEBUG] Successfully bound to on_load_cell_detect event")
+        else:
+            print("[ERROR] Hardware manager not found in app!")
             
         # 3. Start Camera in Background (So UI doesn't freeze)
         threading.Thread(target=self._init_camera_async).start()
@@ -168,12 +172,17 @@ class CaptureScreen(BaseScreen):
         """
         Logic for when the load cell is triggered.
         """
-        print(f"[UI] Capture Screen detected load cell trigger: {weight}")
+        print(f"\n{'='*60}")
+        print(f"[LOADCELL DETECTED] Weight: {weight}")
+        print(f"[LOADCELL DETECTED] Instance: {instance}")
+        print(f"{'='*60}\n")
         
         # 1. Update UI to "Processing" state immeidately
+        print("[DEBUG] Switching to processing mode...")
         self.set_processing_mode(True, message="Analyzing Image...")
         
         # 2. Capture Image
+        print("[DEBUG] Calling save_current_frame()...")
         filepath = self.save_current_frame()
         
         if filepath:
@@ -181,7 +190,7 @@ class CaptureScreen(BaseScreen):
             print(f"[DEBUG] Image saved successfully at {filepath}. Starting API thread...")
             threading.Thread(target=self.run_identification_task, args=(filepath,)).start()
         else:
-            print("[DEBUG] Failed to save image. Aborting API call.")
+            print("[ERROR] Failed to save image. Aborting API call.")
             self.set_processing_mode(False) # Reset if save failed
             self.update_event = Clock.schedule_interval(self.update_feed, 1.0/30.0) # Restart camera
     
@@ -195,6 +204,11 @@ class CaptureScreen(BaseScreen):
         """
         Save high-res photo and resize using the PIL logic
         """
+        print("[DEBUG] save_current_frame() called")
+        print(f"[DEBUG] IS_RASPBERRY_PI: {IS_RASPBERRY_PI}")
+        print(f"[DEBUG] self.picam2: {self.picam2}")
+        print(f"[DEBUG] self.capture: {self.capture}")
+        
         # 1. Generate Transaction ID (Timestamp)
         # Format: YYYYMMDD_HHMMSS(e.g., 20260202_183005)
         timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
