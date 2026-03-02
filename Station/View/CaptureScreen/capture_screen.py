@@ -183,12 +183,13 @@ class CaptureScreen(BaseScreen):
         else:
             print("[DEBUG] Failed to save image. Aborting API call.")
             self.set_processing_mode(False) # Reset if save failed
-            self.update_event = Clock.schedule_interval(self.update_feed, 1.0, 30.0) # Restart camera
+            self.update_event = Clock.schedule_interval(self.update_feed, 1.0/30.0) # Restart camera
     
     # --- DEV - CAPTURE WITH BUTTON - REMOVE LATER --- 
-    def capture_btn(self, weight):
-        """Dev Button Wrapper"""
-        self.handle_load_cell_trigger(None, weight)
+    def capture_btn(self):
+        """Dev Button: Simulate load cell trigger"""
+        print("[DEV] Manual capture button pressed")
+        self.handle_load_cell_trigger(None, 100.0)  # Simulate weight value
     
     def save_current_frame(self):
         """
@@ -250,7 +251,7 @@ class CaptureScreen(BaseScreen):
             new_img = ImageOps.pad(
                 img,
                 (target_size, target_size),
-                method=image.LANCZOS,
+                method=Image.LANCZOS,
                 color="white",
                 centering=(0.5, 0.5),
             )
