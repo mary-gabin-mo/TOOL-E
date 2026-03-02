@@ -178,15 +178,16 @@ class CaptureScreen(BaseScreen):
         """
         Logic for when the load cell is triggered.
         Delays capture by 1.5 seconds to let object settle.
+        Camera stays LIVE during the delay, then freezes when capture happens.
         """
         print(f"\n{'='*60}")
         print(f"[LOADCELL DETECTED] Raw Weight Value: {weight}")
         print(f"[LOADCELL DETECTED] Instance: {instance}")
         print(f"{'='*60}\n")
         
-        # 1. Update UI to "Processing" state immediately
-        print("[DEBUG] Switching to processing mode...")
-        self.set_processing_mode(True, message="Analyzing Image...\n(waiting for object to settle)")
+        # 1. Show message but keep camera LIVE (don't freeze yet)
+        print("[DEBUG] Waiting 1.5 seconds for object to settle...")
+        print("[DEBUG] Camera remains LIVE during delay...")
         
         # 2. Delay capture by 1.5 seconds to let object settle
         print("[DEBUG] Scheduling capture in 1.5 seconds...")
@@ -195,9 +196,12 @@ class CaptureScreen(BaseScreen):
     def _delayed_capture(self, dt):
         """
         Called 1.5 seconds after load cell trigger.
-        Performs the actual image capture.
+        NOW freezes the camera and performs the actual image capture.
         """
-        print("[DEBUG] 1.5 second delay complete. Capturing image...")
+        # NOW freeze the camera (right before capturing)
+        print("[DEBUG] Freezing camera and capturing image...")
+        self.set_processing_mode(True, message="Capturing Image...")
+        
         filepath = self.save_current_frame()
         
         if filepath:
