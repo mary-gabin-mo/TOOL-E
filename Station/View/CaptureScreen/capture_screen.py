@@ -4,12 +4,18 @@ import os
 import time
 import threading
 import numpy as np
+import logging
 from datetime import datetime
 from kivy.app import App
 from kivy.clock import Clock, mainthread
 from kivy.graphics.texture import Texture
 from View.baseScreen import BaseScreen
 from PIL import Image, ImageOps
+
+# Suppress debug logging from picamera2 and other libraries
+logging.getLogger('picamera2').setLevel(logging.WARNING)
+logging.getLogger('libcamera').setLevel(logging.WARNING)
+logging.getLogger('picamera2.job').setLevel(logging.WARNING)
 
 # Detect if we are on the Pi
 IS_RASPBERRY_PI = platform.machine() in ("aarch64", "armv7l")

@@ -1,6 +1,12 @@
 import importlib
 import os
 import platform
+import logging
+
+# --- Suppress library debug logging ---
+logging.getLogger('picamera2').setLevel(logging.WARNING)
+logging.getLogger('libcamera').setLevel(logging.WARNING)
+logging.getLogger('picamera2.job').setLevel(logging.WARNING)
 
 # --- Config - must run before other Kivy imports ---
 from kivy.config import Config 
