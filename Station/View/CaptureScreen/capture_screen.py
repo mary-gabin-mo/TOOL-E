@@ -177,22 +177,31 @@ class CaptureScreen(BaseScreen):
     def handle_load_cell_trigger(self, instance, weight):
         """
         Logic for when the load cell is triggered.
+        Delays capture by 1.5 seconds to let object settle.
         """
         print(f"\n{'='*60}")
-        print(f"[LOADCELL DETECTED] Weight: {weight}")
+        print(f"[LOADCELL DETECTED] Raw Weight Value: {weight}")
         print(f"[LOADCELL DETECTED] Instance: {instance}")
         print(f"{'='*60}\n")
         
-        # 1. Update UI to "Processing" state immeidately
+        # 1. Update UI to "Processing" state immediately
         print("[DEBUG] Switching to processing mode...")
-        self.set_processing_mode(True, message="Analyzing Image...")
+        self.set_processing_mode(True, message="Analyzing Image...\n(waiting for object to settle)")
         
-        # 2. Capture Image
-        print("[DEBUG] Calling save_current_frame()...")
+        # 2. Delay capture by 1.5 seconds to let object settle
+        print("[DEBUG] Scheduling capture in 1.5 seconds...")
+        Clock.schedule_once(self._delayed_capture, 1.5)
+    
+    def _delayed_capture(self, dt):
+        """
+        Called 1.5 seconds after load cell trigger.
+        Performs the actual image capture.
+        """
+        print("[DEBUG] 1.5 second delay complete. Capturing image...")
         filepath = self.save_current_frame()
         
         if filepath:
-            # 3. Start API upload in background
+            # Start API upload in background
             print(f"[DEBUG] Image saved successfully at {filepath}. Starting API thread...")
             threading.Thread(target=self.run_identification_task, args=(filepath,)).start()
         else:

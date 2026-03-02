@@ -162,7 +162,8 @@ class HardwareManager(EventDispatcher):
         # Trigger Event
         if self.stable_reads >= self.STABLE_READS_REQUIRED:
             print(f"\n{'='*60}")
-            print(f"[HARDWARE] **OBJECT DETECTED!** Weight: {current_weight}")
+            print(f"[HARDWARE] **OBJECT DETECTED!**")
+            print(f"[HARDWARE] Weight: {current_weight:.1f}g (raw: {raw_val})")
             print(f"[HARDWARE] Dispatching on_load_cell_detect event...")
             print(f"{'='*60}\n")
             self.dispatch('on_load_cell_detect', current_weight)
