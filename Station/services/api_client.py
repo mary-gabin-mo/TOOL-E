@@ -160,3 +160,33 @@ class APIClient(EventDispatcher):
         except Exception as e:
             print(f"[API] Transaction Failed: {e}")
             return {'success': False, 'error': "Could not record transaction."}
+    
+    def get_user_unreturned_tools(self, user_id):
+        """
+        Fetch all unreturned tools for a specific user.
+        
+        Args:
+            user_id (str): The user's UCID
+            
+        Returns:
+            dict: {'success': True, 'data': [tool_list]} OR {'success': False, 'error': str}
+        """
+        print(f"[API] Fetching unreturned tools for user: {user_id}")
+        
+        try:
+            # TODO: Update this URL when backend endpoint is ready
+            url = f"{API_TRANSACTION}/user/{user_id}/unreturned"
+            
+            response = requests.get(
+                url,
+                timeout=NETWORK_TIMEOUT
+            )
+            response.raise_for_status()
+            
+            data = response.json()
+            print(f"[API] Found {len(data)} unreturned tools")
+            return {'success': True, 'data': data}
+        
+        except Exception as e:
+            print(f"[API] Error fetching unreturned tools: {e}")
+            return {'success': False, 'error': str(e)}

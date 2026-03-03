@@ -1,4 +1,4 @@
-import React, { useState, useRef, useEffect, useMemo } from 'react';
+import React, { useState, useRef, useEffect } from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { ChevronDown, Trash2, ArrowUp, ArrowDown, ArrowUpDown, Loader2, ChevronLeft, ChevronRight } from 'lucide-react';
 import clsx from 'clsx';
@@ -7,7 +7,9 @@ import { api } from '../../lib/axios';
 interface Transaction {
   transaction_id: number;
   user_id: number | null;
+  user_name?: string;
   tool_id: number | null;
+  tool_name?: string;
   checkout_timestamp: string;
   desired_return_date: string | null;
   return_timestamp: string | null;

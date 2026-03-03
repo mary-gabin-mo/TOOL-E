@@ -1,0 +1,83 @@
+<ToolReturnSelectionScreen>:
+    md_bg_color: 1, 1, 1, 1
+
+    MDBoxLayout:
+        orientation: 'vertical'
+        padding: "20dp"
+        spacing: "15dp"
+
+        # --- Header ---
+        MDLabel:
+            id: title_label
+            text: "Select Tool to Return"
+            halign: "center"
+            font_style: "H5"
+            bold: True
+            size_hint_y: None
+            height: "60dp"
+
+        # --- Instructions ---
+        MDLabel:
+            text: "Check the tool(s) you want to return"
+            halign: "center"
+            theme_text_color: "Secondary"
+            font_style: "Body1"
+            size_hint_y: None
+            height: "40dp"
+
+        # --- Tool List Container ---
+        MDCard:
+            orientation: "vertical"
+            padding: "10dp"
+            size_hint_y: 0.6
+            radius: [15, 15, 15, 15]
+            elevation: 2
+
+            ScrollView:
+                do_scroll_x: False
+                do_scroll_y: True
+
+                MDList:
+                    id: tool_list_container
+                    # Tools will be added here dynamically
+
+        # --- Empty Message (hidden when list has items) ---
+        MDLabel:
+            id: empty_message
+            text: "No unreturned tools found"
+            halign: "center"
+            theme_text_color: "Secondary"
+            font_style: "H6"
+            opacity: 0
+            size_hint_y: None
+            height: "60dp"
+
+        # --- Spacer ---
+        Widget:
+            size_hint_y: 0.05
+
+        # --- Continue Button ---
+        MDFillRoundFlatButton:
+            id: continue_btn
+            text: "CONFIRM RETURN"
+            font_size: "24sp"
+            size_hint: 0.9, None
+            height: "80dp"
+            pos_hint: {"center_x": .5}
+            md_bg_color: 0.2, 0.7, 0.2, 1  # Green
+            disabled: True
+            on_release: root.confirm_selection()
+
+        # --- Back Button ---
+        MDFillRoundFlatButton:
+            text: "BACK"
+            font_size: "20sp"
+            size_hint: 0.9, None
+            height: "60dp"
+            pos_hint: {"center_x": .5}
+            md_bg_color: 0.6, 0.6, 0.6, 1  # Grey
+            on_release: root.go_back()
+
+        # --- Spacer ---
+        Widget:
+            size_hint_y: 0.05
