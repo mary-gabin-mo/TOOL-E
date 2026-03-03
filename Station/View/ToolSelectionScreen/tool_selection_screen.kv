@@ -1,0 +1,90 @@
+<ToolSelectionScreen>:
+    md_bg_color: 1, 1, 1, 1  # White background
+
+    MDBoxLayout:
+        orientation: 'vertical'
+        padding: "40dp"
+        spacing: "30dp"
+        pos_hint: {"center_x": .5, "center_y": .5}
+
+        # -- Logo Area Placeholder --
+        Widget:
+            size_hint_y: 0.3
+
+        MDLabel:
+            text: "Please select the correct tool:"
+            halign: "center"
+            font_style: "H5"
+            theme_text_color: "Primary"
+            size_hint_y: 0.1
+
+        MDCard:
+            orientation: 'vertical'
+            padding: '5dp'
+            size_hint: .9, .6
+            pos_hint: {"center_x": .5}
+
+            style: "outlined"
+            line_color: 0.4, 0.4, 0.4, 1  # Grey border
+            line_width: 1.5
+
+            radius: [10, 10, 10, 10]
+            md_bg_color: 1, 1, 1, 1 # White card background
+
+            MDScrollView:
+                do_scroll_x: False # Only allow vertical scrolling
+                do_scroll_y: True
+
+                # The container for the list items
+                MDList:
+                    id: tool_list_container
+                    padding: 0
+
+        MDBoxLayout:
+            orientation: 'horizontal'
+            spacing: "20dp"             # Gap between buttons
+            size_hint_y: None           # Don't expand vertically
+            height: '80dp'              # Fixed height for this row
+            pos_hint: {"center_x": .5}
+            padding: '10dp'             # Optional padding around the row
+
+            MDFillRoundFlatButton:
+                text: "Back"
+                font_size: "20sp"
+                size_hint: 0.4, 1        
+                md_bg_color: 0.7, 0.7, 0.7, 1  # Grey
+                on_release: root.go_back('tool confirm screen')
+
+            MDFillRoundFlatButton:
+                text: "Scan More"
+                font_size: "20sp"
+                size_hint: 0.4, 1        
+                md_bg_color: 0.7, 0.7, 0.7, 1  # Grey
+                on_release: root.confirm_scan_more()
+
+            MDFillRoundFlatButton:
+                id: next_button
+                text: "Next"
+                font_size: "20sp"
+                size_hint: 0.4, 1        
+                md_bg_color: 0.2, 0.7, 0.2, 1  # Green
+                disabled: True
+                on_release: root.proceed()
+
+        # Widget:
+        #     size_hint_y: 0.01
+        # # -- DEV BUTTON --
+        # MDFillRoundFlatButton:
+        #     text: "DEV - BACK (Capture Screen)"
+        #     font_size: "20sp"
+        #     size_hint: 0.5, 0.05
+        #     pos_hint: {"center_x": .5}
+        #     md_bg_color: 0.4, 0.4, 0.4, 1  # Red
+
+        # # -- DEV BUTTON --
+        # MDFillRoundFlatButton:
+        #     text: "DEV - NEXT (Tool Selection)"
+        #     font_size: "20sp"
+        #     size_hint: 0.5, 0.05
+        #     pos_hint: {"center_x": .5}
+        #     md_bg_color: 0.4, 0.4, 0.4, 1  # Red

@@ -1,1 +1,1 @@
-# TOOL-E
+# TOOL-E Kiosk GUI

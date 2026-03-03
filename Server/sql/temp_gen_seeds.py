@@ -13,7 +13,7 @@ with open('transactions_seed.sql', 'w', encoding='utf-8') as f:
 
     values = []
     base_date = datetime.now()
-    count = 100
+    count = 500
 
     for i in range(count):
         uid = random.choice(users)
@@ -48,3 +48,5 @@ with open('transactions_seed.sql', 'w', encoding='utf-8') as f:
         
         val_str = f"({uid}, {tid}, '{checkout_s}', '{desired_s}', {ret_s}, 1, '{purp}', '{img}', 1, 0){terminator}\n"
         f.write(val_str)
+
+print("Check 'transactions_seed.sql' for the generated SQL.")

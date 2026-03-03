@@ -69,5 +69,23 @@ export default defineConfig([
       // other options...
     },
   },
-])
+])xxxxx
 ```
+
+## Project Dependencies
+
+### Core Libraries
+- **React** (`^19.2.0`): UI library
+- **React Router DOM** (`^7.11.0`): For application routing
+- **Vite** (`^7.2.4`): Build tool and development server
+
+### Data Fetching & State Management
+- **@tanstack/react-query** (`^5.90.15`): Server state management
+- **Zustand** (`^5.0.9`): Client state management
+- **Axios** (`^1.13.2`): HTTP client
+
+### UI & Styling
+- **Tailwind CSS** (`^4.1.18`): Utility-first CSS framework
+- **Lucide React** (`^0.562.0`): Icon set
+- **Recharts** (`^3.7.0`): Charting library
+- **clsx** (`^2.1.1`) & **tailwind-merge** (`^3.4.0`): Class name utilities

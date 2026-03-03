@@ -1,0 +1,134 @@
+<TransactionConfirmScreen>:
+    md_bg_color: 1, 1, 1, 1  # White background
+
+    MDBoxLayout:
+        orientation: 'vertical'
+        padding: "40dp"
+        spacing: "30dp"
+        pos_hint: {"center_x": .5, "center_y": .5}
+
+        # --- Logo Area Placeholder ---
+        Widget:
+            size_hint_y: 0.3
+
+        # --- Title ---
+        MDLabel:
+            text: "Confirm Transaction"
+            halign: "center"
+            font_style: "H5"
+            bold: True
+            size_hint_y: None
+            height: '40dp'
+
+        # Central card
+        MDCard:
+            orientation: 'vertical'
+            padding: '15dp'
+            spacing: '15dp'
+            size_hint: .8, .6 # 80% width, fill remaining height
+            pos_hint: {"center_x": .5}
+            radius: [15, 15, 15, 15]
+            elevation: 3
+            md_bg_color: 1, 1, 1, 1
+
+            # 1. Scanned Items Header
+            MDLabel:
+                text: "Items to Return"
+                halign: "center"
+                font_style: "H6"
+                theme_text_color: "Secondary"
+                size_hint_y: None
+                height: "30dp"
+
+            # 2. Scrollable List of Tools
+            MDScrollView:
+                size_hint_y: 0.5 # Take up 50% of the card height
+                bar_width: '10dp'
+
+                MDList:
+                    id: tool_list_container
+                    padding: 0
+            
+            # 2. Required Action: Date Selection Box
+            MDCard:
+                id: date_box
+                orientation: 'vertical'
+                size_hint_y: 0.2
+                radisu: [10, 10, 10, 10]
+                elevation: 0
+                md_bg_color: 0.95, 0.95, 0.95, 1
+                ripple_behavior: True
+                on_release: root.open_calendar()
+
+                # --- THE RED BORDER LOGIC ---
+                line_color: 1, 0, 0, 1 # Initial Red (Changed in Python code)
+                style: "outlined"
+                line_width: 2
+
+                MDLabel:
+                    id: date_label
+                    text: "Tap to select Retrun Date"
+                    halign: "center"
+                    valign: "center"
+                    theme_text_color: "Custom"
+                    text_color: 0.8, 0.2, 0.2, 1 # Red text initially
+
+            # Spacer to push buttons down
+            Widget:
+                size_hint_y: 0.1
+
+        # --- BOTTOM ACTION BAR ---
+        MDBoxLayout:
+            orientation: 'horizontal'
+            size_hint_y: None
+            height: '200dp'
+            spacing: '20dp'
+            padding: '10dp'
+
+            MDFillRoundFlatButton:
+                text: "CANCEL"
+                font_size: "20sp"
+                size_hint_x: 0.4
+                md_bg_color: 0.6, 0.6, 0.6, 1
+                on_release: root.go_back('capture screen')
+
+            MDFillRoundFlatButton:
+                id: confirm_finish_btn
+                text: "CONFIRM & FINISH"
+                font_size: '20sp'
+                size_hint_x: 0.6
+                disabled: True # Disabled until date selected
+                md_bg_color: 0.2, 0.7, 0.2, 1 # Green
+                on_release: root.finish_transaction()
+
+        # MDBoxLayout:
+        #     orientation: 'horizontal'
+        #     spacing: "20dp"             # Gap between buttons
+        #     size_hint_y: None           # Don't expand vertically
+        #     height: '80dp'              # Fixed height for this row
+        #     pos_hint: {"centre_x": .5}
+        #     padding: '10dp'             # Optional padding around the row
+
+        #     MDFillRoundFlatButton:
+        #         text: "DEV - BACK\n(Tool Confim Screen)"
+        #         font_size: "20sp"
+        #         size_hint: 0.3, 1        
+        #         md_bg_color: 0.4, 0.4, 0.4, 1  # Grey
+        #         on_release: root.go_back('tool confirm screen')
+
+        #     MDFillRoundFlatButton:
+        #         text: "DEV - NEXT\n(Return Date Screen)"
+        #         font_size: "20sp"
+        #         size_hint: 0.3, 1        
+        #         md_bg_color: 0.4, 0.4, 0.4, 1  # Grey
+        #         # on_release: root.go_to('return date screen') # add later
+
+        # # -- Cancel Button --
+        # MDFillRoundFlatButton:
+        #     text: "Cancel"
+        #     font_size: "24sp"
+        #     size_hint: 1, 0.01
+        #     pos_hint: {"center_x": .5}
+        #     md_bg_color: 0.9, 0.17, 0.25, 1  # Red
+        #     on_release: root.go_back('welcome screen')
+
