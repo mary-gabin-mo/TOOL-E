@@ -1,4 +1,4 @@
-from fastapi import APIRouter, HTTPException
+from fastapi import APIRouter, HTTPException, Request
 from sqlalchemy import text
 from typing import Optional
 from datetime import datetime
@@ -271,8 +271,9 @@ async def update_transaction(transaction_id: int, transaction: TransactionUpdate
 
     return {"success": True, "message": "Transaction updated successfully"}
 
+@router.post("/transaction/")
 @router.post("/transaction")
-async def create_kiosk_transaction(payload: KioskTransactionRequest):
+async def create_kiosk_transaction(transaction: KioskTransactionRequest):
     """
     Handles transaction submission from the Kiosk frontend.
     Complexity Analysis:
@@ -283,12 +284,12 @@ async def create_kiosk_transaction(payload: KioskTransactionRequest):
     with engine_tools.begin() as conn: # Start transaction
         # 1. Parse User ID
         try:
-            u_id = int(payload.user_id)
+            u_id = int(transaction.user_id)
         except ValueError:
             raise HTTPException(status_code=400, detail="Invalid user_id format")
 
         # 2. Process Transactions (Logic to update user table removed as per request)
-        for item in payload.transactions:
+        for item in transaction.transactions:
             # Find the tool
             # Assuming tool_name is unique or we pick one.
             tool_row = conn.execute(
@@ -328,9 +329,9 @@ async def create_kiosk_transaction(payload: KioskTransactionRequest):
             # Log Transaction
             # Parsing dates
             desired_return = None
-            if payload.return_date:
+            if transaction.return_date:
                 try:
-                    desired_return = datetime.strptime(payload.return_date, "%Y-%m-%d %H:%M:%S")
+                    desired_return = datetime.strptime(transaction.return_date, "%Y-%m-%d %H:%M:%S")
                 except ValueError:
                     pass # Or handle error
 
@@ -342,7 +343,7 @@ async def create_kiosk_transaction(payload: KioskTransactionRequest):
                 """),
                 {
                     "uid": u_id,
-                    "uname": payload.user_name,
+                    "uname": transaction.user_name,
                     "tid": t_id,
                     "d_return": desired_return,
                     "img": final_img_path

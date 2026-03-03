@@ -36,6 +36,7 @@ export const ManualTransactionPage = () => {
   const [selectedToolId, setSelectedToolId] = useState('');
   const [purpose, setPurpose] = useState('');
   const [desiredReturnDate, setDesiredReturnDate] = useState('');
+  const [formError, setFormError] = useState<string | null>(null);
 
   const [returnUserId, setReturnUserId] = useState('');
   const [lookupUserId, setLookupUserId] = useState('');
@@ -66,7 +67,11 @@ export const ManualTransactionPage = () => {
       setSelectedToolId('');
       setPurpose('');
       setDesiredReturnDate('');
+      setFormError(null);
     },
+    onError: (err: any) => {
+       setFormError(err.response?.data?.message || "Failed to create transaction.");
+    }
   });
 
   const { data: userTransactions = [], isFetching: isFetchingReturns, isError, error } = useQuery<any[]>({
@@ -130,10 +135,47 @@ export const ManualTransactionPage = () => {
           <form
             onSubmit={(e) => {
               e.preventDefault();
+              setFormError(null);
+
+              if (!userId) {
+                setFormError("Please enter a UCID.");
+                return;
+              }
+
+              if (!/^\d+$/.test(userId)) {
+                setFormError("UCID must contain only numbers.");
+                return;
+              }
+
+              if (!selectedToolId) {
+                setFormError("Please select a tool.");
+                return;
+              }
+
+              if (!desiredReturnDate) {
+                 setFormError("Please select a desired return date.");
+                 return;
+              }
+
+              const [y, m, d] = desiredReturnDate.split('-').map(Number);
+              const returnDate = new Date(y, m - 1, d);
+              const today = new Date();
+              today.setHours(0, 0, 0, 0);
+              
+              if (returnDate < today) {
+                setFormError("Return date cannot be in the past.");
+                return;
+              }
+
               checkoutMutation.mutate();
             }}
             className="space-y-4"
           >
+            {formError && (
+              <div className="bg-red-50 border border-red-200 text-red-700 px-4 py-3 rounded relative text-sm">
+                <span className="block sm:inline">{formError}</span>
+              </div>
+            )}
             <div>
               <label className="block text-sm font-medium text-gray-700 mb-1">UCID</label>
               <input

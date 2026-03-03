@@ -1,9 +1,64 @@
-from fastapi import FastAPI
+from fastapi import FastAPI, Request
 from fastapi.middleware.cors import CORSMiddleware
 from app.routers import auth, tools, transactions, ml, analytics
 from app.services import ml_service, image_service
 
 app = FastAPI(title="TOOL-E Backend Server (Modular)")
+
+# --- Manually registered endpoint to debug the 404 issue ---
+from fastapi import HTTPException
+from app.models import KioskTransactionRequest
+from app.database import engine_tools
+from sqlalchemy import text
+from app.services import image_service
+from datetime import datetime
+import os
+
+@app.post("/transaction") 
+async def manual_create_transaction_debug(request: Request):
+    print(f"DEBUG: Manual '/transaction' handler reached from {request.client.host}")
+    try:
+        body = await request.json()
+        print(f"DEBUG: Payload received: {body}")
+        payload = KioskTransactionRequest(**body)
+    except Exception as e:
+        print(f"DEBUG: Parsing failed: {e}")
+        raise HTTPException(status_code=422, detail=str(e))
+
+    # Re-use the logic from transactions.py roughly
+    with engine_tools.begin() as conn:
+        try:
+            u_id = int(payload.user_id)
+        except ValueError:
+            raise HTTPException(status_code=400, detail="Invalid user_id")
+        
+        for item in payload.transactions:
+            # Simplified logic for debug
+            final_img_path = item.img_filename
+            # ... skipping complex logic for brevity in debug ...
+            
+            desired_return = None
+            if payload.return_date:
+                 try:
+                    desired_return = datetime.strptime(payload.return_date, "%Y-%m-%d %H:%M:%S")
+                 except: pass
+
+            conn.execute(
+                text("INSERT INTO transactions (user_id, user_name, tool_id, desired_return_date, checkout_timestamp, image_path, purpose) VALUES (:uid, :uname, NULL, :d_return, NOW(), :img, 'Manual Debug Borrow')"),
+                {"uid": u_id, "uname": payload.user_name, "d_return": desired_return, "img": final_img_path}
+            )
+            print(f"DEBUG: Inserted transaction for {u_id}")
+
+    return {"success": True, "message": "Manual Debug Transaction Recorded"}
+# -----------------------------------------------------------
+
+@app.middleware("http")
+async def log_requests(request: Request, call_next):
+    print(f"INCOMING REQUEST: {request.method} {request.url}")
+    print(f"PATH HEX: {request.url.path.encode('utf-8').hex()}") # Detect hidden chars
+    response = await call_next(request)
+    print(f"OUTGOING RESPONSE: {response.status_code}")
+    return response
 
 # Configure CORS
 app.add_middleware(
