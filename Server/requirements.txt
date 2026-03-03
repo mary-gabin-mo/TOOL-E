@@ -1,0 +1,13 @@
+fastapi
+uvicorn
+pydantic
+python-dotenv
+sqlalchemy
+pymysql
+torch
+torchvision
+pillow
+requests
+cryptography
+jinja2
+python-multipart

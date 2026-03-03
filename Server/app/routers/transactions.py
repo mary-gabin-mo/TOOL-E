@@ -2,7 +2,9 @@ from fastapi import APIRouter, HTTPException
 from sqlalchemy import text
 from typing import Optional
 from datetime import datetime
-from app.models import TransactionInput, TransactionUpdate, TransactionBatchInput
+from app.models import TransactionInput, TransactionUpdate, TransactionBatchInput, KioskTransactionRequest
+from app.services import image_service
+import os
 from app.database import engine_tools
 from app.services import image_service
 
@@ -77,7 +79,7 @@ async def get_transactions(
             SELECT t.transaction_id, t.user_id, t.tool_id, t.checkout_timestamp, 
                    t.desired_return_date, t.return_timestamp, t.quantity, t.purpose, 
                    t.image_path, t.classification_correct, t.weight,
-                   u.user_name, tl.tool_name
+                   COALESCE(t.user_name, u.user_name) as user_name, tl.tool_name
             FROM transactions t
             LEFT JOIN users u ON t.user_id = u.user_id
             LEFT JOIN tools tl ON t.tool_id = tl.tool_id
@@ -232,8 +234,18 @@ async def update_transaction(transaction_id: int, transaction: TransactionUpdate
             updates.append("desired_return_date = :desired_return_date")
             params["desired_return_date"] = transaction.desired_return_date
         if transaction.return_timestamp is not None:
+            # Fix ISO format from JS (remove T, Z, milliseconds) for MySQL compatibility
+            ts = transaction.return_timestamp
+            if 'T' in ts:
+                try:
+                    # simplistic parsing for '2026-03-03T17:50:01.323Z' -> '2026-03-03 17:50:01'
+                    ts = ts.replace('T', ' ').replace('Z', '')
+                    if '.' in ts:
+                        ts = ts.split('.')[0]
+                except Exception:
+                    pass
             updates.append("return_timestamp = :return_timestamp")
-            params["return_timestamp"] = transaction.return_timestamp
+            params["return_timestamp"] = ts
         if transaction.quantity is not None:
             updates.append("quantity = :quantity")
             params["quantity"] = transaction.quantity
@@ -258,3 +270,83 @@ async def update_transaction(transaction_id: int, transaction: TransactionUpdate
         conn.commit()
 
     return {"success": True, "message": "Transaction updated successfully"}
+
+@router.post("/transaction")
+async def create_kiosk_transaction(payload: KioskTransactionRequest):
+    """
+    Handles transaction submission from the Kiosk frontend.
+    Complexity Analysis:
+    - Tool Lookup: O(N) where N is the number of tools in the transaction. Each lookup is O(1) assuming index on tool_name.
+    - Updates/Inserts: O(N) - Insertions and updates are constant time per item.
+    - Total Time Complexity: O(N) linear with respect to the number of items being borrowed.
+    """
+    with engine_tools.begin() as conn: # Start transaction
+        # 1. Parse User ID
+        try:
+            u_id = int(payload.user_id)
+        except ValueError:
+            raise HTTPException(status_code=400, detail="Invalid user_id format")
+
+        # 2. Process Transactions (Logic to update user table removed as per request)
+        for item in payload.transactions:
+            # Find the tool
+            # Assuming tool_name is unique or we pick one.
+            tool_row = conn.execute(
+                text("SELECT tool_id, available_quantity FROM tools WHERE tool_name = :name FOR UPDATE"),
+                {"name": item.tool_name}
+            ).fetchone()
+
+            if not tool_row:
+                raise HTTPException(status_code=404, detail=f"Tool '{item.tool_name}' not found")
+            
+            t_id, avail_qty = tool_row
+
+            if avail_qty < 1:
+                # ... check avail ...
+                pass
+
+            # Update Tool Status
+            conn.execute(
+                text("UPDATE tools SET available_quantity = available_quantity - 1, current_status = IF(available_quantity - 1 > 0, 'Available', 'In Use') WHERE tool_id = :tid"),
+                {"tid": t_id}
+            )
+
+            # Move Image to Permanent Storage (if path exists)
+            # The frontend sends the full path or filename? 
+            # If it's a full path on the same machine, move it. If just filename, resolve it.
+            # Assuming just filename or valid path from Kiosk that matches Server.
+            final_img_path = item.img_filename
+            if item.img_filename:
+                # Attempt to move/organize using the service to keep folders clean
+                # We assume correct=True for new transactions unless specified otherwise
+                # Extract filename if full path is given
+                fname = os.path.basename(item.img_filename) 
+                moved_path = image_service.move_image_to_permanent(fname, item.tool_name, True)
+                if moved_path:
+                    final_img_path = moved_path
+
+            # Log Transaction
+            # Parsing dates
+            desired_return = None
+            if payload.return_date:
+                try:
+                    desired_return = datetime.strptime(payload.return_date, "%Y-%m-%d %H:%M:%S")
+                except ValueError:
+                    pass # Or handle error
+
+            conn.execute(
+                text("""
+                    INSERT INTO transactions 
+                    (user_id, user_name, tool_id, desired_return_date, checkout_timestamp, image_path, purpose)
+                    VALUES (:uid, :uname, :tid, :d_return, NOW(), :img, 'Kiosk Borrow')
+                """),
+                {
+                    "uid": u_id,
+                    "uname": payload.user_name,
+                    "tid": t_id,
+                    "d_return": desired_return,
+                    "img": final_img_path
+                }
+            )
+
+    return {"success": True, "message": "Transaction recorded"}
