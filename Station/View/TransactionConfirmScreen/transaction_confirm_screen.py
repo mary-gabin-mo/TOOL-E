@@ -69,14 +69,22 @@ class TransactionConfirmScreen(BaseScreen):
 
         # Safe User ID retrieval
         user_id = getattr(app.session, 'user_id', '')
-        if not user_id and app.session.user_data:
+        user_dict = app.session.user_data or {}
+
+        if not user_id and user_dict:
              # Fallback: try to get ID from the user dictionary if user_id property is empty
              # API returns 'ucid', checking both just in case
-             user_id = app.session.user_data.get('ucid') or app.session.user_data.get('id', '')
+             user_id = user_dict.get('ucid') or user_dict.get('id', '')
+
+        # Get User Name (First + Last)
+        first_name = user_dict.get('first_name', '')
+        last_name = user_dict.get('last_name', '')
+        user_name = f"{first_name} {last_name}".strip()
 
         # Construct the final payload for the API
         final_payload = {
             "user_id": str(user_id), 
+            "user_name": user_name or "Unknown User",
             "return_date": formatted_date,
             "transactions": getattr(app.session, 'transactions', [])
         }
