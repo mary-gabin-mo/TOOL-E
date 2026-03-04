@@ -68,9 +68,10 @@ class ToolConfirmScreen(BaseScreen):
         """
         User clicked NO. Go to the manual selection list.
         """
-        app = App.get_running_app()
-        if hasattr(app, 'session') and app.session.current_transaction:
-             print("[UI] User rejected AI prediction. Setting classification_correct = False")
-             app.session.set_classification_correct(False)
-             
         self.go_to('tool select screen')
+    
+    def go_back_to_capture(self):
+        """
+        User clicked BACK. Return to capture screen to retake photo.
+        """
+        self.go_back('capture screen')

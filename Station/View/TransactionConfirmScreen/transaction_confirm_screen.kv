@@ -90,7 +90,7 @@
                 font_size: "20sp"
                 size_hint_x: 0.4
                 md_bg_color: 0.6, 0.6, 0.6, 1
-                on_release: root.go_back('capture screen')
+                on_release: root.cancel_transaction()
 
             MDFillRoundFlatButton:
                 id: confirm_finish_btn

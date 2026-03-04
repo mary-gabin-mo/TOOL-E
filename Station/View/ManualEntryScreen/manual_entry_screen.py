@@ -1,8 +1,7 @@
-from kivymd.uix.screen import MDScreen
+from View.baseScreen import BaseScreen
 from kivy.app import App
-from kivy.clock import Clock
 
-class ManualEntryScreen(MDScreen):
+class ManualEntryScreen(BaseScreen):
 
     def on_leave(self):
         self.clear_input()
@@ -40,16 +39,3 @@ class ManualEntryScreen(MDScreen):
             error_screen = self.manager.get_screen('user error screen')
             error_screen.set_error_message(result['error'])
             self.go_to('user error screen')
-            
-    def back_to_main(self):
-        """Clear input field and navigate to the Welcome screen."""
-        self.clear_input()
-        self.go_back('welcome screen')
-        
-    def go_to(self, screen):
-        self.manager_screens.transition.direction = 'left'
-        self.manager_screens.current = screen
-        
-    def go_back(self, screen):
-        self.manager_screens.transition.direction = 'right'
-        self.manager_screens.current = screen
