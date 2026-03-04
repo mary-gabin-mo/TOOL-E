@@ -17,7 +17,8 @@ async def identify_tool(file: UploadFile = File(...)):
         contents = await file.read()
         
         # 2. Save temp image
-        image_filename = image_service.save_temp_image(contents)
+        # Use provided filename if available (e.g. timestamp from kiosk), otherwise UUID
+        image_filename = image_service.save_temp_image(contents, file.filename)
         
         # 3. Predict
         image = Image.open(io.BytesIO(contents)).convert('RGB')

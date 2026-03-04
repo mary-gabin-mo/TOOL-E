@@ -11,8 +11,14 @@ TEMP_IMAGES_DIR = os.path.join(CAPTURED_IMAGES_DIR, 'temp')
 def init_image_dirs():
     os.makedirs(TEMP_IMAGES_DIR, exist_ok=True)
 
-def save_temp_image(contents: bytes) -> str:
-    filename = f"{uuid.uuid4()}.jpg"
+def save_temp_image(contents: bytes, filename: str = None) -> str:
+    if not filename:
+        filename = f"{uuid.uuid4()}.jpg"
+    
+    # Ensure secure filename just in case, though if it comes from Kiosk it might contain specific chars we want
+    # For now, trust the filename but maybe ensure it's in the dir
+    filename = os.path.basename(filename)
+    
     temp_path = os.path.join(TEMP_IMAGES_DIR, filename)
     with open(temp_path, "wb") as f:
         f.write(contents)
@@ -38,7 +44,12 @@ def move_image_to_permanent(filename: str, tool_name: str, classification_correc
     tool_target_dir = os.path.join(base_target_dir, safe_tool_name)
     os.makedirs(tool_target_dir, exist_ok=True)
     
-    new_filename = f"{safe_tool_name}_{time.strftime('%Y%m%d_%H%M%S')}_{uuid.uuid4().hex[:6]}.jpg"
+    # new_filename = f"{safe_tool_name}_{time.strftime('%Y%m%d_%H%M%S')}_{uuid.uuid4().hex[:6]}.jpg"
+    # new_filename = f"{safe_tool_name}_{time.strftime('%Y%m%d_%H%M%S')}.jpg"
+    
+    # Use the original filename (which contains the timestamp ID from Kiosk)
+    new_filename = filename
+    
     target_path = os.path.join(tool_target_dir, new_filename)
     
     shutil.move(temp_path, target_path)

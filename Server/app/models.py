@@ -86,6 +86,7 @@ class KioskToolItem(BaseModel):
     transaction_id: str 
     img_filename: str
     tool_name: str
+    classification_correct: Optional[bool] = None
 
 class KioskTransactionRequest(BaseModel):
     user_id: str

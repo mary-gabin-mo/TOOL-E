@@ -6,7 +6,8 @@ from app.models import TransactionInput, TransactionUpdate, TransactionBatchInpu
 from app.services import image_service
 import os
 from app.database import engine_tools
-from app.services import image_service
+# Duplicate import removed
+# from app.services import image_service
 
 router = APIRouter()
 
@@ -113,6 +114,9 @@ async def get_transactions(
                 "return_timestamp": row.return_timestamp,
                 "quantity": row.quantity,
                 "purpose": row.purpose,
+                "image_path": row.image_path,
+                "classification_correct": bool(row.classification_correct) if row.classification_correct is not None else None,
+                "weight": row.weight,
                 "status": status
             })
             
@@ -298,36 +302,44 @@ async def create_kiosk_transaction(transaction: KioskTransactionRequest):
             ).fetchone()
 
             if not tool_row:
-                raise HTTPException(status_code=404, detail=f"Tool '{item.tool_name}' not found")
-            
-            t_id, avail_qty = tool_row
-
-            if avail_qty < 1:
-                # ... check avail ...
-                pass
-
-            # Update Tool Status
-            conn.execute(
-                text("UPDATE tools SET available_quantity = available_quantity - 1, current_status = IF(available_quantity - 1 > 0, 'Available', 'In Use') WHERE tool_id = :tid"),
-                {"tid": t_id}
-            )
+                # If tool not found, we can either skip or create a record with NULL tool_id (like the debug endpoint did)
+                # But proper flow is to alert. For now, let's log and insert with NULL to avoid breaking kiosk flow 
+                # if name mismatch. But DB schema might enforce FK. 
+                # Let's assume strict for now, but handle gracefully.
+                # raise HTTPException(status_code=404, detail=f"Tool '{item.tool_name}' not found")
+                # RELAXED LOGIC for Kiosk Robustness:
+                t_id = None
+                print(f"[SERVER] Warning: Tool '{item.tool_name}' not found in DB. Recording generic transaction.")
+            else:
+                t_id, avail_qty = tool_row
+                # Update Tool Status
+                conn.execute(
+                    text("UPDATE tools SET available_quantity = available_quantity - 1, current_status = IF(available_quantity - 1 > 0, 'Available', 'In Use') WHERE tool_id = :tid"),
+                    {"tid": t_id}
+                )
 
             # Move Image to Permanent Storage (if path exists)
-            # The frontend sends the full path or filename? 
-            # If it's a full path on the same machine, move it. If just filename, resolve it.
-            # Assuming just filename or valid path from Kiosk that matches Server.
             final_img_path = item.img_filename
             if item.img_filename:
                 # Attempt to move/organize using the service to keep folders clean
                 # We assume correct=True for new transactions unless specified otherwise
                 # Extract filename if full path is given
-                fname = os.path.basename(item.img_filename) 
-                moved_path = image_service.move_image_to_permanent(fname, item.tool_name, True)
+                fname = os.path.basename(item.img_filename)
+                
+                # Determine classification correctness (default to True if not provided, or handle None)
+                # If item.classification_correct is explicitly False, use False.
+                is_correct = True
+                if item.classification_correct is not None:
+                    is_correct = item.classification_correct
+
+                moved_path = image_service.move_image_to_permanent(fname, item.tool_name, is_correct)
                 if moved_path:
+                    print(f"[SERVER] Successfully moved kiosk image to {moved_path}")
                     final_img_path = moved_path
+                else:
+                    print(f"[SERVER] Warning: Failed to move kiosk image {fname}")
 
             # Log Transaction
-            # Parsing dates
             desired_return = None
             if transaction.return_date:
                 try:
@@ -338,15 +350,16 @@ async def create_kiosk_transaction(transaction: KioskTransactionRequest):
             conn.execute(
                 text("""
                     INSERT INTO transactions 
-                    (user_id, user_name, tool_id, desired_return_date, checkout_timestamp, image_path, purpose)
-                    VALUES (:uid, :uname, :tid, :d_return, NOW(), :img, 'Kiosk Borrow')
+                    (user_id, user_name, tool_id, desired_return_date, checkout_timestamp, image_path, purpose, classification_correct)
+                    VALUES (:uid, :uname, :tid, :d_return, NOW(), :img, 'Kiosk Borrow', :class_correct)
                 """),
                 {
                     "uid": u_id,
                     "uname": transaction.user_name,
                     "tid": t_id,
                     "d_return": desired_return,
-                    "img": final_img_path
+                    "img": final_img_path,
+                    "class_correct": item.classification_correct
                 }
             )
 
