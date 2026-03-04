@@ -6,6 +6,31 @@ import platform
 from kivy.config import Config 
 from kivy.core.window import Window
 
+# --- Compiling Executable ---
+import sys
+from kivy.resources import resouce_add_path
+from kivy.lang import Builder
+
+def resource_path(relative_path):
+    """ Get absolute path to resource, works for dev and for PyInstaller """
+    try:
+        # PyInstaller stores the absolute path to the bundled files here
+        base_path = sys._MEIPASS
+    except Exception:
+        # If not running as a compiled app, use the normal current directory
+        base_path = os.path.abspath(".")
+        
+    return os.path.join(base_path, relative_path)
+    
+view_directory = resource_path('View')
+
+for root, dirs, files in os.walk(view_directory):
+    for file in files:
+        if file.endswith('.kv'):
+            kv_path = os.path.join(root, files)
+            Builder.load_files(kv_path)
+
+
 IS_RASPBERRY_PI = platform.machine() in ("aarch64", "armv7l")
 
 # Enable hot reload on Mac/Windows only
