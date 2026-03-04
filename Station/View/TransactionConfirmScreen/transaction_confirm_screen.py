@@ -101,3 +101,5 @@ class TransactionConfirmScreen(BaseScreen):
         else:
              print(f"Transaction Failed: {response.get('error')}")
              # You might want to add a UI popup here to alert the user
+
+#Submitting Transaction: {'user_id': '', 'user_name': '', 'return_date': '2026-03-06 12:00:00', 'transactions': [{'transaction_id': '20260304_133206-971', 'img_filename': '20260304_133206-971.jpg', 'tool_name': 'Channel Lock', 'classification_correct': False}]}

@@ -68,6 +68,11 @@ class ToolConfirmScreen(BaseScreen):
         """
         User clicked NO. Go to the manual selection list.
         """
+        # Mark the prediction as incorrect before redirecting to manual selection
+        app = App.get_running_app()
+        if hasattr(app, 'session') and app.session.current_transaction:
+            app.session.set_classification_correct(False)
+            
         self.go_to('tool select screen')
     
     def go_back_to_capture(self):

@@ -105,6 +105,11 @@ class ToolSelectionScreen(BaseScreen):
                 session.start_new_transaction(timestamp_id, filename)
 
             # Now we can safely confirm
+            # If classification_correct has not been set (e.g., coming from Dev Mode or unexpected flow),
+            # default to False because the user had to manually select it.
+            if session.current_transaction.get('classification_correct') is None:
+                 session.set_classification_correct(False)
+                 
             session.confirm_current_tool(self.selected_tool['name'])
             
         # Navigate to completion screen
