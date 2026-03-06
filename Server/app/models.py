@@ -92,4 +92,5 @@ class KioskTransactionRequest(BaseModel):
     user_id: str
     user_name: Optional[str] = None
     return_date: Optional[str] = None
+    purpose: Optional[str] = None
     transactions: list[KioskToolItem]

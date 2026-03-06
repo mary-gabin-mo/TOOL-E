@@ -351,7 +351,7 @@ async def create_kiosk_transaction(transaction: KioskTransactionRequest):
                 text("""
                     INSERT INTO transactions 
                     (user_id, user_name, tool_id, desired_return_date, checkout_timestamp, image_path, purpose, classification_correct)
-                    VALUES (:uid, :uname, :tid, :d_return, NOW(), :img, 'Kiosk Borrow', :class_correct)
+                    VALUES (:uid, :uname, :tid, :d_return, NOW(), :img, :purpose, :class_correct)
                 """),
                 {
                     "uid": u_id,
@@ -359,6 +359,7 @@ async def create_kiosk_transaction(transaction: KioskTransactionRequest):
                     "tid": t_id,
                     "d_return": desired_return,
                     "img": final_img_path,
+                    "purpose": transaction.purpose or 'Kiosk Borrow',
                     "class_correct": item.classification_correct
                 }
             )

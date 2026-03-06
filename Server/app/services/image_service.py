@@ -12,11 +12,17 @@ def init_image_dirs():
     os.makedirs(TEMP_IMAGES_DIR, exist_ok=True)
 
 def save_temp_image(contents: bytes, filename: str = None) -> str:
+    # 1. Generate a Unique ID (Timestamp + Random)
+    unique_id = f"{int(time.time())}_{uuid.uuid4().hex[:6]}"
+
     if not filename:
-        filename = f"{uuid.uuid4()}.jpg"
+        filename = f"{unique_id}.jpg"
+    else:
+        # Keep original name but append ID to prevent overwrites
+        name, ext = os.path.splitext(os.path.basename(filename))
+        filename = f"{name}_{unique_id}{ext}"
     
-    # Ensure secure filename just in case, though if it comes from Kiosk it might contain specific chars we want
-    # For now, trust the filename but maybe ensure it's in the dir
+    # Ensure secure filename just in case
     filename = os.path.basename(filename)
     
     temp_path = os.path.join(TEMP_IMAGES_DIR, filename)
@@ -44,11 +50,10 @@ def move_image_to_permanent(filename: str, tool_name: str, classification_correc
     tool_target_dir = os.path.join(base_target_dir, safe_tool_name)
     os.makedirs(tool_target_dir, exist_ok=True)
     
-    # new_filename = f"{safe_tool_name}_{time.strftime('%Y%m%d_%H%M%S')}_{uuid.uuid4().hex[:6]}.jpg"
-    # new_filename = f"{safe_tool_name}_{time.strftime('%Y%m%d_%H%M%S')}.jpg"
-    
-    # Use the original filename (which contains the timestamp ID from Kiosk)
-    new_filename = filename
+    # Generate new filename with Timestamp + ToolName + ID
+    timestamp = time.strftime('%Y%m%d_%H%M%S')
+    unique_id = uuid.uuid4().hex[:6]
+    new_filename = f"{safe_tool_name}_{timestamp}_{unique_id}.jpg" # Add tool name
     
     target_path = os.path.join(tool_target_dir, new_filename)
     
