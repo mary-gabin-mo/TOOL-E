@@ -19,9 +19,10 @@ ENABLE_HOT_RELOAD = not IS_RASPBERRY_PI
 
 if IS_RASPBERRY_PI:
     print("System: Raspberry Pi detected. Setting FULLSCREEN.")
-    # Config.set('graphics', 'fullscreen', 'auto')
-    Config.set('graphics', 'fullscreen', '0')
-    Config.set('graphics', 'show_cursor', '1')
+    Config.set('graphics', 'fullscreen', 'auto')
+    Config.set('graphics', 'show_cursor', '0')
+    # Config.set('graphics', 'fullscreen', '0')
+    # Config.set('graphics', 'show_cursor', '1')
     Config.set('graphics', 'width', '800')
     Config.set('graphics', 'height', '600')
 else:
