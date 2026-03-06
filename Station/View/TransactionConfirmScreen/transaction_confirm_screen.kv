@@ -49,7 +49,42 @@
                     id: tool_list_container
                     padding: 0
             
-            # 2. Required Action: Date Selection Box
+            # 2. Purpose Selection Box
+            MDCard:
+                orientation: 'vertical'
+                size_hint_y: 0.25
+                padding: "10dp"
+                spacing: "5dp"
+                elevation: 0
+                md_bg_color: 1, 1, 1, 1
+
+                MDLabel:
+                    text: "Purpose of Checkout"
+                    halign: "center"
+                    font_style: "Subtitle1"
+                    theme_text_color: "Secondary"
+
+                MDBoxLayout:
+                    orientation: 'horizontal'
+                    spacing: "15dp"
+
+                    MDFillRoundFlatButton:
+                        id: btn_academic
+                        text: "Academic Course"
+                        size_hint_x: 0.5
+                        md_bg_color: 0.9, 0.9, 0.9, 1
+                        text_color: 0, 0, 0, 1
+                        on_release: root.select_purpose("Academic Course")
+
+                    MDFillRoundFlatButton:
+                        id: btn_personal
+                        text: "Personal Project"
+                        size_hint_x: 0.5
+                        md_bg_color: 0.9, 0.9, 0.9, 1
+                        text_color: 0, 0, 0, 1
+                        on_release: root.select_purpose("Personal Project")
+
+            # 3. Required Action: Date Selection Box
             MDCard:
                 id: date_box
                 orientation: 'vertical'
