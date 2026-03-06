@@ -106,6 +106,9 @@ else:
     from kivymd.app import MDApp
     from kivymd.uix.screenmanager import MDScreenManager
     
+    # Import footer component to make it available in KV files
+    from View.components.user_info_footer import UserInfoFooter
+    
     from View.screens import screens
     
     class KioskApp(MDApp):

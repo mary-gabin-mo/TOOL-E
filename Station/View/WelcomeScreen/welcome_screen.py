@@ -90,9 +90,24 @@ class WelcomeScreen(BaseScreen):
             error_screen = self.manager.get_screen('user error screen')
             error_screen.set_error_message(result['error'])
             self.go_to('user error screen')
-        
-    def go_to(self, screen):
-        self.manager_screens.transition.direction = 'left'
-        self.manager_screens.current = screen
 
+    ### DEV ### 
+    def submit_ucid(self):
+        ucid = "10131867" # Mary's UCID for testing
+        print(f"Submitting UCID: {ucid}")
+        
+        app = App.get_running_app()
+        result = app.api_client.validate_user(ucid)
+        if result['success'] == True:
+            # Save the user info to the session once validated
+            app.session.user_data = result['user']
+            # Save the specific ID (mapping API 'ucid' to session 'user_id')
+            app.session.user_id = str(result['user'].get('ucid', ''))
+            self.go_to('action selection screen')
+            
+        else:
+            # if the validation failed, show the appropriate error message
+            error_screen = self.manager.get_screen('user error screen')
+            error_screen.set_error_message(result['error'])
+            self.go_to('user error screen')
         

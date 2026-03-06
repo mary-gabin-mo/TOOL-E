@@ -65,33 +65,44 @@
 
         # -- Spacer --
         Widget:
-            size_hint_y: 0.15
+            size_hint_y: 0.1
             
         # -- Footer Buttons --
         MDBoxLayout:
             id: footer_buttons
-            orientation: 'vertical'
-            size_hint_y: 0.2
+            orientation: 'horizontal'
+            size_hint_y: 0.4
             spacing: "10dp"
 
             # -- DEV BUTTON --
             MDFillRoundFlatButton:
-                text: "DEV - SCAN CARD"
+                text: "DEV - SCAN CARD \n(server ON)"
                 font_size: "20sp"
-                size_hint: 0.4, 0.1
+                size_hint: 0.7, 0.3
+                pos_hint: {"center_x": .5}
+                md_bg_color: 0.4, 0.4, 0.4, 1  # Red
+                # move on to the next page
+                on_release: root.submit_ucid()
+
+            # -- DEV BUTTON --
+            MDFillRoundFlatButton:
+                text: "DEV - SCAN CARD \n(server OFFLINE)"
+                font_size: "20sp"
+                size_hint: 0.8, 0.3
                 pos_hint: {"center_x": .5}
                 md_bg_color: 0.4, 0.4, 0.4, 1  # Red
                 # move on to the next page
                 on_release: root.go_to('action selection screen')
 
-            # -- Manual Entry Button --
-            MDFillRoundFlatButton:
-                text: "MANUAL UCID ENTRY"
-                font_size: "24sp"
-                size_hint: 0.6, 0.1
-                pos_hint: {"center_x": .5}
-                md_bg_color: 0.9, 0.17, 0.25, 1  # Red
-                on_release: root.go_to('manual entry screen')
-            
-            # Widget:
-            #     size_hint_y: 0.01
+        # -- Manual Entry Button --
+        MDFillRoundFlatButton:
+            text: "MANUAL UCID ENTRY"
+            font_size: "24sp"
+            size_hint: 0.6, 0.2
+            pos_hint: {"center_x": .5}
+            md_bg_color: 0.9, 0.17, 0.25, 1  # Red
+            on_release: root.go_to('manual entry screen')    
+        
+        # -- Spacer --
+        Widget:
+            size_hint_y: 0.1
