@@ -21,6 +21,10 @@ if IS_RASPBERRY_PI:
     print("System: Raspberry Pi detected. Setting FULLSCREEN.")
     Config.set('graphics', 'fullscreen', 'auto')
     Config.set('graphics', 'show_cursor', '0')
+    # Performance optimizations for Pi touchscreen responsiveness
+    Config.set('graphics', 'multisampling', '0')  # Disable anti-aliasing
+    Config.set('kivy', 'touch_log_fn', '')  # Disable touch logging overhead
+    Config.set('postproc', 'enabled', '0')  # Disable post-processing
     # Config.set('graphics', 'fullscreen', '0')
     # Config.set('graphics', 'show_cursor', '1')
     # Config.set('graphics', 'width', '800')

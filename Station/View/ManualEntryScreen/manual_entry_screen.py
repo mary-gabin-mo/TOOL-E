@@ -1,49 +1,52 @@
 from View.baseScreen import BaseScreen
 from kivy.app import App
-from kivy.clock import Clock
+import time
 
 class ManualEntryScreen(BaseScreen):
 
     def __init__(self, **kwargs):
         super().__init__(**kwargs)
-        self._input_lock = False  # Prevent rapid successive inputs
+        # Aggressive debouncing for touchscreen - Pi is slow
+        self._last_input_time = 0
+        self._debounce_delay = 0.35  # 350ms debounce for Pi touchscreen
 
     def on_leave(self):
         self.clear_input()
 
+    def _check_debounce(self):
+        """Check if enough time has passed since last input"""
+        current_time = time.time()
+        if current_time - self._last_input_time >= self._debounce_delay:
+            self._last_input_time = current_time
+            return True
+        return False
+
     def add_digit(self, digit):
-        # Prevent rapid successive inputs (debouncing)
-        if self._input_lock:
+        """Add a digit to the input with debouncing"""
+        if not self._check_debounce():
             return
         
         # Limit length to avoid infinite strings
         current_text = self.ids.ucid_input.text
         if len(current_text) < 8: 
             self.ids.ucid_input.text += digit
-            
-        # Lock input for 100ms to prevent double-clicks
-        self._input_lock = True
-        Clock.schedule_once(self._unlock_input, 0.1)
-
-    def _unlock_input(self, dt):
-        self._input_lock = False
+            print(f"[INPUT] Added digit: {digit}")
 
     def clear_input(self):
-        if self._input_lock:
+        """Clear all input"""
+        if not self._check_debounce():
             return
         self.ids.ucid_input.text = ""
-        self._input_lock = True
-        Clock.schedule_once(self._unlock_input, 0.1)
+        print("[INPUT] Cleared input")
 
     def delete_last(self):
         """Remove the last character from the UCID input."""
-        if self._input_lock:
+        if not self._check_debounce():
             return
         current_text = self.ids.ucid_input.text
         if len(current_text) > 0:
             self.ids.ucid_input.text = current_text[:-1]
-        self._input_lock = True
-        Clock.schedule_once(self._unlock_input, 0.1)
+            print(f"[INPUT] Deleted character, now: {self.ids.ucid_input.text}")
 
     def submit_ucid(self):
         ucid = self.ids.ucid_input.text
