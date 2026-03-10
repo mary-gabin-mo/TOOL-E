@@ -4,12 +4,18 @@ import os
 import time
 import threading
 import numpy as np
+import logging
 from datetime import datetime
 from kivy.app import App
 from kivy.clock import Clock, mainthread
 from kivy.graphics.texture import Texture
 from View.baseScreen import BaseScreen
 from PIL import Image, ImageOps
+
+# Suppress debug logging from picamera2 and other libraries
+logging.getLogger('picamera2').setLevel(logging.WARNING)
+logging.getLogger('libcamera').setLevel(logging.WARNING)
+logging.getLogger('picamera2.job').setLevel(logging.WARNING)
 
 # Detect if we are on the Pi
 IS_RASPBERRY_PI = platform.machine() in ("aarch64", "armv7l")
@@ -33,7 +39,11 @@ class CaptureScreen(BaseScreen):
         # 2. Bind hardware Events
         app = App.get_running_app()
         if hasattr(app, 'hardware'):
+            print("[DEBUG] Hardware manager found. Binding to on_load_cell_detect...")
             app.hardware.bind(on_load_cell_detect=self.handle_load_cell_trigger)
+            print("[DEBUG] Successfully bound to on_load_cell_detect event")
+        else:
+            print("[ERROR] Hardware manager not found in app!")
             
         # 3. Start Camera in Background (So UI doesn't freeze)
         threading.Thread(target=self._init_camera_async).start()
@@ -167,33 +177,57 @@ class CaptureScreen(BaseScreen):
     def handle_load_cell_trigger(self, instance, weight):
         """
         Logic for when the load cell is triggered.
+        Delays capture by 1.5 seconds to let object settle.
+        Camera stays LIVE during the delay, then freezes when capture happens.
         """
-        print(f"[UI] Capture Screen detected load cell trigger: {weight}")
+        print(f"\n{'='*60}")
+        print(f"[LOADCELL DETECTED] Raw Weight Value: {weight}")
+        print(f"[LOADCELL DETECTED] Instance: {instance}")
+        print(f"{'='*60}\n")
         
-        # 1. Update UI to "Processing" state immeidately
-        self.set_processing_mode(True, message="Analyzing Image...")
+        # 1. Show message but keep camera LIVE (don't freeze yet)
+        print("[DEBUG] Waiting 1.5 seconds for object to settle...")
+        print("[DEBUG] Camera remains LIVE during delay...")
         
-        # 2. Capture Image
+        # 2. Delay capture by 1.5 seconds to let object settle
+        print("[DEBUG] Scheduling capture in 1.5 seconds...")
+        Clock.schedule_once(self._delayed_capture, 1.5)
+    
+    def _delayed_capture(self, dt):
+        """
+        Called 1.5 seconds after load cell trigger.
+        NOW freezes the camera and performs the actual image capture.
+        """
+        # NOW freeze the camera (right before capturing)
+        print("[DEBUG] Freezing camera and capturing image...")
+        self.set_processing_mode(True, message="Capturing Image...")
+        
         filepath = self.save_current_frame()
         
         if filepath:
-            # 3. Start API upload in background
+            # Start API upload in background
             print(f"[DEBUG] Image saved successfully at {filepath}. Starting API thread...")
             threading.Thread(target=self.run_identification_task, args=(filepath,)).start()
         else:
-            print("[DEBUG] Failed to save image. Aborting API call.")
+            print("[ERROR] Failed to save image. Aborting API call.")
             self.set_processing_mode(False) # Reset if save failed
-            self.update_event = Clock.schedule_interval(self.update_feed, 1.0, 30.0) # Restart camera
+            self.update_event = Clock.schedule_interval(self.update_feed, 1.0/30.0) # Restart camera
     
     # --- DEV - CAPTURE WITH BUTTON - REMOVE LATER --- 
-    def capture_btn(self, weight):
-        """Dev Button Wrapper"""
-        self.handle_load_cell_trigger(None, weight)
+    def capture_btn(self):
+        """Dev Button: Simulate load cell trigger"""
+        print("[DEV] Manual capture button pressed")
+        self.handle_load_cell_trigger(None, 100.0)  # Simulate weight value
     
     def save_current_frame(self):
         """
         Save high-res photo and resize using the PIL logic
         """
+        print("[DEBUG] save_current_frame() called")
+        print(f"[DEBUG] IS_RASPBERRY_PI: {IS_RASPBERRY_PI}")
+        print(f"[DEBUG] self.picam2: {self.picam2}")
+        print(f"[DEBUG] self.capture: {self.capture}")
+        
         # 1. Generate Transaction ID (Timestamp)
         # Format: YYYYMMDD_HHMMSS(e.g., 20260202_183005)
         timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
@@ -250,7 +284,7 @@ class CaptureScreen(BaseScreen):
             new_img = ImageOps.pad(
                 img,
                 (target_size, target_size),
-                method=image.LANCZOS,
+                method=Image.LANCZOS,
                 color="white",
                 centering=(0.5, 0.5),
             )

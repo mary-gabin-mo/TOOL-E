@@ -1,4 +1,5 @@
 import platform
+import traceback
 from kivy.event import EventDispatcher
 from smartcard.System import readers
 from smartcard.util import toHexString
@@ -33,6 +34,7 @@ class HardwareManager(EventDispatcher):
         self.stable_reads = 0
         self.offset = 382000  # From your calibration script
         self.STABLE_READS_REQUIRED = 3
+        self.poll_counter = 0  # For periodic debug output
         
         if self.is_pi:
             self._setup_real_hardware()
@@ -67,17 +69,23 @@ class HardwareManager(EventDispatcher):
             lgpio.gpio_claim_output(self.lgpio_handle, PIN_LED_RED, 0)
             lgpio.gpio_claim_output(self.lgpio_handle, PIN_LED_YELLOW, 0)
             
-            # Turn on Yellow (Idle) initially
-            self.set_leds('idle')
+            # Set Yellow LED to idle (low for now, can add LED control later)
+            lgpio.gpio_write(self.lgpio_handle, PIN_LED_YELLOW, 1)
+            print("[HARDWARE] LEDs configured. Yellow LED set to ON (idle).")
 
             # 4. Start polling the load cell 
             # Run 10 times a second (0.1s interval)
+            print("[HARDWARE] Starting load cell polling (0.1s interval)...")
             Clock.schedule_interval(self._poll_load_cell, 0.1)
+            print("[HARDWARE] Load cell polling scheduled successfully!")
 
         except ImportError:
             print("[ERROR] lgpio not found. Hardware control disabled.")
+            self.lgpio_handle = None
         except Exception as e:
             print(f"[ERROR] GPIO Setup failed: {e}")
+            print(f"[ERROR] Full traceback: ", exc_info=True)
+            self.lgpio_handle = None
         
         # implement GPIO setup...
         # implement other methods for the real hardware
@@ -126,14 +134,24 @@ class HardwareManager(EventDispatcher):
         """
         Periodically checks weight. Replaces 'wait_for_object' loop.
         """
+        self.poll_counter += 1
+        
         if not self.lgpio_handle:
+            if self.poll_counter % 50 == 0:  # Print every 5 seconds (50 polls * 0.1s)
+                print("[HARDWARE] Waiting for lgpio handle...")
             return
 
         raw_val = self._read_hx711_raw()
         if raw_val is None:
+            if self.poll_counter % 50 == 0:
+                print("[HARDWARE] Load cell sensor not responding")
             return # Sensor not ready
 
         current_weight = raw_val - self.offset
+        
+        # # Print status every 10 polls (1 second)
+        # if self.poll_counter % 10 == 0:
+        #     print(f"[LOADCELL] Raw: {raw_val}, Weight: {current_weight:.1f}g, Threshold: {LOAD_CELL_THRESHOLD}g, Stable: {self.stable_reads}/{self.STABLE_READS_REQUIRED}")
 
         # Check Threshold
         if current_weight > LOAD_CELL_THRESHOLD:
@@ -143,7 +161,11 @@ class HardwareManager(EventDispatcher):
 
         # Trigger Event
         if self.stable_reads >= self.STABLE_READS_REQUIRED:
-            print(f"[HARDWARE] Object Detected! Weight: {current_weight}")
+            print(f"\n{'='*60}")
+            print(f"[HARDWARE] **OBJECT DETECTED!**")
+            print(f"[HARDWARE] Weight: {current_weight:.1f}g (raw: {raw_val})")
+            print(f"[HARDWARE] Dispatching on_load_cell_detect event...")
+            print(f"{'='*60}\n")
             self.dispatch('on_load_cell_detect', current_weight)
             # Reset stable reads so we don't trigger 30 times a second while object sits there
             # Or you can add logic to wait for removal before triggering again.

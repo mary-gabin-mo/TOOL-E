@@ -7,6 +7,7 @@ from datetime import datetime, date
 class TransactionConfirmScreen(BaseScreen):
     
     return_date = None
+    purpose = None # 'Academic Course' or 'Personal Project'
     
     def on_enter(self):
         """Reset state when entering screen."""
@@ -66,9 +67,32 @@ class TransactionConfirmScreen(BaseScreen):
         # Change border from Red to Blue/Grey to indicate "Done"
         self.ids.date_box.line_color = (0.2, 0.6, 0.8, 1)
         
-        # Enable the final button
-        self.ids.confirm_finish_btn.disabled = False
+        self.check_can_finish()
         
+    def select_purpose(self, selected_purpose):
+        self.purpose = selected_purpose
+        
+        # Update colors
+        if selected_purpose == "Academic Course":
+            self.ids.btn_academic.md_bg_color = (0.2, 0.6, 0.8, 1) # Blue
+            self.ids.btn_academic.text_color = (1, 1, 1, 1)        # White text
+            self.ids.btn_personal.md_bg_color = (0.9, 0.9, 0.9, 1) # Grey
+            self.ids.btn_personal.text_color = (0, 0, 0, 1)        # Black text
+        else:
+            self.ids.btn_personal.md_bg_color = (0.2, 0.6, 0.8, 1) # Blue
+            self.ids.btn_personal.text_color = (1, 1, 1, 1)        # White text
+            self.ids.btn_academic.md_bg_color = (0.9, 0.9, 0.9, 1) # Grey
+            self.ids.btn_academic.text_color = (0, 0, 0, 1)        # Black text
+            
+        self.check_can_finish()
+
+    def check_can_finish(self):
+        # Enable the final button only if both date and purpose are selected
+        if self.return_date and self.purpose:
+            self.ids.confirm_finish_btn.disabled = False
+        else:
+            self.ids.confirm_finish_btn.disabled = True
+
     def finish_transaction(self):
         app = App.get_running_app()
         
@@ -86,15 +110,24 @@ class TransactionConfirmScreen(BaseScreen):
 
         # Safe User ID retrieval
         user_id = getattr(app.session, 'user_id', '')
-        if not user_id and app.session.user_data:
+        user_dict = app.session.user_data or {}
+
+        if not user_id and user_dict:
              # Fallback: try to get ID from the user dictionary if user_id property is empty
              # API returns 'ucid', checking both just in case
-             user_id = app.session.user_data.get('ucid') or app.session.user_data.get('id', '')
+             user_id = user_dict.get('ucid') or user_dict.get('id', '')
+
+        # Get User Name (First + Last)
+        first_name = user_dict.get('first_name', '')
+        last_name = user_dict.get('last_name', '')
+        user_name = f"{first_name} {last_name}".strip()
 
         # Construct the final payload for the API
         final_payload = {
             "user_id": str(user_id), 
+            "user_name": user_name or "Unknown User",
             "return_date": formatted_date,
+            "purpose": self.purpose,
             "transactions": getattr(app.session, 'transactions', [])
         }
         
@@ -113,3 +146,5 @@ class TransactionConfirmScreen(BaseScreen):
         else:
              print(f"Transaction Failed: {response.get('error')}")
              # You might want to add a UI popup here to alert the user
+
+#Submitting Transaction: {'user_id': '30113779', 'user_name': 'Hongwoo Yoon', 'return_date': '2026-03-25 12:00:00', 'purpose': 'Academic Course', 'transactions': [{'transaction_id': '20260306_154121-492', 'img_filename': '20260306_154121-492.jpg', 'tool_name': 'Hot Glue Gun', 'classification_correct': False}]}

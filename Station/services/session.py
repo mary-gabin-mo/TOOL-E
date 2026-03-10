@@ -53,9 +53,25 @@ class SessionManager(EventDispatcher):
         self.current_transaction = {
             "transaction_id": transaction_id,
             "img_filename": img_filename,
-            "tool_name": None  # Will be filled after ML/User confirmation
+            "tool_name": None,  # Will be filled after ML/User confirmation
+            "classification_correct": None # User feedback on ML prediction
         }
         print(f"[SESSION] Started Transaction: {transaction_id}")
+
+    def set_classification_correct(self, is_correct):
+        """
+        Updates the 'classification_correct' flag of the current transaction.
+        Handles Kivy DictProperty updates correctly.
+        """
+        if not self.current_transaction:
+            print("[SESSION] Warning: No current transaction to update correction status.")
+            return
+
+        print(f"[SESSION] Setting classification_correct = {is_correct}")
+        # Copy-modify-assign pattern forces Kivy to dispatch the property change event
+        tx = dict(self.current_transaction)
+        tx['classification_correct'] = is_correct
+        self.current_transaction = tx
 
     def confirm_current_tool(self, tool_name):
         """

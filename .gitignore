@@ -4,6 +4,8 @@
 
 *.pth
 
+*.jpg
+
 # Python
 __pycache__/
 *.py[cod]
