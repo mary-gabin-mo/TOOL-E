@@ -1,9 +1,18 @@
 from kivy.app import App
-from kivymd.uix.list import TwoLineAvatarIconListItem, IconLeftWidget
+from kivymd.uix.list import TwoLineAvatarIconListItem, IRightBodyTouch
 from kivymd.uix.selectioncontrol import MDCheckbox
 from View.baseScreen import BaseScreen
 
+
+class RightCheckbox(IRightBodyTouch, MDCheckbox):
+    """Checkbox that behaves correctly inside MDList item right-side body."""
+    pass
+
 class ToolReturnSelectionScreen(BaseScreen):
+
+    def __init__(self, **kwargs):
+        super().__init__(**kwargs)
+        self._checkboxes = []
     
     def on_enter(self):
         """
@@ -22,6 +31,7 @@ class ToolReturnSelectionScreen(BaseScreen):
         # Clear existing list
         list_container = self.ids.tool_list_container
         list_container.clear_widgets()
+        self._checkboxes = []
         
         # Get non-returned tools for this user from API
         # For now, we'll use a placeholder - you'll need to implement the API call
@@ -62,12 +72,16 @@ class ToolReturnSelectionScreen(BaseScreen):
                     )
                     
                     # Add checkbox
-                    checkbox = MDCheckbox(
+                    checkbox = RightCheckbox(
                         size_hint=(None, None),
                         size=("48dp", "48dp"),
                     )
                     checkbox.tool_id = tool.get('tool_id', 0)  # Store tool ID for later
                     checkbox.bind(active=self.on_checkbox_change)
+                    self._checkboxes.append(checkbox)
+
+                    # Make the full row tappable so users can select items reliably.
+                    item.bind(on_release=lambda _item, cb=checkbox: setattr(cb, 'active', not cb.active))
                     
                     item.add_widget(checkbox)
                     list_container.add_widget(item)
@@ -124,20 +138,7 @@ class ToolReturnSelectionScreen(BaseScreen):
     
     def on_checkbox_change(self, checkbox, value):
         """Enable continue button if at least one tool is selected."""
-        app = App.get_running_app()
-        
-        # Check if any checkboxes are selected
-        list_container = self.ids.tool_list_container
-        any_selected = False
-        
-        for item in list_container.children:
-            for widget in item.children:
-                if isinstance(widget, MDCheckbox) and widget.active:
-                    any_selected = True
-                    break
-            if any_selected:
-                break
-        
+        any_selected = any(cb.active for cb in self._checkboxes)
         self.ids.continue_btn.disabled = not any_selected
     
     def confirm_selection(self):

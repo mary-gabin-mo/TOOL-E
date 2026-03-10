@@ -214,7 +214,7 @@ class CaptureScreen(BaseScreen):
             self.update_event = Clock.schedule_interval(self.update_feed, 1.0/30.0) # Restart camera
     
     # --- DEV - CAPTURE WITH BUTTON - REMOVE LATER --- 
-    def capture_btn(self):
+    def capture_btn(self, *args):
         """Dev Button: Simulate load cell trigger"""
         print("[DEV] Manual capture button pressed")
         self.handle_load_cell_trigger(None, 100.0)  # Simulate weight value
