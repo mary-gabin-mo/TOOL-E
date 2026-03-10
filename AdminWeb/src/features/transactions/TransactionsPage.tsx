@@ -161,6 +161,9 @@ export const TransactionsPage = () => {
           <thead>
             <tr className="border-b border-gray-100">
               <th className="py-4 px-6 text-xs font-semibold text-gray-500 uppercase tracking-wider">
+                Transaction ID
+              </th>
+              <th className="py-4 px-6 text-xs font-semibold text-gray-500 uppercase tracking-wider">
                 UCID
               </th>
               <th className="py-4 px-6 text-xs font-semibold text-gray-500 uppercase tracking-wider">
@@ -191,6 +194,9 @@ export const TransactionsPage = () => {
                     <ArrowUpDown className="w-3 h-3 ml-1 text-gray-300" />
                   )}
                 </div>
+              </th>
+              <th className="py-4 px-6 text-xs font-semibold text-gray-500 uppercase tracking-wider">
+                Date Returned
               </th>
               <th className="py-4 px-6 text-xs font-semibold text-gray-500 uppercase tracking-wider">
                 Purpose
@@ -234,26 +240,29 @@ export const TransactionsPage = () => {
           <tbody className="">
             {isLoading ? (
               <tr>
-                <td colSpan={7} className="py-10 text-center text-sm text-gray-500">
+                <td colSpan={10} className="py-10 text-center text-sm text-gray-500">
                   Loading transactions...
                 </td>
               </tr>
             ) : isError ? (
               <tr>
-                <td colSpan={7} className="py-10 text-center text-sm text-red-500">
+                <td colSpan={10} className="py-10 text-center text-sm text-red-500">
                   Failed to load transactions.
                   {error instanceof Error ? ` ${error.message}` : ''}
                 </td>
               </tr>
             ) : transactions.length === 0 ? (
               <tr>
-                <td colSpan={7} className="py-10 text-center text-sm text-gray-500">
+                <td colSpan={10} className="py-10 text-center text-sm text-gray-500">
                   No transactions found.
                 </td>
               </tr>
             ) : (
               transactions.map((tx) => (
               <tr key={tx.transaction_id} className="border-b border-gray-100 hover:bg-gray-50 transition-colors">
+                <td className="py-4 px-6 text-sm text-gray-900">
+                  #{tx.transaction_id}
+                </td>
                 <td className="py-4 px-6 text-sm font-medium text-gray-900">
                    <div className="flex flex-col">
                       <span>{tx.user_name || 'Unknown'}</span>
@@ -274,6 +283,18 @@ export const TransactionsPage = () => {
                 </td>
                 <td className="py-4 px-6 text-sm text-gray-500">
                    {tx.desired_return_date ? new Date(tx.desired_return_date).toLocaleDateString() : 'N/A'}
+                </td>
+                <td className="py-4 px-6 text-sm text-gray-500">
+                  {tx.return_timestamp ? (
+                    <>
+                      {new Date(tx.return_timestamp).toLocaleDateString()}
+                      <span className="text-xs text-gray-400 block">
+                        {new Date(tx.return_timestamp).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
+                      </span>
+                    </>
+                  ) : (
+                    <span className="text-gray-400">-</span>
+                  )}
                 </td>
                 <td className="py-4 px-6 text-sm text-gray-500 max-w-[200px] truncate" title={tx.purpose || ''}>
                    {tx.purpose || '-'}
