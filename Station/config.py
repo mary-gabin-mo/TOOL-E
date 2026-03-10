@@ -14,7 +14,7 @@ BASE_URL = f"http://{SERVER_IP}:{SERVER_PORT}"
 # API Endpoints
 API_VALIDATE_USER = f"{BASE_URL}/validate_user"
 API_IDENTIFY_TOOL = f"{BASE_URL}/identify_tool"
-API_TRANSACTION   = f"{BASE_URL}/transaction"
+API_TRANSACTION   = f"{BASE_URL}/transactions"
 API_GET_TOOLS     = f"{BASE_URL}/tools"
 
 # Timeouts (in seconds)

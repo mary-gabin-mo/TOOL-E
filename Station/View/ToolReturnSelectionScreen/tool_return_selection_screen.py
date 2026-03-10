@@ -27,14 +27,18 @@ class ToolReturnSelectionScreen(BaseScreen):
         # For now, we'll use a placeholder - you'll need to implement the API call
         non_returned_tools = self._fetch_non_returned_tools()
         
+        print(f"[DEBUG] Fetched {len(non_returned_tools)} tools")
+        print(f"[DEBUG] First tool data: {non_returned_tools[0] if non_returned_tools else 'None'}")
+        print(f"[DEBUG] Type of first tool: {type(non_returned_tools[0]) if non_returned_tools else 'None'}")
+        
         # Filter tools if the scanned tool was confirmed correct
         if tool_was_confirmed and predicted_tool:
             # Show only tools matching the predicted type
-            filtered_tools = [tool for tool in non_returned_tools if tool['tool_name'] == predicted_tool]
+            filtered_tools = [tool for tool in non_returned_tools if isinstance(tool, dict) and tool.get('tool_name') == predicted_tool]
             self.ids.title_label.text = f"Select {predicted_tool} to Return"
         else:
             # Show all non-returned tools
-            filtered_tools = non_returned_tools
+            filtered_tools = [tool for tool in non_returned_tools if isinstance(tool, dict)]
             self.ids.title_label.text = "Select Tool to Return"
         
         # Display filtered tools
@@ -46,22 +50,25 @@ class ToolReturnSelectionScreen(BaseScreen):
             self.ids.empty_message.opacity = 0
             
             for tool in filtered_tools:
-                # Create list item with checkbox
-                item = TwoLineAvatarIconListItem(
-                    text=tool['tool_name'],
-                    secondary_text=f"Borrowed: {tool['borrow_date']} • Due: {tool['due_date']}",
-                )
-                
-                # Add checkbox
-                checkbox = MDCheckbox(
-                    size_hint=(None, None),
-                    size=("48dp", "48dp"),
-                )
-                checkbox.tool_id = tool['tool_id']  # Store tool ID for later
-                checkbox.bind(active=self.on_checkbox_change)
-                
-                item.add_widget(checkbox)
-                list_container.add_widget(item)
+                try:
+                    # Create list item with checkbox
+                    item = TwoLineAvatarIconListItem(
+                        text=tool.get('tool_name', 'Unknown Tool'),
+                        secondary_text=f"Borrowed: {tool.get('borrow_date', 'N/A')} • Due: {tool.get('due_date', 'N/A')}",
+                    )
+                    
+                    # Add checkbox
+                    checkbox = MDCheckbox(
+                        size_hint=(None, None),
+                        size=("48dp", "48dp"),
+                    )
+                    checkbox.tool_id = tool.get('tool_id', 0)  # Store tool ID for later
+                    checkbox.bind(active=self.on_checkbox_change)
+                    
+                    item.add_widget(checkbox)
+                    list_container.add_widget(item)
+                except Exception as e:
+                    print(f"[ERROR] Failed to create list item for tool: {tool}, Error: {e}")
     
     def _fetch_non_returned_tools(self):
         """
