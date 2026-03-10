@@ -87,3 +87,7 @@ class ToolConfirmScreen(BaseScreen):
         else:
             # For borrows, go to manual selection
             self.go_to('tool select screen')
+
+    def go_back_to_capture(self):
+        """Back button handler for confirm screen."""
+        self.go_to('capture screen')

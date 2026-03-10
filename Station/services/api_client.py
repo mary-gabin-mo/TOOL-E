@@ -174,19 +174,47 @@ class APIClient(EventDispatcher):
         print(f"[API] Fetching unreturned tools for user: {user_id}")
         
         try:
-            # TODO: Update this URL when backend endpoint is ready
-            url = f"{API_TRANSACTION}/user/{user_id}/unreturned"
-            
-            response = requests.get(
-                url,
-                timeout=NETWORK_TIMEOUT
-            )
-            response.raise_for_status()
-            
-            data = response.json()
-            print(f"[API] Found {len(data)} unreturned tools")
-            return {'success': True, 'data': data}
-        
+            # Try current route first, then legacy query route used by some backend versions.
+            candidate_calls = [
+                (f"{API_TRANSACTION}/user/{user_id}/unreturned", None),
+                (f"{API_TRANSACTION}/unreturned", {"user_id": user_id}),
+            ]
+
+            last_error = None
+            payload = None
+
+            for url, params in candidate_calls:
+                try:
+                    response = requests.get(url, params=params, timeout=NETWORK_TIMEOUT)
+                    response.raise_for_status()
+                    payload = response.json()
+                    break
+                except Exception as e:
+                    last_error = e
+
+            if payload is None:
+                raise last_error or Exception("No response from unreturned-tools endpoint")
+
+            # Normalize backend response into a list for UI code.
+            if isinstance(payload, list):
+                tools = payload
+            elif isinstance(payload, dict):
+                tools = (
+                    payload.get("data")
+                    or payload.get("items")
+                    or payload.get("tools")
+                    or payload.get("unreturned_tools")
+                    or []
+                )
+            else:
+                tools = []
+
+            if not isinstance(tools, list):
+                tools = []
+
+            print(f"[API] Found {len(tools)} unreturned tools")
+            return {'success': True, 'data': tools}
+
         except Exception as e:
             print(f"[API] Error fetching unreturned tools: {e}")
             return {'success': False, 'error': str(e)}

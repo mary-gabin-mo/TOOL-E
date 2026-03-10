@@ -28,8 +28,9 @@ class ToolReturnSelectionScreen(BaseScreen):
         non_returned_tools = self._fetch_non_returned_tools()
         
         print(f"[DEBUG] Fetched {len(non_returned_tools)} tools")
-        print(f"[DEBUG] First tool data: {non_returned_tools[0] if non_returned_tools else 'None'}")
-        print(f"[DEBUG] Type of first tool: {type(non_returned_tools[0]) if non_returned_tools else 'None'}")
+        first_tool = non_returned_tools[0] if isinstance(non_returned_tools, list) and non_returned_tools else None
+        print(f"[DEBUG] First tool data: {first_tool}")
+        print(f"[DEBUG] Type of first tool: {type(first_tool) if first_tool is not None else 'None'}")
         
         # Filter tools if the scanned tool was confirmed correct
         if tool_was_confirmed and predicted_tool:
@@ -52,9 +53,12 @@ class ToolReturnSelectionScreen(BaseScreen):
             for tool in filtered_tools:
                 try:
                     # Create list item with checkbox
+                    borrow_date = tool.get('borrow_date') or tool.get('checkout_timestamp') or 'N/A'
+                    due_date = tool.get('due_date') or tool.get('desired_return_date') or 'N/A'
+                    tool_name = tool.get('tool_name') or 'Unknown Tool'
                     item = TwoLineAvatarIconListItem(
-                        text=tool.get('tool_name', 'Unknown Tool'),
-                        secondary_text=f"Borrowed: {tool.get('borrow_date', 'N/A')} • Due: {tool.get('due_date', 'N/A')}",
+                        text=tool_name,
+                        secondary_text=f"Borrowed: {borrow_date} • Due: {due_date}",
                     )
                     
                     # Add checkbox
@@ -138,7 +142,7 @@ class ToolReturnSelectionScreen(BaseScreen):
     
     def confirm_selection(self):
         """
-        Collect selected tools and add to session, then navigate to confirmation.
+        Collect selected tools, store them in session, then navigate to confirmation.
         """
         app = App.get_running_app()
         
@@ -157,9 +161,9 @@ class ToolReturnSelectionScreen(BaseScreen):
                         'tool_name': tool_name
                     })
         
-        # Add selected tools to session transactions
-        for tool in selected_tools:
-            app.session.confirm_current_tool(tool['tool_name'])
+        # Return flow can select multiple existing tools, so write the list directly
+        # instead of using confirm_current_tool (which expects current_transaction state).
+        app.session.transactions = selected_tools
         
         print(f"[UI] Selected {len(selected_tools)} tools for return")
         
