@@ -1,3 +1,5 @@
+import threading
+from kivy.clock import mainthread
 from kivy.app import App
 from kivymd.uix.list import OneLineListItem
 from View.baseScreen import BaseScreen
@@ -132,9 +134,27 @@ class TransactionConfirmScreen(BaseScreen):
         }
         
         print(f"[UI] Submitting Transaction via APIClient...")
+        
+        # Disable button during processing
+        self.ids.confirm_finish_btn.disabled = True
+        self.ids.confirm_finish_btn.text = "Submitting..."
 
-        # Call API logic using the centralized API Client
-        response = app.api_client.submit_transaction(final_payload)
+        # Call API logic using the centralized API Client in a thread
+        threading.Thread(target=self._submit_transaction_thread, args=(final_payload,)).start()
+        
+    def _submit_transaction_thread(self, final_payload):
+        app = App.get_running_app()
+        try:
+            response = app.api_client.submit_transaction(final_payload)
+        except Exception as e:
+            response = {'success': False, 'error': str(e)}
+        self._handle_submission_result(response)
+        
+    @mainthread
+    def _handle_submission_result(self, response):
+        app = App.get_running_app()
+        self.ids.confirm_finish_btn.disabled = False
+        self.ids.confirm_finish_btn.text = "Confirm & Finish"
              
         if response.get('success'):
              print("Transaction Success")

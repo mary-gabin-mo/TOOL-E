@@ -1,6 +1,8 @@
 from kivy.app import App
 from kivy.properties import ObjectProperty
 from kivymd.uix.list import TwoLineListItem
+import threading
+from kivy.clock import mainthread
 
 from View.baseScreen import BaseScreen
 
@@ -15,14 +17,25 @@ class ToolSelectionScreen(BaseScreen):
         self.populate_list()
         
     def populate_list(self):
-        """Clears the list and re-adds tool items using API data."""
-        # 1. Clear previous items so we don't duplicate
+        """Clears the list and fetches tool items using API data in a thread."""
         scroll_list = self.ids.tool_list_container
         scroll_list.clear_widgets()
         
-        # 2. Fetch data from API
+        # Show a loading placeholder
+        scroll_list.add_widget(TwoLineListItem(text="Loading tools...", secondary_text="Please wait"))
+        
+        threading.Thread(target=self._fetch_tools_thread).start()
+        
+    def _fetch_tools_thread(self):
         app = App.get_running_app()
         all_tools = app.api_client.get_tools()
+        self._update_ui_with_tools(all_tools)
+        
+    @mainthread
+    def _update_ui_with_tools(self, all_tools):
+        # 1. Clear previous items so we don't duplicate
+        scroll_list = self.ids.tool_list_container
+        scroll_list.clear_widgets()
         
         if not all_tools:
             scroll_list.add_widget(TwoLineListItem(text="No API tools found", secondary_text="Check server connection"))

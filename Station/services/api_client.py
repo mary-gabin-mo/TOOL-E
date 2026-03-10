@@ -217,9 +217,8 @@ class APIClient(EventDispatcher):
         print(f"[API] Fetching unreturned tools for user: {user_id}")
         
         try:
-            # Try current route first, then legacy query route used by some backend versions.
+            # Use the query param route which is confirmed to work
             candidate_calls = [
-                (f"{API_TRANSACTION}/user/{user_id}/unreturned", None),
                 (f"{API_TRANSACTION}/unreturned", {"user_id": user_id}),
             ]
 

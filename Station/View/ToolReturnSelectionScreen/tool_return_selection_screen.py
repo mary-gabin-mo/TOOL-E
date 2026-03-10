@@ -2,6 +2,8 @@ from kivy.app import App
 from kivymd.uix.list import TwoLineAvatarIconListItem, IRightBodyTouch
 from kivymd.uix.selectioncontrol import MDCheckbox
 from View.baseScreen import BaseScreen
+import threading
+from kivy.clock import mainthread
 
 
 class RightCheckbox(IRightBodyTouch, MDCheckbox):
@@ -33,9 +35,38 @@ class ToolReturnSelectionScreen(BaseScreen):
         list_container.clear_widgets()
         self._checkboxes = []
         
-        # Get non-returned tools for this user from API
-        # For now, we'll use a placeholder - you'll need to implement the API call
-        non_returned_tools = self._fetch_non_returned_tools()
+        # Show loading state
+        self.ids.title_label.text = "Loading tools..."
+        self.ids.empty_message.opacity = 1
+        self.ids.empty_message.text = "Please wait..."
+        self.ids.continue_btn.disabled = True
+        
+        # Fetch non-returned tools for this user from API in background
+        threading.Thread(
+            target=self._fetch_non_returned_tools_thread, 
+            args=(tool_was_confirmed, predicted_tool)
+        ).start()
+
+    def _fetch_non_returned_tools_thread(self, tool_was_confirmed, predicted_tool):
+        app = App.get_running_app()
+        user_id = None
+        if hasattr(app.session, 'user_data') and app.session.user_data:
+            user_id = app.session.user_data.get('ucid') or app.session.user_data.get('id')
+            
+        non_returned_tools = []
+        if user_id:
+            try:
+                response = app.api_client.get_user_unreturned_tools(user_id)
+                if response.get('success'):
+                    non_returned_tools = response.get('data', [])
+            except Exception as e:
+                print(f"[ERROR] Exception fetching unreturned tools: {e}")
+                
+        self._update_tools_ui(non_returned_tools, tool_was_confirmed, predicted_tool)
+
+    @mainthread
+    def _update_tools_ui(self, non_returned_tools, tool_was_confirmed, predicted_tool):
+        list_container = self.ids.tool_list_container
         
         print(f"[DEBUG] Fetched {len(non_returned_tools)} tools")
         first_tool = non_returned_tools[0] if isinstance(non_returned_tools, list) and non_returned_tools else None
@@ -166,23 +197,36 @@ class ToolReturnSelectionScreen(BaseScreen):
 
         print(f"[UI] Selected {len(selected_tools)} tools for return")
         
-        # Call API to process returns
-        try:
-            # Mark tools as returned in the backend
-            result = app.api_client.return_tools(selected_tools)
-            
-            if result.get('success') or result.get('count', 0) > 0:
-                # Store processed transactions in session so confirmation screen can show them
-                app.session.transactions = selected_tools
-                
-                # Navigate to return confirmation screen
-                self.go_to('return confirmation screen')
-            else:
-                print(f"[ERROR] Failed to return tools: {result.get('error')}")
-                # You might want to show an error dialog here
+        # Disable button during processing
+        self.ids.continue_btn.disabled = True
+        self.ids.continue_btn.text = "Processing..."
         
+        threading.Thread(target=self._return_tools_thread, args=(selected_tools,)).start()
+        
+    def _return_tools_thread(self, selected_tools):
+        app = App.get_running_app()
+        try:
+            result = app.api_client.return_tools(selected_tools)
         except Exception as e:
-            print(f"[ERROR] Exception processing return: {e}")
+            result = {'success': False, 'error': str(e)}
+            
+        self._handle_return_result(result, selected_tools)
+        
+    @mainthread
+    def _handle_return_result(self, result, selected_tools):
+        app = App.get_running_app()
+        self.ids.continue_btn.text = "Confirm Return"
+        
+        if result.get('success') or result.get('count', 0) > 0:
+            # Store processed transactions in session so confirmation screen can show them
+            app.session.transactions = selected_tools
+            
+            # Navigate to return confirmation screen
+            self.go_to('return confirmation screen')
+        else:
+            print(f"[ERROR] Failed to return tools: {result.get('error', 'Unknown error')}")
+            # Ensure the button is re-enabled to allow trying again
+            self.ids.continue_btn.disabled = False
             # Fallback for now if API fails (e.g. testing without backend)
             app.session.transactions = selected_tools
             self.go_to('return confirmation screen')
