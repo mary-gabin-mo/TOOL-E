@@ -10,7 +10,7 @@ class SessionManager(EventDispatcher):
     # Kivy Properties allow the UI to automatically update if these change
     
     # 'borrow' or 'return'
-    transaction_type = StringProperty("borrow")
+    transaction_type = StringProperty("")
     
     # The User ID (e.g. "30012345")
     user_id = StringProperty(None, allownone=True)
@@ -28,14 +28,14 @@ class SessionManager(EventDispatcher):
     def reset(self):
         """Clear data for the next user."""
         print("[SESSION] Resetting settion state...")
-        self.transaction_type = "borrow" # Default
+        self.transaction_type = "" # Default to no type selected
         self.user_data = None
         self.user_id = None
         self.transactions = []
         self.current_transaction = []
         
     def set_transaction_type(self, type_str):
-        if type_str.lower() not in ['borrow', 'return']:
+        if type_str.lower() not in ["borrow", "return"]:
             print(f"[ERROR] Invalid transaction type: {type_str}")
             return
         self.transaction_type = type_str.lower()

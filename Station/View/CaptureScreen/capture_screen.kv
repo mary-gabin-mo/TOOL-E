@@ -3,8 +3,8 @@
 
     MDBoxLayout:
         orientation: 'vertical'
-        padding: "0dp"
-        spacing: "0dp"
+        padding: "40dp"
+        spacing: "10dp"
 
         # -- Logo Area Placeholder --
         Widget:
@@ -72,7 +72,7 @@
             size_hint_y: None           # Don't expand vertically
             height: '80dp'              # Fixed height for this row
             pos_hint: {"centre_x": .5}
-            padding: '4dp'             # Optional padding around the row
+            padding: '14dp'             # Optional padding around the row
 
             MDFillRoundFlatButton:
                 text: "DEV - BACK\n(Action Selection\nScreen)"
@@ -96,11 +96,19 @@
                 md_bg_color: 0.4, 0.4, 0.4, 1  # Grey
                 on_release: root.go_to('tool confirm screen')
 
+        # -- Spacer for the footer--
+        Widget:
+            size_hint_y: 0.1
+
         # -- Cancel Button --
         MDFillRoundFlatButton:
-            text: "CANCEL"
+            text: "Cancel"
             font_size: "24sp"
-            size_hint_y: 0.1
+            size_hint: 1, 0.01
             pos_hint: {"center_x": .5}
             md_bg_color: 0.9, 0.17, 0.25, 1  # Red
             on_release: root.cancel_transaction()
+
+        # -- Spacer for the footer--
+        Widget:
+            size_hint_y: 0.1

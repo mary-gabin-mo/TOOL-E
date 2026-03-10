@@ -81,6 +81,8 @@ class WelcomeScreen(BaseScreen):
         """RESULT HANDLER: Runs back on the Main UI Thread"""
         if result['success']: # Success Logic
             # Once the user is validated, save the user info in SessionManager.
+            # make sure no transaction type is pre-set
+            app.session.transaction_type = ""
             app.session.user_data = result['user']
             # Save the specific ID (mapping API 'ucid' to session 'user_id')
             app.session.user_id = str(result['user'].get('ucid', ''))
@@ -100,6 +102,7 @@ class WelcomeScreen(BaseScreen):
         result = app.api_client.validate_user(ucid)
         if result['success'] == True:
             # Save the user info to the session once validated
+            app.session.transaction_type = ""  # ensure fresh start
             app.session.user_data = result['user']
             # Save the specific ID (mapping API 'ucid' to session 'user_id')
             app.session.user_id = str(result['user'].get('ucid', ''))

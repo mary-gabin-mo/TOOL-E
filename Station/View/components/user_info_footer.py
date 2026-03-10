@@ -27,6 +27,9 @@ class UserInfoFooter(MDBoxLayout):
             session.bind(user_data=self.on_user_data_change)
             session.bind(transaction_type=self.on_transaction_type_change)
             
+            # Set default color
+            self.transaction_color = [0.5, 0.5, 0.5, 1]  # Grey
+            
             # Set initial values if session already has data
             if session.user_data:
                 self.on_user_data_change(session, session.user_data)
@@ -50,11 +53,14 @@ class UserInfoFooter(MDBoxLayout):
             # Update transaction type display when user logs in
             transaction_type = session.transaction_type
             if transaction_type.lower() == 'return':
-                self.transaction_type = 'return'
+                self.transaction_type = 'RETURN'
                 self.transaction_color = [0.2, 0.6, 0.2, 1]  # Green for return
-            else:
-                self.transaction_type = 'borrow'
+            elif transaction_type.lower() == 'borrow':
+                self.transaction_type = 'BORROW'
                 self.transaction_color = [0.76, 0.19, 0.20, 1]  # Red for borrow
+            else:
+                self.transaction_type = "-----"
+                self.transaction_color = [0.5, 0.5, 0.5, 1]  # Grey for no type
         else:
             self.update_no_user_state()
             self.is_user_logged_in = False
@@ -72,8 +78,11 @@ class UserInfoFooter(MDBoxLayout):
         # Only update display if user is logged in
         if self.is_user_logged_in:
             if transaction_type.lower() == 'return':
-                self.transaction_type = 'return'
+                self.transaction_type = 'RETURN'
                 self.transaction_color = [0.2, 0.6, 0.2, 1]  # Green for return
-            else:
-                self.transaction_type = 'borrow'
+            elif transaction_type.lower() == 'borrow':
+                self.transaction_type = 'BORROW'
                 self.transaction_color = [0.76, 0.19, 0.20, 1]  # Red for borrow
+            else:
+                self.transaction_type = "-----"
+                self.transaction_color = [0.5, 0.5, 0.5, 1]  # Grey for no type
