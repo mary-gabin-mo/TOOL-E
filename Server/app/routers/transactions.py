@@ -128,6 +128,55 @@ async def get_transactions(
             "pages": (total + limit - 1) // limit if limit > 0 else 1
         }
 
+@router.get("/transactions/unreturned")
+async def get_unreturned_transactions(user_id: Optional[int] = None):
+    """
+    Fetches all transactions that have not been returned yet (return_timestamp IS NULL).
+    Optionally filters by user_id.
+    """
+    with engine_tools.connect() as conn:
+        query = """
+            SELECT t.transaction_id, t.user_id, t.tool_id, t.checkout_timestamp, 
+                   t.desired_return_date, t.return_timestamp, t.quantity, t.purpose, 
+                   t.image_path, t.classification_correct, t.weight,
+                   COALESCE(t.user_name, u.user_name) as user_name, tl.tool_name
+            FROM transactions t
+            LEFT JOIN users u ON t.user_id = u.user_id
+            LEFT JOIN tools tl ON t.tool_id = tl.tool_id
+            WHERE t.return_timestamp IS NULL
+        """
+        params = {}
+        if user_id is not None:
+            query += " AND t.user_id = :user_id"
+            params["user_id"] = user_id
+            
+        result = conn.execute(text(query), params)
+        
+        transactions = []
+        for row in result:
+            status = "Borrowed"
+            if row.desired_return_date and row.desired_return_date < datetime.now():
+                status = "Overdue"
+                
+            transactions.append({
+                "transaction_id": row.transaction_id,
+                "user_id": row.user_id,
+                "user_name": row.user_name,
+                "tool_id": row.tool_id,
+                "tool_name": row.tool_name,
+                "checkout_timestamp": row.checkout_timestamp,
+                "desired_return_date": row.desired_return_date,
+                "return_timestamp": row.return_timestamp,
+                "quantity": row.quantity,
+                "purpose": row.purpose,
+                "image_path": row.image_path,
+                "classification_correct": bool(row.classification_correct) if row.classification_correct is not None else None,
+                "weight": row.weight,
+                "status": status
+            })
+            
+        return {"items": transactions}
+
 @router.post("/transactions")
 async def create_transaction(transaction: TransactionInput):
     with engine_tools.connect() as conn:
@@ -275,8 +324,7 @@ async def update_transaction(transaction_id: int, transaction: TransactionUpdate
 
     return {"success": True, "message": "Transaction updated successfully"}
 
-@router.post("/transaction/")
-@router.post("/transaction")
+@router.post("/transactions/kiosk")
 async def create_kiosk_transaction(transaction: KioskTransactionRequest):
     """
     Handles transaction submission from the Kiosk frontend.
