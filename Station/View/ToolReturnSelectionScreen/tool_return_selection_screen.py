@@ -1,20 +1,51 @@
 from kivy.app import App
-from kivymd.uix.list import TwoLineAvatarIconListItem, IRightBodyTouch
+from kivymd.uix.boxlayout import MDBoxLayout
 from kivymd.uix.selectioncontrol import MDCheckbox
 from View.baseScreen import BaseScreen
 import threading
-from kivy.clock import mainthread
+from kivy.clock import mainthread, Clock
+from kivy.properties import DictProperty, BooleanProperty, StringProperty
+from kivy.uix.recycleview.views import RecycleDataViewBehavior
+from kivy.uix.behaviors import ButtonBehavior
 
+class ReturnToolItem(RecycleDataViewBehavior, ButtonBehavior, MDBoxLayout):
+    """Custom list item for RecycleView with a checkbox."""
+    tool_data = DictProperty()
+    is_active = BooleanProperty(False)
+    text = StringProperty()
+    secondary_text = StringProperty()
+    
+    def refresh_view_attrs(self, rv, index, data):
+        """ Catch and handle the view changes """
+        self._rv_index = index
+        return super().refresh_view_attrs(rv, index, data)
 
-class RightCheckbox(IRightBodyTouch, MDCheckbox):
-    """Checkbox that behaves correctly inside MDList item right-side body."""
-    pass
+    def on_release(self):
+        """Triggered by ButtonBehavior when the layout is clicked."""
+        self.toggle_active()
+
+    def toggle_active(self):
+        """Toggle checkbox state on row tap."""
+        new_state = not self.is_active
+        self.set_active_state(new_state)
+
+    def on_checkbox_hit(self, active_state):
+        """Called by the MDCheckbox directly from UI action."""
+        self.set_active_state(active_state)
+
+    def set_active_state(self, is_active):
+        self.is_active = is_active
+        app = App.get_running_app()
+        if hasattr(app, 'manager_screens'):
+            screen = app.manager_screens.get_screen('tool return selection screen')
+            if screen:
+                screen.on_checkbox_change(self.tool_data, is_active, getattr(self, '_rv_index', None))
 
 class ToolReturnSelectionScreen(BaseScreen):
 
     def __init__(self, **kwargs):
         super().__init__(**kwargs)
-        self._checkboxes = []
+        self._selected_tools = {} # dict of transaction_id -> tool_data
     
     def on_enter(self):
         """
@@ -30,16 +61,15 @@ class ToolReturnSelectionScreen(BaseScreen):
         if hasattr(app.session, 'identified_tool_data') and app.session.identified_tool_data:
             predicted_tool = app.session.identified_tool_data.get('prediction', None)
         
-        # Clear existing list
-        list_container = self.ids.tool_list_container
-        list_container.clear_widgets()
-        self._checkboxes = []
+        # Clear existing selection
+        self._selected_tools = {}
         
         # Show loading state
         self.ids.title_label.text = "Loading tools..."
         self.ids.empty_message.opacity = 1
         self.ids.empty_message.text = "Please wait..."
         self.ids.continue_btn.disabled = True
+        self.ids.tool_recycle_view.data = []
         
         # Fetch non-returned tools for this user from API in background
         threading.Thread(
@@ -66,12 +96,7 @@ class ToolReturnSelectionScreen(BaseScreen):
 
     @mainthread
     def _update_tools_ui(self, non_returned_tools, tool_was_confirmed, predicted_tool):
-        list_container = self.ids.tool_list_container
-        
         print(f"[DEBUG] Fetched {len(non_returned_tools)} tools")
-        first_tool = non_returned_tools[0] if isinstance(non_returned_tools, list) and non_returned_tools else None
-        print(f"[DEBUG] First tool data: {first_tool}")
-        print(f"[DEBUG] Type of first tool: {type(first_tool) if first_tool is not None else 'None'}")
         
         # Filter tools if the scanned tool was confirmed correct
         if tool_was_confirmed and predicted_tool:
@@ -88,38 +113,24 @@ class ToolReturnSelectionScreen(BaseScreen):
             self.ids.empty_message.opacity = 1
             self.ids.empty_message.text = "No unreturned tools found"
             self.ids.continue_btn.disabled = True
+            self.ids.tool_recycle_view.data = []
         else:
             self.ids.empty_message.opacity = 0
             
+            rv_data = []
             for tool in filtered_tools:
-                try:
-                    # Create list item with checkbox
-                    borrow_date = tool.get('borrow_date') or tool.get('checkout_timestamp') or 'N/A'
-                    due_date = tool.get('due_date') or tool.get('desired_return_date') or 'N/A'
-                    tool_name = tool.get('tool_name') or 'Unknown Tool'
-                    item = TwoLineAvatarIconListItem(
-                        text=tool_name,
-                        secondary_text=f"Borrowed: {borrow_date} • Due: {due_date}",
-                    )
-                    
-                    # Add checkbox
-                    checkbox = RightCheckbox(
-                        size_hint=(None, None),
-                        size=("48dp", "48dp"),
-                    )
-                    checkbox.tool_id = tool.get('tool_id', 0)
-                    checkbox.transaction_id = tool.get('transaction_id')
-                    checkbox.tool_name = tool_name
-                    checkbox.bind(active=self.on_checkbox_change)
-                    self._checkboxes.append(checkbox)
-
-                    # Make the full row tappable so users can select items reliably.
-                    item.bind(on_release=lambda _item, cb=checkbox: setattr(cb, 'active', not cb.active))
-                    
-                    item.add_widget(checkbox)
-                    list_container.add_widget(item)
-                except Exception as e:
-                    print(f"[ERROR] Failed to create list item for tool: {tool}, Error: {e}")
+                borrow_date = tool.get('borrow_date') or tool.get('checkout_timestamp') or 'N/A'
+                due_date = tool.get('due_date') or tool.get('desired_return_date') or 'N/A'
+                tool_name = tool.get('tool_name') or 'Unknown Tool'
+                
+                rv_data.append({
+                    "text": tool_name,
+                    "secondary_text": f"Borrowed: {borrow_date} • Due: {due_date}",
+                    "tool_data": tool,
+                    "is_active": False
+                })
+            
+            self.ids.tool_recycle_view.data = rv_data
     
     def _fetch_non_returned_tools(self):
         """
@@ -169,10 +180,34 @@ class ToolReturnSelectionScreen(BaseScreen):
                 }
             ]
     
-    def on_checkbox_change(self, checkbox, value):
-        """Enable continue button if at least one tool is selected."""
-        any_selected = any(cb.active for cb in self._checkboxes)
-        self.ids.continue_btn.disabled = not any_selected
+    def on_checkbox_change(self, tool_data, is_active, rv_index=None):
+        """Update selected tools and enable continue button if at least one tool is selected."""
+        if not tool_data:
+            return
+            
+        tx_id = tool_data.get('transaction_id')
+        if not tx_id:
+            return
+
+        if is_active:
+            self._selected_tools[tx_id] = tool_data
+        elif tx_id in self._selected_tools:
+            del self._selected_tools[tx_id]
+            
+        # Update UI in list
+        rv = self.ids.tool_recycle_view
+        
+        # We only really need to update the backing data model to persist visual state as we scroll
+        if rv_index is not None and rv_index >= 0 and rv_index < len(rv.data):
+            rv.data[rv_index]['is_active'] = is_active
+        else:
+            # Fallback if index wasn't saved yet
+            for i, item in enumerate(rv.data):
+                if item.get('tool_data', {}).get('transaction_id') == tx_id:
+                    rv.data[i]['is_active'] = is_active
+                    break
+        
+        self.ids.continue_btn.disabled = len(self._selected_tools) == 0
     
     def confirm_selection(self):
         """
@@ -183,13 +218,12 @@ class ToolReturnSelectionScreen(BaseScreen):
         # Collect selected tool IDs directly from our tracking list
         selected_tools = []
         
-        for checkbox in self._checkboxes:
-            if checkbox.active:
-                selected_tools.append({
-                    'transaction_id': getattr(checkbox, 'transaction_id', None),
-                    'tool_id': getattr(checkbox, 'tool_id', None),
-                    'tool_name': getattr(checkbox, 'tool_name', "Unknown Tool")
-                })
+        for tx_id, d in self._selected_tools.items():
+            selected_tools.append({
+                'transaction_id': tx_id,
+                'tool_id': d.get('tool_id', None),
+                'tool_name': d.get('tool_name', "Unknown Tool")
+            })
         
         if not selected_tools:
             print("[UI] No tools selected.")

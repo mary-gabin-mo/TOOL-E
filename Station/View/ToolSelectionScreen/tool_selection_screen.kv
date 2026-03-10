@@ -1,3 +1,6 @@
+<SelectableToolItem>:
+    on_release: self.handle_selection()
+
 <ToolSelectionScreen>:
     md_bg_color: 1, 1, 1, 1  # White background
 
@@ -31,14 +34,15 @@
             radius: [10, 10, 10, 10]
             md_bg_color: 1, 1, 1, 1 # White card background
 
-            MDScrollView:
-                do_scroll_x: False # Only allow vertical scrolling
-                do_scroll_y: True
-
-                # The container for the list items
-                MDList:
-                    id: tool_list_container
-                    padding: 0
+            RecycleView:
+                id: tool_recycle_view
+                viewclass: 'SelectableToolItem'
+                RecycleBoxLayout:
+                    default_size: None, dp(72)
+                    default_size_hint: 1, None
+                    size_hint_y: None
+                    height: self.minimum_height
+                    orientation: 'vertical'
 
         MDBoxLayout:
             orientation: 'horizontal'

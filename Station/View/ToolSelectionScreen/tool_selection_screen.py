@@ -1,10 +1,21 @@
 from kivy.app import App
-from kivy.properties import ObjectProperty
+from kivy.properties import ObjectProperty, DictProperty
 from kivymd.uix.list import TwoLineListItem
 import threading
 from kivy.clock import mainthread
 
 from View.baseScreen import BaseScreen
+
+class SelectableToolItem(TwoLineListItem):
+    tool_data = DictProperty()
+    
+    def handle_selection(self):
+        app = App.get_running_app()
+        # Find the active screen using app.manager_screens
+        if hasattr(app, 'manager_screens'):
+            screen = app.manager_screens.get_screen('tool select screen')
+            if screen:
+                screen.on_tool_selected(self, self.tool_data)
 
 class ToolSelectionScreen(BaseScreen):
     
@@ -18,11 +29,10 @@ class ToolSelectionScreen(BaseScreen):
         
     def populate_list(self):
         """Clears the list and fetches tool items using API data in a thread."""
-        scroll_list = self.ids.tool_list_container
-        scroll_list.clear_widgets()
+        tool_rv = self.ids.tool_recycle_view
         
         # Show a loading placeholder
-        scroll_list.add_widget(TwoLineListItem(text="Loading tools...", secondary_text="Please wait"))
+        tool_rv.data = [{"text": "Loading tools...", "secondary_text": "Please wait", "tool_data": {}}]
         
         threading.Thread(target=self._fetch_tools_thread).start()
         
@@ -34,53 +44,58 @@ class ToolSelectionScreen(BaseScreen):
     @mainthread
     def _update_ui_with_tools(self, all_tools):
         # 1. Clear previous items so we don't duplicate
-        scroll_list = self.ids.tool_list_container
-        scroll_list.clear_widgets()
+        tool_rv = self.ids.tool_recycle_view
         
         if not all_tools:
-            scroll_list.add_widget(TwoLineListItem(text="No API tools found", secondary_text="Check server connection"))
+            tool_rv.data = [{"text": "No API tools found", "secondary_text": "Check server connection", "tool_data": {}}]
         
         else:
+            rv_data = []
             # 3. Create items
             for tool_obj in all_tools:
-                # Display name and status
-                item = TwoLineListItem(
-                    text=f"{tool_obj['name']} (ID: {tool_obj['id']})",
-                    secondary_text=f"Status: {tool_obj['status']} | Available: {tool_obj['available_quantity']}"
-                )
-                
-                # bind the click event
-                item.bind(on_release=lambda x, t=tool_obj: self.on_tool_selected(x, t))
-                
-                # Add to the scroll view
-                scroll_list.add_widget(item)
+                rv_data.append({
+                    "text": f"{tool_obj['name']} (ID: {tool_obj['id']})",
+                    "secondary_text": f"Status: {tool_obj['status']} | Available: {tool_obj['available_quantity']}",
+                    "tool_data": tool_obj,
+                    "theme_text_color": "Primary",
+                    "text_color": (0,0,0,1)
+                })
 
-        # 4. Add "Other" Option to the bottom
-        other_tool = {"id": 0, "name": "Other", "status": "Manual", "available_quantity": "-"}
-        other_item = TwoLineListItem(
-            text="Other / Not Listed",
-            secondary_text="Select this if you can't find the tool"
-        )
-        other_item.bind(on_release=lambda x, t=other_tool: self.on_tool_selected(x, t))
-        scroll_list.add_widget(other_item)
+            # 4. Add "Other" Option to the bottom
+            other_tool = {"id": 0, "name": "Other", "status": "Manual", "available_quantity": "-"}
+            rv_data.append({
+                "text": "Other / Not Listed",
+                "secondary_text": "Select this if you can't find the tool",
+                "tool_data": other_tool,
+                "theme_text_color": "Primary",
+                "text_color": (0,0,0,1)
+            })
+            
+            tool_rv.data = rv_data
             
     def on_tool_selected(self, item_widget, tool_data):
         """
         Receives the full tool dictionary
         """
+        if not tool_data:
+            return
+            
         print(f"[UI] User manually selected: {tool_data.get('name')} (ID: {tool_data.get('id')})")
         
         self.selected_tool = tool_data
         self.ids.next_button.disabled = False
         
-        # Visual feedback: Reset all items text color
-        for child in self.ids.tool_list_container.children:
-            child.theme_text_color = "Primary"
-            # child.text_color = (0, 0, 0, 1)
-            
-        # Highlight selected
-        item_widget.theme_text_color = "Custom"
-        item_widget.text_color = (0, 0, 1, 1) # Blue
+        # Visual feedback: Reset all items text color in data model
+        rv = self.ids.tool_recycle_view
+        for i, item in enumerate(rv.data):
+            if item.get('tool_data', {}).get('id') == tool_data.get('id'):
+                rv.data[i]['theme_text_color'] = "Custom"
+                rv.data[i]['text_color'] = (0, 0, 1, 1) # Blue
+            else:
+                rv.data[i]['theme_text_color'] = "Primary"
+                # rv.data[i]['text_color'] = (0, 0, 0, 1) # Depends on KivyMD theme
+        
+        rv.refresh_from_data()
         
     def confirm_scan_more(self):
         app = App.get_running_app()

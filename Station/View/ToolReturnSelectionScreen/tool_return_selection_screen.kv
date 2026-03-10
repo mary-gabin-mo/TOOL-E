@@ -1,3 +1,36 @@
+<ReturnToolItem>:
+    orientation: "horizontal"
+    padding: "10dp"
+    spacing: "10dp"
+    size_hint_y: None
+    height: "72dp"
+    
+    MDBoxLayout:
+        orientation: "vertical"
+        pos_hint: {"center_y": .5}
+        
+        MDLabel:
+            text: root.text
+            theme_text_color: "Primary"
+            font_style: "Subtitle1"
+            shorten: True
+            shorten_from: "right"
+            
+        MDLabel:
+            text: root.secondary_text
+            theme_text_color: "Secondary"
+            font_style: "Caption"
+            shorten: True
+            shorten_from: "right"
+            
+    MDCheckbox:
+        id: cb
+        size_hint: None, None
+        size: "48dp", "48dp"
+        pos_hint: {"center_y": .5}
+        active: root.is_active
+        on_active: root.on_checkbox_hit(self.active)
+
 <ToolReturnSelectionScreen>:
     md_bg_color: 1, 1, 1, 1
 
@@ -33,13 +66,15 @@
             radius: [15, 15, 15, 15]
             elevation: 2
 
-            ScrollView:
-                do_scroll_x: False
-                do_scroll_y: True
-
-                MDList:
-                    id: tool_list_container
-                    # Tools will be added here dynamically
+            RecycleView:
+                id: tool_recycle_view
+                viewclass: 'ReturnToolItem'
+                RecycleBoxLayout:
+                    default_size: None, dp(72)
+                    default_size_hint: 1, None
+                    size_hint_y: None
+                    height: self.minimum_height
+                    orientation: 'vertical'
 
         # --- Empty Message (hidden when list has items) ---
         MDLabel:
