@@ -1,6 +1,7 @@
 import requests
 import os
 import json
+from datetime import datetime
 from kivy.event import EventDispatcher
 
 # Import settings from the config file
@@ -161,6 +162,48 @@ class APIClient(EventDispatcher):
             print(f"[API] Transaction Failed: {e}")
             return {'success': False, 'error': "Could not record transaction."}
     
+    def return_tools(self, transactions):
+        """
+        Mark tools as returned. 
+        Args:
+           transactions (list): List of dicts, each with 'transaction_id'.
+        """
+        print(f"[API] Returning {len(transactions)} tools...")
+        success_count = 0
+        errors = []
+        
+        current_time = datetime.now().isoformat()
+        
+        for tx in transactions:
+            tx_id = tx.get('transaction_id')
+            if not tx_id:
+                errors.append(f"Missing transaction_id for tool: {tx}")
+                continue
+                
+            payload = {
+                "return_timestamp": current_time
+            }
+            
+            try:
+                # Update the transaction
+                # API_TRANSACTION endpoint is base_url/transactions
+                response = requests.put(
+                    f"{API_TRANSACTION}/{tx_id}",
+                    json=payload,
+                    timeout=NETWORK_TIMEOUT
+                )
+                response.raise_for_status()
+                print(f"[API] Successfully returned transaction {tx_id}")
+                success_count += 1
+            except Exception as e:
+                print(f"[API] Failed to return transaction {tx_id}: {e}")
+                errors.append(f"Failed to return transaction {tx_id}: {e}")
+                
+        if success_count > 0:
+            return {'success': True, 'count': success_count, 'errors': errors}
+        else:
+            return {'success': False, 'error': f"No tools returned. Errors: {errors}"}
+
     def get_user_unreturned_tools(self, user_id):
         """
         Fetch all unreturned tools for a specific user.

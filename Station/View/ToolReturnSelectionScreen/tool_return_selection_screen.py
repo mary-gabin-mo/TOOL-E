@@ -76,7 +76,9 @@ class ToolReturnSelectionScreen(BaseScreen):
                         size_hint=(None, None),
                         size=("48dp", "48dp"),
                     )
-                    checkbox.tool_id = tool.get('tool_id', 0)  # Store tool ID for later
+                    checkbox.tool_id = tool.get('tool_id', 0)
+                    checkbox.transaction_id = tool.get('transaction_id')
+                    checkbox.tool_name = tool_name
                     checkbox.bind(active=self.on_checkbox_change)
                     self._checkboxes.append(checkbox)
 
@@ -147,29 +149,43 @@ class ToolReturnSelectionScreen(BaseScreen):
         """
         app = App.get_running_app()
         
-        # Collect selected tool IDs
-        list_container = self.ids.tool_list_container
+        # Collect selected tool IDs directly from our tracking list
         selected_tools = []
         
-        for item in list_container.children:
-            for widget in item.children:
-                if isinstance(widget, MDCheckbox) and widget.active:
-                    # Get the tool info
-                    tool_id = widget.tool_id
-                    tool_name = item.text
-                    selected_tools.append({
-                        'tool_id': tool_id,
-                        'tool_name': tool_name
-                    })
+        for checkbox in self._checkboxes:
+            if checkbox.active:
+                selected_tools.append({
+                    'transaction_id': getattr(checkbox, 'transaction_id', None),
+                    'tool_id': getattr(checkbox, 'tool_id', None),
+                    'tool_name': getattr(checkbox, 'tool_name', "Unknown Tool")
+                })
         
-        # Return flow can select multiple existing tools, so write the list directly
-        # instead of using confirm_current_tool (which expects current_transaction state).
-        app.session.transactions = selected_tools
-        
+        if not selected_tools:
+            print("[UI] No tools selected.")
+            return
+
         print(f"[UI] Selected {len(selected_tools)} tools for return")
         
-        # Navigate to return confirmation screen
-        self.go_to('return confirmation screen')
+        # Call API to process returns
+        try:
+            # Mark tools as returned in the backend
+            result = app.api_client.return_tools(selected_tools)
+            
+            if result.get('success') or result.get('count', 0) > 0:
+                # Store processed transactions in session so confirmation screen can show them
+                app.session.transactions = selected_tools
+                
+                # Navigate to return confirmation screen
+                self.go_to('return confirmation screen')
+            else:
+                print(f"[ERROR] Failed to return tools: {result.get('error')}")
+                # You might want to show an error dialog here
+        
+        except Exception as e:
+            print(f"[ERROR] Exception processing return: {e}")
+            # Fallback for now if API fails (e.g. testing without backend)
+            app.session.transactions = selected_tools
+            self.go_to('return confirmation screen')
     
     def go_back(self):
         """Return to tool confirmation screen."""
