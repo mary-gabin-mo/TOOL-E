@@ -74,26 +74,26 @@
             pos_hint: {"centre_x": .5}
             padding: '14dp'             # Optional padding around the row
 
-            MDFillRoundFlatButton:
+            AppButton:
                 text: "DEV - BACK\n(Action Selection\nScreen)"
                 font_size: "14sp"
                 size_hint: .2, 1        
-                md_bg_color: 0.4, 0.4, 0.4, 1  # Grey
+                background_color: 0.4, 0.4, 0.4, 1  # Grey
                 on_release: root.go_back('action selection screen')
             
-            MDFillRoundFlatButton:
+            AppButton:
                 text: "DEV - Capture"
                 font_size: "14sp"
                 size_hint: .2, 1        
-                md_bg_color: 0.4, 0.4, 0.4, 1  # Grey
+                background_color: 0.4, 0.4, 0.4, 1  # Grey
                 on_release: root.capture_btn()
 
             # -- DEV BUTTON --
-            MDFillRoundFlatButton:
+            AppButton:
                 text: "DEV - NEXT\n(Tool Confirm\nScreen)"
                 font_size: "14sp"
                 size_hint: .2, 1        
-                md_bg_color: 0.4, 0.4, 0.4, 1  # Grey
+                background_color: 0.4, 0.4, 0.4, 1  # Grey
                 on_release: root.go_to('tool confirm screen')
 
         # -- Spacer for the footer--
@@ -101,12 +101,12 @@
             size_hint_y: 0.1
 
         # -- Cancel Button --
-        MDFillRoundFlatButton:
+        AppButton:
             text: "Cancel"
             font_size: "24sp"
-            size_hint: 1, 0.01
+            size_hint: 1, 0.1
             pos_hint: {"center_x": .5}
-            md_bg_color: 0.9, 0.17, 0.25, 1  # Red
+            background_color: 0.9, 0.17, 0.25, 1  # Red
             on_release: root.cancel_transaction()
 
         # -- Spacer for the footer--

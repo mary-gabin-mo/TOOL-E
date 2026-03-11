@@ -11,6 +11,10 @@
         padding: "20dp"
         spacing: "10dp"
 
+        # -- Logo Area Placeholder --
+        Widget:
+            size_hint_y: 0.40
+
         # --- HEADER (Back Button + Title) ---
         BoxLayout:
             size_hint_y: 0.1
@@ -24,16 +28,16 @@
                 color: 0,0,0,1
                 size_hint_x: None
                 width: dp(60)
-                on_release: root.back_to_main()
+                on_release: root.cancel_transaction()
 
-            Label:
-                text: "Enter UCID Manually"
-                font_size: "24sp"
-                bold: True
-                color: 0,0,0,1
-                halign: 'center'
-                valign: 'middle'
-                text_size: self.size
+            # Label:
+            #     text: "Enter UCID Manually"
+            #     font_size: "24sp"
+            #     bold: True
+            #     color: 0,0,0,1
+            #     halign: 'center'
+            #     valign: 'middle'
+            #     text_size: self.size
 
         # --- DISPLAY AREA ---
         BoxLayout:

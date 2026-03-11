@@ -75,32 +75,32 @@
             spacing: "10dp"
 
             # -- DEV BUTTON --
-            MDFillRoundFlatButton:
+            AppButton:
                 text: "DEV - SCAN CARD \n(server ON)"
                 font_size: "20sp"
                 size_hint: 0.7, 0.3
                 pos_hint: {"center_x": .5}
-                md_bg_color: 0.4, 0.4, 0.4, 1  # Red
+                background_color: 0.4, 0.4, 0.4, 1  # Grey
                 # move on to the next page
                 on_release: root.submit_ucid()
 
             # -- DEV BUTTON --
-            MDFillRoundFlatButton:
+            AppButton:
                 text: "DEV - SCAN CARD \n(server OFFLINE)"
                 font_size: "20sp"
                 size_hint: 0.8, 0.3
                 pos_hint: {"center_x": .5}
-                md_bg_color: 0.4, 0.4, 0.4, 1  # Red
+                background_color: 0.4, 0.4, 0.4, 1  # Grey
                 # move on to the next page
                 on_release: root.go_to('action selection screen')
 
         # -- Manual Entry Button --
-        MDFillRoundFlatButton:
+        AppButton:
             text: "MANUAL UCID ENTRY"
             font_size: "24sp"
             size_hint: 0.6, 0.2
             pos_hint: {"center_x": .5}
-            md_bg_color: 0.9, 0.17, 0.25, 1  # Red
+            background_color: 0.9, 0.17, 0.25, 1  # Red
             on_release: root.go_to('manual entry screen')    
         
         # -- Spacer --
