@@ -1,5 +1,5 @@
 from kivy.event import EventDispatcher
-from kivy.properties import StringProperty, ObjectProperty, ListProperty, DictProperty
+from kivy.properties import StringProperty, ObjectProperty, ListProperty, DictProperty, BooleanProperty
 
 class SessionManager(EventDispatcher):
     """
@@ -25,6 +25,9 @@ class SessionManager(EventDispatcher):
     # The current transaction being processed (waiting for tool confirmation)
     current_transaction = DictProperty({})
     
+    # Track if the scanned tool was confirmed correct (for return filtering)
+    tool_was_confirmed = BooleanProperty(False)
+    
     def reset(self):
         """Clear data for the next user."""
         print("[SESSION] Resetting settion state...")
@@ -32,7 +35,8 @@ class SessionManager(EventDispatcher):
         self.user_data = None
         self.user_id = None
         self.transactions = []
-        self.current_transaction = []
+        self.current_transaction = {}
+        self.tool_was_confirmed = False
         
     def set_transaction_type(self, type_str):
         if type_str.lower() not in ["borrow", "return"]:

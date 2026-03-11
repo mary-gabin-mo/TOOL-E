@@ -53,7 +53,8 @@ if ENABLE_HOT_RELOAD:
     from kivymd.uix.screenmanager import MDScreenManager
 
     class KioskApp(MDApp):
-        KV_DIRS = [os.path.join(os.getcwd(), "View")]
+        # Get the directory where this main.py file is located
+        KV_DIRS = [os.path.join(os.path.dirname(os.path.abspath(__file__)), "View")]
 
         def build_app(self) -> MDScreenManager:
             

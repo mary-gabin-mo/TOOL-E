@@ -2,6 +2,9 @@ from View.baseScreen import BaseScreen
 from kivy.app import App
 import time
 
+import threading
+from kivy.clock import mainthread
+
 class ManualEntryScreen(BaseScreen):
 
     def __init__(self, **kwargs):
@@ -52,8 +55,23 @@ class ManualEntryScreen(BaseScreen):
         ucid = self.ids.ucid_input.text
         print(f"Submitting UCID: {ucid}")
         
+        # Disable button/input during loading
+        self.ids.ucid_input.disabled = True
+        
+        # Run API in thread to prevent UI freezing
+        threading.Thread(target=self._submit_ucid_thread, args=(ucid,)).start()
+
+    def _submit_ucid_thread(self, ucid):
         app = App.get_running_app()
         result = app.api_client.validate_user(ucid)
+        self._handle_validation_result(result)
+
+    @mainthread
+    def _handle_validation_result(self, result):
+        # Re-enable input
+        self.ids.ucid_input.disabled = False
+        app = App.get_running_app()
+        
         if result['success'] == True:
             # Save the user info to the session once validated
             app.session.user_data = result['user']

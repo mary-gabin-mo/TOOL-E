@@ -41,42 +41,53 @@ class ToolConfirmScreen(BaseScreen):
         User clicked YES. Confirm this tool and save to transaction list.
         """
         app = App.get_running_app()
-        if hasattr(app, 'session') and app.session.current_transaction:
-            app.session.set_classification_correct(True)
-            # Use the session method we defined earlier
-            app.session.confirm_current_tool(self.predicted_name)
-            
-        # Navigate to next step (e.g. Scan More or Finish)
-        # For now, let's say we go back to selection to scan another or finish
-        self.go_to('capture screen') 
+        
+        # Check if this is a return transaction
+        if app.session.transaction_type == "return":
+            # Mark tool as confirmed
+            app.session.tool_was_confirmed = True
+            # Go to tool return selection screen
+            self.go_to('tool return selection screen')
+        else:
+            # For borrows, confirm and scan more
+            if hasattr(app, 'session'):
+                app.session.confirm_current_tool(self.predicted_name)
+            self.go_to('capture screen') 
         
     def confirm_finish(self):
         """
         User clicked YES. Confirm this tool and save to transaction list.
         """
         app = App.get_running_app()
-        if hasattr(app, 'session') and app.session.current_transaction:
-            app.session.set_classification_correct(True)
-            # Use the session method we defined earlier
-            app.session.confirm_current_tool(self.predicted_name)
-            
-        # Navigate to next step (e.g. Scan More or Finish)
-        # For now, let's say we go back to selection to scan another or finish
-        self.go_to('transaction confirm screen') 
+        
+        # Check if this is a return transaction
+        if app.session.transaction_type == "return":
+            # Mark tool as confirmed
+            app.session.tool_was_confirmed = True
+            # Go to tool return selection screen
+            self.go_to('tool return selection screen')
+        else:
+            # For borrows, confirm and finish
+            if hasattr(app, 'session'):
+                app.session.confirm_current_tool(self.predicted_name)
+            self.go_to('transaction confirm screen') 
 
     def reject_tool(self):
         """
-        User clicked NO. Go to the manual selection list.
+        User clicked NO. Go to the manual selection list or tool return selection.
         """
-        # Mark the prediction as incorrect before redirecting to manual selection
         app = App.get_running_app()
-        if hasattr(app, 'session') and app.session.current_transaction:
-            app.session.set_classification_correct(False)
-            
-        self.go_to('tool select screen')
-    
+        
+        # Check if this is a return transaction
+        if app.session.transaction_type == "return":
+            # Mark tool as NOT confirmed (will show all unreturned tools)
+            app.session.tool_was_confirmed = False
+            # Go to tool return selection screen
+            self.go_to('tool return selection screen')
+        else:
+            # For borrows, go to manual selection
+            self.go_to('tool select screen')
+
     def go_back_to_capture(self):
-        """
-        User clicked BACK. Return to capture screen to retake photo.
-        """
-        self.go_back('capture screen')
+        """Back button handler for confirm screen."""
+        self.go_to('capture screen')

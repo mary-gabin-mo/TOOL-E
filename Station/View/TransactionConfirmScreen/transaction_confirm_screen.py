@@ -1,3 +1,5 @@
+import threading
+from kivy.clock import mainthread
 from kivy.app import App
 from kivymd.uix.list import OneLineListItem
 from View.baseScreen import BaseScreen
@@ -12,22 +14,29 @@ class TransactionConfirmScreen(BaseScreen):
     def on_enter(self):
         """Reset state when entering screen."""
         self.return_date = None
-        self.purpose = None
-        self.ids.confirm_finish_btn.disabled = True
         
-        # Reset buttons state
-        self.ids.btn_academic.md_bg_color = (0.9, 0.9, 0.9, 1) # Grey out
-        self.ids.btn_personal.md_bg_color = (0.9, 0.9, 0.9, 1)
-        self.ids.btn_academic.text_color = (0, 0, 0, 1)
-        self.ids.btn_personal.text_color = (0, 0, 0, 1)
-
-        # Reset the red border box visuals
-        self.ids.date_box.line_color = (1,0,0,1) # Red border
-        self.ids.date_label.text = "Tap to select Return Date"
-        self.ids.date_label.text_color = (0.5, 0.5, 0.5, 1)
+        app = App.get_running_app()
+        transaction_type = getattr(app.session, 'transaction_type', 'borrow')
+        
+        # For returns, we don't need a return date - skip directly to finish
+        if transaction_type == "return":
+            self.ids.date_box.opacity = 0  # Hide date selector
+            self.ids.date_box.size_hint_y = 0
+            self.ids.confirm_finish_btn.disabled = False
+            self.ids.confirm_finish_btn.text = "CONFIRM RETURN"
+        else:
+            # For borrows, show date selector
+            self.ids.date_box.opacity = 1
+            self.ids.date_box.size_hint_y = None
+            self.ids.confirm_finish_btn.disabled = True
+            self.ids.confirm_finish_btn.text = "CONFIRM CHECKOUT"
+            
+            # Reset the red border box visuals
+            self.ids.date_box.line_color = (1,0,0,1) # Red border
+            self.ids.date_label.text = "Tap to select Return Date"
+            self.ids.date_label.text_color = (0.5, 0.5, 0.5, 1)
         
         # Load tool info from session
-        app = App.get_running_app()
         transactions = getattr(app.session, 'transactions', [])
         
         # Clear existing items in the list
@@ -87,16 +96,19 @@ class TransactionConfirmScreen(BaseScreen):
             self.ids.confirm_finish_btn.disabled = True
 
     def finish_transaction(self):
-        print(f"Transaction Confirmed! Date: {self.return_date}")
-        
         app = App.get_running_app()
         
-        # Format Date for Backend (YYYY-MM-DD HH:MM:SS)
-        # If only a date is provided, default to noon or end of day
-        if isinstance(self.return_date, date) and not isinstance(self.return_date, datetime):
-             formatted_date = f"{self.return_date.strftime('%Y-%m-%d')} 12:00:00"
+        # For returns, use current date/time; for borrows, use selected return date
+        if app.session.transaction_type == "return":
+            formatted_date = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
+            print(f"Return Transaction Confirmed at: {formatted_date}")
         else:
-             formatted_date = self.return_date.strftime("%Y-%m-%d %H:%M:%S")
+            print(f"Checkout Transaction Confirmed! Return Date: {self.return_date}")
+            # Format Date for Backend (YYYY-MM-DD HH:MM:SS)
+            if isinstance(self.return_date, date) and not isinstance(self.return_date, datetime):
+                formatted_date = f"{self.return_date.strftime('%Y-%m-%d')} 12:00:00"
+            else:
+                formatted_date = self.return_date.strftime("%Y-%m-%d %H:%M:%S")
 
         # Safe User ID retrieval
         user_id = getattr(app.session, 'user_id', '')
@@ -122,14 +134,35 @@ class TransactionConfirmScreen(BaseScreen):
         }
         
         print(f"[UI] Submitting Transaction via APIClient...")
+        
+        # Disable button during processing
+        self.ids.confirm_finish_btn.disabled = True
+        self.ids.confirm_finish_btn.text = "Submitting..."
 
-        # Call API logic using the centralized API Client
-        response = app.api_client.submit_transaction(final_payload)
+        # Call API logic using the centralized API Client in a thread
+        threading.Thread(target=self._submit_transaction_thread, args=(final_payload,)).start()
+        
+    def _submit_transaction_thread(self, final_payload):
+        app = App.get_running_app()
+        try:
+            response = app.api_client.submit_transaction(final_payload)
+        except Exception as e:
+            response = {'success': False, 'error': str(e)}
+        self._handle_submission_result(response)
+        
+    @mainthread
+    def _handle_submission_result(self, response):
+        app = App.get_running_app()
+        self.ids.confirm_finish_btn.disabled = False
+        self.ids.confirm_finish_btn.text = "Confirm & Finish"
              
         if response.get('success'):
              print("Transaction Success")
-             # Go to confirmation screen only on success
-             self.go_to('checkout confirmation screen')
+             # Navigate to appropriate confirmation screen based on transaction type
+             if app.session.transaction_type == "return":
+                 self.go_to('return confirmation screen')
+             else:
+                 self.go_to('checkout confirmation screen')
         else:
              print(f"Transaction Failed: {response.get('error')}")
              # You might want to add a UI popup here to alert the user

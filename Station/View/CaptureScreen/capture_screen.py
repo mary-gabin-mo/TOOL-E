@@ -202,19 +202,12 @@ class CaptureScreen(BaseScreen):
         print("[DEBUG] Freezing camera and capturing image...")
         self.set_processing_mode(True, message="Capturing Image...")
         
-        filepath = self.save_current_frame()
-        
-        if filepath:
-            # Start API upload in background
-            print(f"[DEBUG] Image saved successfully at {filepath}. Starting API thread...")
-            threading.Thread(target=self.run_identification_task, args=(filepath,)).start()
-        else:
-            print("[ERROR] Failed to save image. Aborting API call.")
-            self.set_processing_mode(False) # Reset if save failed
-            self.update_event = Clock.schedule_interval(self.update_feed, 1.0/30.0) # Restart camera
+        # Start API upload in background, save image inside thread
+        print(f"[DEBUG] Starting API thread for save and identification...")
+        threading.Thread(target=self.run_identification_task).start()
     
     # --- DEV - CAPTURE WITH BUTTON - REMOVE LATER --- 
-    def capture_btn(self):
+    def capture_btn(self, *args):
         """Dev Button: Simulate load cell trigger"""
         print("[DEV] Manual capture button pressed")
         self.handle_load_cell_trigger(None, 100.0)  # Simulate weight value
@@ -295,8 +288,17 @@ class CaptureScreen(BaseScreen):
         except Exception as e:
             print(f"[UI] PIL Error: {e}")
 
-    def run_identification_task(self, filepath):
-        """Background Thread: uploads image to server."""
+    def run_identification_task(self):
+        """Background Thread: Takes photo, resizes, and uploads image to server."""
+        # Save image and run heavy PIL resizing outside the main thread
+        filepath = self.save_current_frame()
+
+        if not filepath:
+            print("[ERROR] Failed to save image. Aborting API call.")
+            # Pass error back to Main UI Thread
+            self.handle_identification_result({'success': False, 'error': 'Failed to save image'})
+            return
+
         print(f"[Background] Uploading {filepath}...")
         app = App.get_running_app()
         
@@ -332,6 +334,9 @@ class CaptureScreen(BaseScreen):
             # Handle Error (e.g. show error screen or text)
             error_msg = result.get('error', 'Unknown Error') if result else "Connection Failed"
             print(f"[UI Error] {error_msg}")
+            # Reset UI and Restart Camera
+            self.reset_feed()
+            # Optionally show popup with error msg
             
     def reset_feed(self):
         self.set_processing_mode(False) # hide spinner
