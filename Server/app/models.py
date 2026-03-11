@@ -80,3 +80,17 @@ class TransactionUpdate(BaseModel):
 
 class TransactionBatchInput(BaseModel):
     transactions: list[TransactionInput]
+
+# --- Kiosk Models ---
+class KioskToolItem(BaseModel):
+    transaction_id: str 
+    img_filename: str
+    tool_name: str
+    classification_correct: Optional[bool] = None
+
+class KioskTransactionRequest(BaseModel):
+    user_id: str
+    user_name: Optional[str] = None
+    return_date: Optional[str] = None
+    purpose: Optional[str] = None
+    transactions: list[KioskToolItem]
