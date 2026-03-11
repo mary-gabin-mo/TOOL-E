@@ -149,7 +149,7 @@ class APIClient(EventDispatcher):
         
         try: 
             response = requests.post(
-                f"{API_TRANSACTION}",
+                f"{API_TRANSACTION}/kiosk",
                 json=transaction_data,
                 timeout=NETWORK_TIMEOUT
             )

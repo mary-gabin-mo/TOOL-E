@@ -42,6 +42,9 @@ class ToolConfirmScreen(BaseScreen):
         """
         app = App.get_running_app()
         
+        if hasattr(app, 'session'):
+            app.session.set_classification_correct(True)
+        
         # Check if this is a return transaction
         if app.session.transaction_type == "return":
             # Mark tool as confirmed
@@ -60,6 +63,9 @@ class ToolConfirmScreen(BaseScreen):
         """
         app = App.get_running_app()
         
+        if hasattr(app, 'session'):
+            app.session.set_classification_correct(True)
+        
         # Check if this is a return transaction
         if app.session.transaction_type == "return":
             # Mark tool as confirmed
@@ -77,6 +83,9 @@ class ToolConfirmScreen(BaseScreen):
         User clicked NO. Go to the manual selection list or tool return selection.
         """
         app = App.get_running_app()
+        
+        if hasattr(app, 'session'):
+            app.session.set_classification_correct(False)
         
         # Check if this is a return transaction
         if app.session.transaction_type == "return":
