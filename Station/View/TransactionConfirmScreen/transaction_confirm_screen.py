@@ -7,12 +7,20 @@ from datetime import datetime, date
 class TransactionConfirmScreen(BaseScreen):
     
     return_date = None
+    purpose = None # 'Academic Course' or 'Personal Project'
     
     def on_enter(self):
         """Reset state when entering screen."""
         self.return_date = None
+        self.purpose = None
         self.ids.confirm_finish_btn.disabled = True
         
+        # Reset buttons state
+        self.ids.btn_academic.md_bg_color = (0.9, 0.9, 0.9, 1) # Grey out
+        self.ids.btn_personal.md_bg_color = (0.9, 0.9, 0.9, 1)
+        self.ids.btn_academic.text_color = (0, 0, 0, 1)
+        self.ids.btn_personal.text_color = (0, 0, 0, 1)
+
         # Reset the red border box visuals
         self.ids.date_box.line_color = (1,0,0,1) # Red border
         self.ids.date_label.text = "Tap to select Return Date"
@@ -52,9 +60,32 @@ class TransactionConfirmScreen(BaseScreen):
         # Change border from Red to Blue/Grey to indicate "Done"
         self.ids.date_box.line_color = (0.2, 0.6, 0.8, 1)
         
-        # Enable the final button
-        self.ids.confirm_finish_btn.disabled = False
+        self.check_can_finish()
         
+    def select_purpose(self, selected_purpose):
+        self.purpose = selected_purpose
+        
+        # Update colors
+        if selected_purpose == "Academic Course":
+            self.ids.btn_academic.md_bg_color = (0.2, 0.6, 0.8, 1) # Blue
+            self.ids.btn_academic.text_color = (1, 1, 1, 1)        # White text
+            self.ids.btn_personal.md_bg_color = (0.9, 0.9, 0.9, 1) # Grey
+            self.ids.btn_personal.text_color = (0, 0, 0, 1)        # Black text
+        else:
+            self.ids.btn_personal.md_bg_color = (0.2, 0.6, 0.8, 1) # Blue
+            self.ids.btn_personal.text_color = (1, 1, 1, 1)        # White text
+            self.ids.btn_academic.md_bg_color = (0.9, 0.9, 0.9, 1) # Grey
+            self.ids.btn_academic.text_color = (0, 0, 0, 1)        # Black text
+            
+        self.check_can_finish()
+
+    def check_can_finish(self):
+        # Enable the final button only if both date and purpose are selected
+        if self.return_date and self.purpose:
+            self.ids.confirm_finish_btn.disabled = False
+        else:
+            self.ids.confirm_finish_btn.disabled = True
+
     def finish_transaction(self):
         print(f"Transaction Confirmed! Date: {self.return_date}")
         
@@ -86,6 +117,7 @@ class TransactionConfirmScreen(BaseScreen):
             "user_id": str(user_id), 
             "user_name": user_name or "Unknown User",
             "return_date": formatted_date,
+            "purpose": self.purpose,
             "transactions": getattr(app.session, 'transactions', [])
         }
         
@@ -101,3 +133,5 @@ class TransactionConfirmScreen(BaseScreen):
         else:
              print(f"Transaction Failed: {response.get('error')}")
              # You might want to add a UI popup here to alert the user
+
+#Submitting Transaction: {'user_id': '30113779', 'user_name': 'Hongwoo Yoon', 'return_date': '2026-03-25 12:00:00', 'purpose': 'Academic Course', 'transactions': [{'transaction_id': '20260306_154121-492', 'img_filename': '20260306_154121-492.jpg', 'tool_name': 'Hot Glue Gun', 'classification_correct': False}]}

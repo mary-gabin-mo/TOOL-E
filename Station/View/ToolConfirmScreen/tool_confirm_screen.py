@@ -41,7 +41,8 @@ class ToolConfirmScreen(BaseScreen):
         User clicked YES. Confirm this tool and save to transaction list.
         """
         app = App.get_running_app()
-        if hasattr(app, 'session'):
+        if hasattr(app, 'session') and app.session.current_transaction:
+            app.session.set_classification_correct(True)
             # Use the session method we defined earlier
             app.session.confirm_current_tool(self.predicted_name)
             
@@ -54,7 +55,8 @@ class ToolConfirmScreen(BaseScreen):
         User clicked YES. Confirm this tool and save to transaction list.
         """
         app = App.get_running_app()
-        if hasattr(app, 'session'):
+        if hasattr(app, 'session') and app.session.current_transaction:
+            app.session.set_classification_correct(True)
             # Use the session method we defined earlier
             app.session.confirm_current_tool(self.predicted_name)
             
@@ -66,6 +68,11 @@ class ToolConfirmScreen(BaseScreen):
         """
         User clicked NO. Go to the manual selection list.
         """
+        # Mark the prediction as incorrect before redirecting to manual selection
+        app = App.get_running_app()
+        if hasattr(app, 'session') and app.session.current_transaction:
+            app.session.set_classification_correct(False)
+            
         self.go_to('tool select screen')
     
     def go_back_to_capture(self):
