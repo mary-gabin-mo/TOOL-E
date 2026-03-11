@@ -1,10 +1,12 @@
 from kivy.app import App
 from kivymd.uix.screen import MDScreen
+from View.components.user_info_footer import UserInfoFooter
 
 class BaseScreen(MDScreen):
     """
     Parent class for all screens.
     Includes helper methods for navigation.
+    All screens should include the UserInfoFooter at the bottom.
     """
     
     def go_to(self, screen_name):

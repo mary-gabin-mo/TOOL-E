@@ -19,11 +19,16 @@ ENABLE_HOT_RELOAD = not IS_RASPBERRY_PI
 
 if IS_RASPBERRY_PI:
     print("System: Raspberry Pi detected. Setting FULLSCREEN.")
-    # Config.set('graphics', 'fullscreen', 'auto')
-    Config.set('graphics', 'fullscreen', '0')
-    Config.set('graphics', 'show_cursor', '1')
-    Config.set('graphics', 'width', '800')
-    Config.set('graphics', 'height', '600')
+    Config.set('graphics', 'fullscreen', 'auto')
+    Config.set('graphics', 'show_cursor', '0')
+    # Performance optimizations for Pi touchscreen responsiveness
+    Config.set('graphics', 'multisampling', '0')  # Disable anti-aliasing
+    Config.set('kivy', 'touch_log_fn', '')  # Disable touch logging overhead
+    Config.set('postproc', 'enabled', '0')  # Disable post-processing
+    # Config.set('graphics', 'fullscreen', '0')
+    # Config.set('graphics', 'show_cursor', '1')
+    # Config.set('graphics', 'width', '800')
+    # Config.set('graphics', 'height', '600')
 else:
     print("System: Dev Environment detected. Setting WINDOWED.")
     Config.set('graphics', 'fullscreen', '0')
@@ -105,6 +110,9 @@ else:
     # --- Kivy/KivyMD imports ---
     from kivymd.app import MDApp
     from kivymd.uix.screenmanager import MDScreenManager
+    
+    # Import footer component to make it available in KV files
+    from View.components.user_info_footer import UserInfoFooter
     
     from View.screens import screens
     

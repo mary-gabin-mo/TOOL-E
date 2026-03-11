@@ -38,22 +38,22 @@
             size_hint_y: None
             height: "180dp"
 
-            MDFillRoundFlatButton:
+            AppButton:
                 text: "BORROW"
                 font_size: "32sp"
                 size_hint_x: 0.6
                 size_hint_y: 0.8
                 pos_hint: {"center_x": .5}
-                md_bg_color: 0.9, 0.17, 0.25, 1  # Red
+                background_color: 0.9, 0.17, 0.25, 1  # Red
                 on_release: root.select_borrow()
 
-            MDFillRoundFlatButton:
+            AppButton:
                 text: "RETURN"
                 font_size: "32sp"
                 size_hint_x: 0.6
                 size_hint_y: 0.8
                 pos_hint: {"center_x": .5}
-                md_bg_color: 0.9, 0.17, 0.25, 1  # Red
+                background_color: 0.9, 0.17, 0.25, 1  # Red
                 on_release: root.select_return()
 
         # -- Spacer --
@@ -61,12 +61,12 @@
             size_hint_y: 0.1
 
         # -- Dev Button --
-        MDFillRoundFlatButton:
+        AppButton:
             text: "DEV: List Tools"
             font_size: "18sp"
             size_hint: 0.5, 0.08
             pos_hint: {"center_x": .5}
-            md_bg_color: 0.2, 0.2, 0.2, 1
+            background_color: 0.2, 0.2, 0.2, 1
             on_release: root.go_to('tool select screen')
 
         # -- Spacer --
@@ -74,13 +74,17 @@
             size_hint_y: 0.4
 
         # -- Cancel Button --
-        MDFillRoundFlatButton:
+        AppButton:
             text: "Cancel"
             font_size: "24sp"
-            size_hint: 1, 0.01
+            size_hint: 1, 0.1
             pos_hint: {"center_x": .5}
-            md_bg_color: 0.9, 0.17, 0.25, 1  # Red
+            background_color: 0.9, 0.17, 0.25, 1  # Red
             on_release: root.cancel_transaction()
+
+        # -- Spacer for the footer--
+        Widget:
+            size_hint_y: 0.1
 
         # Widget:
         #     size_hint_y: 0.01

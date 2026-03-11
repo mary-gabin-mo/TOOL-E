@@ -1,0 +1,48 @@
+#:kivy 2.0
+
+<UserInfoFooter>:
+    orientation: 'horizontal'
+    padding: "10dp"
+    spacing: "15dp"
+    size_hint_y: None
+    height: "60dp"
+    md_bg_color: 0.95, 0.95, 0.95, 1  # Light gray background
+    
+    # Left: User Info
+    MDBoxLayout:
+        orientation: 'vertical'
+        spacing: "2dp"
+        size_hint_x: 0.7
+        
+        MDLabel:
+            text: root.user_name
+            font_style: "Body1"
+            bold: True
+            theme_text_color: "Primary"
+            size_hint_y: None
+            height: "20dp"
+            
+        MDLabel:
+            text: f"{int(root.user_ucid):08d}" if root.user_ucid != 0 else "--" + " | " + root.user_email
+            font_style: "Caption"
+            theme_text_color: "Secondary"
+            size_hint_y: None
+            height: "15dp"
+    
+    # Right: Transaction Type Badge
+    MDLabel:
+        text: root.transaction_type
+        font_style: "Caption"
+        bold: True
+        theme_text_color: "Custom"
+        text_color: 1, 1, 1, 1  # White text
+        size_hint_x: 0.3
+        padding: "10dp"
+        halign: "center"
+        canvas.before:
+            Color:
+                rgba: root.transaction_color
+            RoundedRectangle:
+                size: self.size
+                pos: self.pos
+                radius: [5]

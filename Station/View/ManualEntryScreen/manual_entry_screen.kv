@@ -1,53 +1,71 @@
-<ManualEntryScreen>
-    md_bg_color: 1, 1, 1, 1  # White background
+<ManualEntryScreen>:
+    canvas.before:
+        Color:
+            rgba: 1, 1, 1, 1  # White background
+        Rectangle:
+            pos: self.pos
+            size: self.size
 
-    MDBoxLayout:
+    BoxLayout:
         orientation: 'vertical'
         padding: "20dp"
         spacing: "10dp"
 
+        # -- Logo Area Placeholder --
+        Widget:
+            size_hint_y: 0.40
+
         # --- HEADER (Back Button + Title) ---
-        MDBoxLayout:
+        BoxLayout:
             size_hint_y: 0.1
             spacing: "20dp"
             
-            MDIconButton:
-                icon: "arrow-left"
-                theme_text_color: "Custom"
-                text_color: 0, 0, 0, 1
-                pos_hint: {"center_y": .5}
-                on_release: root.back_to_main()
+            Button:
+                background_normal: ''
+                background_color: 0,0,0,0
+                text: '<'  # simple back arrow
+                font_size: '32sp'
+                color: 0,0,0,1
+                size_hint_x: None
+                width: dp(60)
+                on_release: root.cancel_transaction()
 
-            MDLabel:
-                text: "Enter UCID Manually"
-                font_style: "H5"
-                bold: True
-                pos_hint: {"center_y": .5}
+            # Label:
+            #     text: "Enter UCID Manually"
+            #     font_size: "24sp"
+            #     bold: True
+            #     color: 0,0,0,1
+            #     halign: 'center'
+            #     valign: 'middle'
+            #     text_size: self.size
 
         # --- DISPLAY AREA ---
-        MDBoxLayout:
+        BoxLayout:
             size_hint_y: 0.2
             padding: "40dp", "0dp"
             
-            MDTextField:
+            TextInput:
                 id: ucid_input
                 hint_text: "Enter UCID Number"
                 text: ""
                 font_size: "48sp"
                 halign: "center"
                 readonly: True  # Vital: Prevents OS keyboard from popping up
-                mode: "fill"
-                radius: [10, 10, 0, 0]
+                background_color: 1,1,1,1
+                foreground_color: 0,0,0,1
+                cursor_color: 0,0,0,1
+                size_hint_y: None
+                height: self.font_size * 2
 
         # --- NUMBER PAD GRID ---
-        MDGridLayout:
+        GridLayout:
             cols: 3
-            spacing: "8dp"
-            padding: "120dp", "20dp"
+            spacing: "4dp"
+            padding: "60dp", "20dp"
             size_hint_y: 0.55
             pos_hint: {"center_x": .5}
             row_force_default: True
-            row_default_height: 100
+            row_default_height: 80
 
             # Row 1
             NumpadButton:
@@ -98,30 +116,35 @@
                 on_release: root.delete_last()
 
         # --- CONTROL BUTTONS ---
-        MDBoxLayout:
+        BoxLayout:
             orientation: 'horizontal'
-            spacing: "20dp"
-            padding: "120dp", "10dp", "120dp", "20dp"
+            spacing: "10dp"
+            padding: "40dp", "10dp", "40dp", "20dp"
             size_hint_y: 0.18
             pos_hint: {"center_x": .5}
 
-            NumpadButton:
+            Button:
                 text: "CANCEL"
                 font_size: "22sp"
-                md_bg_color: 0.9, 0.2, 0.2, 1  # Red
+                background_normal: ''
+                background_color: 0.9, 0.2, 0.2, 1  # Red
+                color: 1,1,1,1
                 on_release: root.cancel_transaction()
 
-            NumpadButton:
+            Button:
                 text: "ENTER"
                 font_size: "22sp"
-                md_bg_color: 0.2, 0.8, 0.2, 1  # Green
+                background_normal: ''
+                background_color: 0.2, 0.8, 0.2, 1  # Green
+                color: 1,1,1,1
                 on_release: root.submit_ucid()
 
 # --- Custom Button Component ---
 # This prevents code duplication for the number keys
-<NumpadButton@MDFillRoundFlatButton>:
+<NumpadButton@Button>:
     font_size: "28sp"
     size_hint: 1, 1
-    md_bg_color: 0.82, 0.82, 0.82, 1  # Light Grey
-    text_color: 0, 0, 0, 1         # Black Text
-    radius: [15, 15, 15, 15]
+    background_normal: ''
+    background_color: 0.82, 0.82, 0.82, 1  # Light Grey
+    color: 0, 0, 0, 1         # Black Text
+    # no radius or ripple to keep it simple
