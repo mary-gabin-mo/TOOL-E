@@ -1,5 +1,5 @@
 CREATE TABLE IF NOT EXISTS `transactions` (
-    `transaction_id` INT NOT NULL AUTO_INCREMENT,
+    `transaction_id` VARCHAR(255) NOT NULL,
     `user_id` INT DEFAULT NULL,
     `tool_id` INT DEFAULT NULL,
     `checkout_timestamp` TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
@@ -8,6 +8,7 @@ CREATE TABLE IF NOT EXISTS `transactions` (
     `quantity` INT DEFAULT 1,
     `purpose` TEXT,
     `image_path` VARCHAR(255) DEFAULT NULL,
+    `return_image_path` VARCHAR(255) DEFAULT NULL,
     `classification_correct` BOOLEAN DEFAULT NULL,
     `weight` INT DEFAULT 0,
     PRIMARY KEY (`transaction_id`)

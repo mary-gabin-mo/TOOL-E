@@ -2,6 +2,7 @@ from fastapi import APIRouter, HTTPException, Request
 from sqlalchemy import text
 from typing import Optional
 from datetime import datetime
+import uuid
 from app.models import TransactionInput, TransactionUpdate, TransactionBatchInput, KioskTransactionRequest
 from app.services import image_service
 import os
@@ -11,7 +12,7 @@ from app.database import engine_tools
 
 router = APIRouter()
 
-@router.get("/transactions")
+@router.get("/transactions")#website
 async def get_transactions(
     user_id: Optional[int] = None, 
     page: int = 1, 
@@ -79,7 +80,7 @@ async def get_transactions(
         base_sql = f"""
             SELECT t.transaction_id, t.user_id, t.tool_id, t.checkout_timestamp, 
                    t.desired_return_date, t.return_timestamp, t.quantity, t.purpose, 
-                   t.image_path, t.classification_correct, t.weight,
+                   t.image_path, t.return_image_path, t.classification_correct, t.weight,
                    COALESCE(t.user_name, u.user_name) as user_name, tl.tool_name
             FROM transactions t
             LEFT JOIN users u ON t.user_id = u.user_id
@@ -115,6 +116,7 @@ async def get_transactions(
                 "quantity": row.quantity,
                 "purpose": row.purpose,
                 "image_path": row.image_path,
+                "return_image_path": row.return_image_path,
                 "classification_correct": bool(row.classification_correct) if row.classification_correct is not None else None,
                 "weight": row.weight,
                 "status": status
@@ -138,7 +140,7 @@ async def get_unreturned_transactions(user_id: Optional[int] = None):
         query = """
             SELECT t.transaction_id, t.user_id, t.tool_id, t.checkout_timestamp, 
                    t.desired_return_date, t.return_timestamp, t.quantity, t.purpose, 
-                   t.image_path, t.classification_correct, t.weight,
+                   t.image_path, t.return_image_path, t.classification_correct, t.weight,
                    COALESCE(t.user_name, u.user_name) as user_name, tl.tool_name
             FROM transactions t
             LEFT JOIN users u ON t.user_id = u.user_id
@@ -170,6 +172,7 @@ async def get_unreturned_transactions(user_id: Optional[int] = None):
                 "quantity": row.quantity,
                 "purpose": row.purpose,
                 "image_path": row.image_path,
+                "return_image_path": row.return_image_path,
                 "classification_correct": bool(row.classification_correct) if row.classification_correct is not None else None,
                 "weight": row.weight,
                 "status": status
@@ -218,23 +221,30 @@ def _process_single_transaction(conn, transaction: TransactionInput):
                   tool_name = tool_row[0]
                   is_correct = transaction.classification_correct if transaction.classification_correct is not None else False
                   
-                  new_path = image_service.move_image_to_permanent(transaction.image_path, tool_name, is_correct)
+                  new_path = image_service.move_image_to_permanent(
+                      filename=transaction.image_path, 
+                      tool_name=tool_name, 
+                      classification_correct=is_correct,
+                      new_transaction_id=transaction.transaction_id or str(uuid.uuid4())
+                  )
                   
                   if new_path:
                       print(f"[SERVER] Moved image to {new_path}")
                       transaction.image_path = new_path
                   else:
                       print(f"[SERVER] Warning: Image path provided {transaction.image_path} but file not found in temp.")
+                      transaction.image_path = os.path.basename(transaction.image_path) # Fallback to clean filename
 
     query = text("""
         INSERT INTO transactions
-        (user_id, tool_id, desired_return_date, return_timestamp, quantity, purpose,
-            image_path, classification_correct, weight)
+        (transaction_id, user_id, tool_id, desired_return_date, return_timestamp, quantity, purpose,
+            image_path, return_image_path, classification_correct, weight)
         VALUES
-        (:user_id, :tool_id, :desired_return_date, :return_timestamp, :quantity, :purpose,
-            :image_path, :classification_correct, :weight)
+        (:transaction_id, :user_id, :tool_id, :desired_return_date, :return_timestamp, :quantity, :purpose,
+            :image_path, :return_image_path, :classification_correct, :weight)
     """)
     conn.execute(query, {
+        "transaction_id": transaction.transaction_id or str(uuid.uuid4()),
         "user_id": transaction.user_id,
         "tool_id": transaction.tool_id,
         "desired_return_date": transaction.desired_return_date,
@@ -242,12 +252,13 @@ def _process_single_transaction(conn, transaction: TransactionInput):
         "quantity": transaction.quantity,
         "purpose": transaction.purpose,
         "image_path": transaction.image_path,
+        "return_image_path": transaction.return_image_path,
         "classification_correct": transaction.classification_correct,
         "weight": transaction.weight,
     })
 
 @router.delete("/transactions/{transaction_id}")
-async def delete_transaction(transaction_id: int):
+async def delete_transaction(transaction_id: str):
     with engine_tools.connect() as conn:
         check = conn.execute(
             text("SELECT transaction_id FROM transactions WHERE transaction_id = :id"),
@@ -265,7 +276,7 @@ async def delete_transaction(transaction_id: int):
     return {"success": True, "message": "Transaction deleted successfully"}
 
 @router.put("/transactions/{transaction_id}")
-async def update_transaction(transaction_id: int, transaction: TransactionUpdate):
+async def update_transaction(transaction_id: str, transaction: TransactionUpdate):
     with engine_tools.connect() as conn:
         check = conn.execute(
             text("SELECT transaction_id FROM transactions WHERE transaction_id = :id"),
@@ -308,6 +319,9 @@ async def update_transaction(transaction_id: int, transaction: TransactionUpdate
         if transaction.image_path is not None:
             updates.append("image_path = :image_path")
             params["image_path"] = transaction.image_path
+        if transaction.return_image_path is not None:
+            updates.append("return_image_path = :return_image_path")
+            params["return_image_path"] = transaction.return_image_path
         if transaction.classification_correct is not None:
             updates.append("classification_correct = :classification_correct")
             params["classification_correct"] = transaction.classification_correct
@@ -380,12 +394,19 @@ async def create_kiosk_transaction(transaction: KioskTransactionRequest):
                 if item.classification_correct is not None:
                     is_correct = item.classification_correct
 
-                moved_path = image_service.move_image_to_permanent(fname, item.tool_name, is_correct)
+                # Pass the transaction_id to explicitly rename the file from 'capture_xxx.jpg'
+                moved_path = image_service.move_image_to_permanent(
+                    filename=fname, 
+                    tool_name=item.tool_name, 
+                    classification_correct=is_correct, 
+                    new_transaction_id=item.transaction_id
+                )
                 if moved_path:
-                    print(f"[SERVER] Successfully moved kiosk image to {moved_path}")
+                    print(f"[SERVER] Successfully moved and renamed kiosk image to {moved_path}")
                     final_img_path = moved_path
                 else:
                     print(f"[SERVER] Warning: Failed to move kiosk image {fname}")
+                    final_img_path = fname  # Fallback to the plain filename just in case
 
             # Log Transaction
             desired_return = None
@@ -398,10 +419,11 @@ async def create_kiosk_transaction(transaction: KioskTransactionRequest):
             conn.execute(
                 text("""
                     INSERT INTO transactions 
-                    (user_id, user_name, tool_id, desired_return_date, checkout_timestamp, image_path, purpose, classification_correct)
-                    VALUES (:uid, :uname, :tid, :d_return, NOW(), :img, :purpose, :class_correct)
+                    (transaction_id, user_id, user_name, tool_id, desired_return_date, checkout_timestamp, image_path, purpose, classification_correct)
+                    VALUES (:transaction_id, :uid, :uname, :tid, :d_return, NOW(), :img, :purpose, :class_correct)
                 """),
                 {
+                    "transaction_id": item.transaction_id,
                     "uid": u_id,
                     "uname": transaction.user_name,
                     "tid": t_id,

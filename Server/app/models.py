@@ -57,6 +57,7 @@ class ToolUpdate(BaseModel):
 
 # --- Transactions Models ---
 class TransactionInput(BaseModel):
+    transaction_id: Optional[str] = None
     user_id: Optional[int] = None
     tool_id: Optional[int] = None
     desired_return_date: Optional[str] = None
@@ -64,6 +65,7 @@ class TransactionInput(BaseModel):
     quantity: int = 1
     purpose: Optional[str] = None
     image_path: Optional[str] = None
+    return_image_path: Optional[str] = None
     classification_correct: Optional[bool] = None
     weight: int = 0
 
@@ -75,6 +77,7 @@ class TransactionUpdate(BaseModel):
     quantity: Optional[int] = None
     purpose: Optional[str] = None
     image_path: Optional[str] = None
+    return_image_path: Optional[str] = None
     classification_correct: Optional[bool] = None
     weight: Optional[int] = None
 
