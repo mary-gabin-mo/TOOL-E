@@ -249,15 +249,15 @@ class CaptureScreen(BaseScreen):
                     success = True
                     
             if success:
-                print (f"[UI] Image saved: {filename}")
+                print (f"[UI] Image saved locally: {filename}")
                 
-                # 3. Update Session
+                # 3. Update Session with local path
                 app = App.get_running_app()
                 if hasattr(app, 'session'):
-                    # Start the transaction now with ID and filename
+                    # Start the transaction now with ID and local full path
                     app.session.start_new_transaction(
                         transaction_id=timestamp_id,
-                        img_filename=full_path
+                        img_filename=full_path  # We temporarily store the local path here so the Kivy UI can render it
                     )
                 return full_path
                 
@@ -323,9 +323,17 @@ class CaptureScreen(BaseScreen):
             app = App.get_running_app()
             if hasattr(app, 'session'):
                 # Extract the nested dictionary from 'data'
-                # API returns: {'success': True, 'data: {'prediction': '...', ...}}
+                # API returns: {'success': True, 'data: {'prediction': '...', 'image_filename': '...', ...}}
                 tool_data = result.get('data', {})
                 app.session.identified_tool_data = tool_data
+                
+                # UPDATE THE SESSION FILENAME:
+                # The server generated a temp name (e.g. 'capture_123_abc.jpg') for this specific upload
+                # We need to swap our local path for this server path so the final POST knows which file to use
+                server_filename = tool_data.get('image_filename')
+                if server_filename:
+                    app.session.update_current_transaction_filename(server_filename)
+                    
                 print(f"[DEBUG] Saved tool info to session: {tool_data}")
                 
             # Navigate to Confirmation

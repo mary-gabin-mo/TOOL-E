@@ -52,11 +52,25 @@ class SessionManager(EventDispatcher):
         """
         self.current_transaction = {
             "transaction_id": transaction_id,
-            "img_filename": img_filename,
+            "img_filename": img_filename, # Initially holds the absolute local path for the UI (e.g. C:\...)
+            "local_img_path": img_filename, # Keep a backup of the local path for the UI preview
             "tool_name": None,  # Will be filled after ML/User confirmation
             "classification_correct": None # User feedback on ML prediction
         }
         print(f"[SESSION] Started Transaction: {transaction_id}")
+
+    def update_current_transaction_filename(self, new_filename):
+        """
+        Updates the img_filename to the server's temporary uuid filename
+        so the final POST request references the correct uploaded file.
+        """
+        if not self.current_transaction:
+            return
+        
+        tx = dict(self.current_transaction)
+        tx['img_filename'] = new_filename
+        self.current_transaction = tx
+        print(f"[SESSION] Updated pending transaction image filename to: {new_filename}")
 
     def set_classification_correct(self, is_correct):
         """
