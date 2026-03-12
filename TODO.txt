@@ -7,7 +7,7 @@ Img handling fix.
 - button name change
 
 Return 
-- UI fix (Remove time, only dates) Bigger
-- Limit Multiselection
-- Img name fix(ToolName_id_Return(or Borrow)) 
+- UI fix (Remove time, only dates) Bigger texts for dates
+- Limit Multiselection when selecting returning tool/transaction
+- Img name fix(ToolName_id_Return(or Borrow))  (server)
 
