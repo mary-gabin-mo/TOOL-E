@@ -222,12 +222,17 @@ class CaptureScreen(BaseScreen):
         print(f"[DEBUG] self.capture: {self.capture}")
         
         # 1. Generate Transaction ID (Timestamp)
-        # Format: YYYYMMDD_HHMMSS(e.g., 20260202_183005)
+        # Format: YYYYMMDD_HHMMSS-ms (e.g., 20260202_183005-123)
         timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
         milliseconds = int(datetime.now().microsecond / 1000)
         timestamp_id = f"{timestamp}-{milliseconds:03d}"
-        # 2. Create Filename
-        filename = f"{timestamp_id}.jpg"        
+
+        # 2. Create temp filename from tx_id + action type (BORROW/RETURN)
+        app = App.get_running_app()
+        tx_type = "BORROW"
+        if hasattr(app, 'session') and getattr(app.session, 'transaction_type', None):
+            tx_type = app.session.transaction_type.upper()
+        filename = f"{timestamp_id}_{tx_type}.jpg"
         full_path = os.path.abspath(filename)
         
         success = False
@@ -252,7 +257,6 @@ class CaptureScreen(BaseScreen):
                 print (f"[UI] Image saved locally: {filename}")
                 
                 # 3. Update Session with local path
-                app = App.get_running_app()
                 if hasattr(app, 'session'):
                     # Start the transaction now with ID and local full path
                     app.session.start_new_transaction(
@@ -331,16 +335,9 @@ class CaptureScreen(BaseScreen):
             app = App.get_running_app()
             if hasattr(app, 'session'):
                 # Extract the nested dictionary from 'data'
-                # API returns: {'success': True, 'data: {'prediction': '...', 'image_filename': '...', ...}}
+                # API returns: {'success': True, 'data': {'prediction': '...', ...}}
                 tool_data = result.get('data', {})
                 app.session.identified_tool_data = tool_data
-                
-                # UPDATE THE SESSION FILENAME:
-                # The server generated a temp name (e.g. 'capture_123_abc.jpg') for this specific upload
-                # We need to swap our local path for this server path so the final POST knows which file to use
-                server_filename = tool_data.get('image_filename')
-                if server_filename:
-                    app.session.update_current_transaction_filename(server_filename)
                     
                 print(f"[DEBUG] Saved tool info to session: {tool_data}")
                 

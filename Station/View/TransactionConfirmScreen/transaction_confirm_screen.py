@@ -134,6 +134,9 @@ class TransactionConfirmScreen(BaseScreen):
             img = tx_copy.get('img_filename')
             if img:
                 tx_copy['img_filename'] = os.path.basename(img)
+            temp_img = tx_copy.get('temp_img_filename')
+            if temp_img:
+                tx_copy['temp_img_filename'] = os.path.basename(temp_img)
             tx_list.append(tx_copy)
 
         final_payload = {

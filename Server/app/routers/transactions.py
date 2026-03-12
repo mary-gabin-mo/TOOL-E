@@ -390,8 +390,8 @@ async def create_kiosk_transaction(transaction: KioskTransactionRequest):
             if item.img_filename:
                 # Attempt to move/organize using the service to keep folders clean
                 # We assume correct=True for new transactions unless specified otherwise
-                # Extract filename if full path is given
-                fname = os.path.basename(item.img_filename)
+                temp_name = os.path.basename(item.temp_img_filename or item.img_filename)
+                final_name = os.path.basename(item.img_filename)
                 
                 # Determine classification correctness (default to True if not provided, or handle None)
                 # If item.classification_correct is explicitly False, use False.
@@ -404,17 +404,18 @@ async def create_kiosk_transaction(transaction: KioskTransactionRequest):
 
                 # Pass the transaction_id to explicitly rename the file from 'capture_xxx.jpg'
                 moved_path = image_service.move_image_to_permanent(
-                    filename=fname, 
+                    filename=temp_name,
                     tool_name=resolved_tool_name, 
                     classification_correct=is_correct, 
-                    new_transaction_id=item.transaction_id
+                    new_filename=final_name,
+                    new_transaction_id=item.transaction_id,
                 )
                 if moved_path:
                     print(f"[SERVER] Successfully moved and renamed kiosk image to {moved_path}")
                     final_img_path = moved_path
                 else:
-                    print(f"[SERVER] Warning: Failed to move kiosk image {fname}")
-                    final_img_path = fname  # Fallback to the plain filename just in case
+                    print(f"[SERVER] Warning: Failed to move kiosk image {temp_name}")
+                    final_img_path = final_name  # Fallback to payload final filename
 
             # Log Transaction
             desired_return = None

@@ -88,6 +88,7 @@ class TransactionBatchInput(BaseModel):
 class KioskToolItem(BaseModel):
     transaction_id: str 
     img_filename: str
+    temp_img_filename: Optional[str] = None
     tool_name: str
     classification_correct: Optional[bool] = None
 
