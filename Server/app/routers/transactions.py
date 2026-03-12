@@ -219,21 +219,26 @@ def _process_single_transaction(conn, transaction: TransactionInput):
               tool_row = conn.execute(text("SELECT tool_name FROM tools WHERE tool_id = :id"), {"id": transaction.tool_id}).fetchone()
               if tool_row:
                   tool_name = tool_row[0]
-                  is_correct = transaction.classification_correct if transaction.classification_correct is not None else False
-                  
-                  new_path = image_service.move_image_to_permanent(
-                      filename=transaction.image_path, 
-                      tool_name=tool_name, 
-                      classification_correct=is_correct,
-                      new_transaction_id=transaction.transaction_id or str(uuid.uuid4())
-                  )
-                  
-                  if new_path:
-                      print(f"[SERVER] Moved image to {new_path}")
-                      transaction.image_path = new_path
-                  else:
-                      print(f"[SERVER] Warning: Image path provided {transaction.image_path} but file not found in temp.")
-                      transaction.image_path = os.path.basename(transaction.image_path) # Fallback to clean filename
+              else:
+                  tool_name = "Unknown_Tool"
+        else:
+              tool_name = "Unknown_Tool"
+
+        is_correct = transaction.classification_correct if transaction.classification_correct is not None else False
+        
+        new_path = image_service.move_image_to_permanent(
+            filename=transaction.image_path, 
+            tool_name=tool_name, 
+            classification_correct=is_correct,
+            new_transaction_id=transaction.transaction_id or str(uuid.uuid4())
+        )
+        
+        if new_path:
+            print(f"[SERVER] Moved image to {new_path}")
+            transaction.image_path = new_path
+        else:
+            print(f"[SERVER] Warning: Image path provided {transaction.image_path} but file not found in temp.")
+            transaction.image_path = os.path.basename(transaction.image_path) # Fallback to clean filename
 
     query = text("""
         INSERT INTO transactions
@@ -394,10 +399,13 @@ async def create_kiosk_transaction(transaction: KioskTransactionRequest):
                 if item.classification_correct is not None:
                     is_correct = item.classification_correct
 
+                # If the AI predicted 'Other' or it wasn't found in DB, just organize it as 'Other'
+                resolved_tool_name = item.tool_name if item.tool_name and item.tool_name.lower() != 'other' else 'Other'
+
                 # Pass the transaction_id to explicitly rename the file from 'capture_xxx.jpg'
                 moved_path = image_service.move_image_to_permanent(
                     filename=fname, 
-                    tool_name=item.tool_name, 
+                    tool_name=resolved_tool_name, 
                     classification_correct=is_correct, 
                     new_transaction_id=item.transaction_id
                 )
@@ -412,6 +420,7 @@ async def create_kiosk_transaction(transaction: KioskTransactionRequest):
             desired_return = None
             if transaction.return_date:
                 try:
+                    # Parse the incoming date sent from the kiosk
                     desired_return = datetime.strptime(transaction.return_date, "%Y-%m-%d %H:%M:%S")
                 except ValueError:
                     pass # Or handle error
