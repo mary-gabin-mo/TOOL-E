@@ -1,3 +1,4 @@
+import os
 from kivy.app import App
 from View.baseScreen import BaseScreen
 
@@ -36,6 +37,20 @@ class ToolConfirmScreen(BaseScreen):
         self.ids.tool_name_label.text = tool_name
         self.ids.confidence_label.text = score
 
+    def _delete_current_image(self):
+        """Delete the temporary captured image after user leaves confirmation."""
+        app = App.get_running_app()
+        if not hasattr(app, 'session') or not app.session.current_transaction:
+            return
+
+        img_path = app.session.current_transaction.get('img_filename')
+        if img_path and os.path.isabs(img_path) and os.path.exists(img_path):
+            try:
+                os.remove(img_path)
+                print(f"[UI] Deleted image file {img_path} after tool confirmation.")
+            except Exception as e:
+                print(f"[UI] Warning: could not delete image {img_path}: {e}")
+
     def confirm_scan_more(self):
         """
         User clicked YES. Confirm this tool and save to transaction list.
@@ -49,11 +64,13 @@ class ToolConfirmScreen(BaseScreen):
         if app.session.transaction_type == "return":
             # Mark tool as confirmed
             app.session.tool_was_confirmed = True
+            self._delete_current_image()
             # Go to tool return selection screen
             self.go_to('tool return selection screen')
         else:
             # For borrows, confirm and scan more
             if hasattr(app, 'session'):
+                self._delete_current_image()
                 app.session.confirm_current_tool(self.predicted_name)
             self.go_to('capture screen') 
         
@@ -70,11 +87,13 @@ class ToolConfirmScreen(BaseScreen):
         if app.session.transaction_type == "return":
             # Mark tool as confirmed
             app.session.tool_was_confirmed = True
+            self._delete_current_image()
             # Go to tool return selection screen
             self.go_to('tool return selection screen')
         else:
             # For borrows, confirm and finish
             if hasattr(app, 'session'):
+                self._delete_current_image()
                 app.session.confirm_current_tool(self.predicted_name)
             self.go_to('transaction confirm screen') 
 
@@ -91,12 +110,15 @@ class ToolConfirmScreen(BaseScreen):
         if app.session.transaction_type == "return":
             # Mark tool as NOT confirmed (will show all unreturned tools)
             app.session.tool_was_confirmed = False
+            self._delete_current_image()
             # Go to tool return selection screen
             self.go_to('tool return selection screen')
         else:
             # For borrows, go to manual selection
+            self._delete_current_image()
             self.go_to('tool select screen')
 
     def go_back_to_capture(self):
         """Back button handler for confirm screen."""
+        self._delete_current_image()
         self.go_to('capture screen')

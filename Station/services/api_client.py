@@ -111,10 +111,11 @@ class APIClient(EventDispatcher):
         
         try:
             # Open file in binary mode
+            filename = os.path.basename(image_path)
             with open(image_path, 'rb') as img_file:
                 # 'file' matches the parameter name in the FastAPI endpoint
                 # Value is a tuple: (filename, file_object, content_type)
-                files = {'file': ('capture.jpg', img_file, 'image/jpeg')}
+                files = {'file': (filename, img_file, 'image/jpeg')}
                 
                 response = requests.post(
                     API_IDENTIFY_TOOL,
@@ -179,10 +180,24 @@ class APIClient(EventDispatcher):
             if not tx_id:
                 errors.append(f"Missing transaction_id for tool: {tx}")
                 continue
+
+            tool_name = tx.get('tool_name', 'UnknownTool')
+            sanitized_tool = str(tool_name).replace(' ', '')
+            ext = '.jpg'
+            original_name = tx.get('img_filename') or tx.get('image_path')
+            if original_name:
+                _, guessed_ext = os.path.splitext(os.path.basename(str(original_name)))
+                if guessed_ext:
+                    ext = guessed_ext
+
+            return_image_name = f"{sanitized_tool}_{tx_id}_RETURN{ext}"
                 
             payload = {
-                "return_timestamp": current_time
+                "return_timestamp": current_time,
+                "return_image_path": return_image_name
             }
+
+            print(f"[API] Return payload for {tx_id}: {payload}")
             
             try:
                 # Update the transaction
