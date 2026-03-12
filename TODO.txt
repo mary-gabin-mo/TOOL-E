@@ -1,0 +1,13 @@
+TODO
+Overall 
+Img handling fix.
+- Transfer to the Disk D.
+- Transaction ID fix
+- UI fix(make button lighter) 
+- button name change
+
+Return 
+- UI fix (Remove time, only dates) Bigger
+- Limit Multiselection
+- Img name fix(ToolName_id_Return(or Borrow)) 
+
