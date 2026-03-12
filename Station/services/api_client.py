@@ -184,6 +184,13 @@ class APIClient(EventDispatcher):
             payload = {
                 "return_timestamp": current_time
             }
+
+            if tx.get('return_img_filename'):
+                payload["return_image_path"] = tx.get('return_img_filename')
+            if tx.get('temp_img_filename'):
+                payload["temp_img_filename"] = tx.get('temp_img_filename')
+            if tx.get('classification_correct') is not None:
+                payload["classification_correct"] = tx.get('classification_correct')
             
             try:
                 # Update the transaction

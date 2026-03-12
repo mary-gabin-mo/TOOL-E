@@ -325,8 +325,41 @@ async def update_transaction(transaction_id: str, transaction: TransactionUpdate
             updates.append("image_path = :image_path")
             params["image_path"] = transaction.image_path
         if transaction.return_image_path is not None:
+            # Return flow: move temp return image to permanent folder and store final filename.
+            desired_return_filename = os.path.basename(transaction.return_image_path) if transaction.return_image_path else None
+            temp_return_filename = os.path.basename(transaction.temp_img_filename) if transaction.temp_img_filename else desired_return_filename
+
+            if temp_return_filename:
+                tool_name_row = conn.execute(
+                    text("""
+                        SELECT COALESCE(tl.tool_name, 'Other') AS tool_name
+                        FROM transactions t
+                        LEFT JOIN tools tl ON t.tool_id = tl.tool_id
+                        WHERE t.transaction_id = :id
+                    """),
+                    {"id": transaction_id},
+                ).fetchone()
+
+                resolved_tool_name = tool_name_row.tool_name if tool_name_row and tool_name_row.tool_name else "Other"
+                is_correct = transaction.classification_correct if transaction.classification_correct is not None else True
+
+                moved_return = image_service.move_image_to_permanent(
+                    filename=temp_return_filename,
+                    tool_name=resolved_tool_name,
+                    classification_correct=is_correct,
+                    new_filename=desired_return_filename,
+                    new_transaction_id=transaction_id,
+                )
+
+                if moved_return:
+                    params["return_image_path"] = moved_return
+                else:
+                    print(f"[SERVER] Warning: Failed to move return image {temp_return_filename} for tx {transaction_id}")
+                    params["return_image_path"] = desired_return_filename
+            else:
+                params["return_image_path"] = desired_return_filename
+
             updates.append("return_image_path = :return_image_path")
-            params["return_image_path"] = transaction.return_image_path
         if transaction.classification_correct is not None:
             updates.append("classification_correct = :classification_correct")
             params["classification_correct"] = transaction.classification_correct

@@ -217,13 +217,32 @@ class ToolReturnSelectionScreen(BaseScreen):
         
         # Collect selected tool IDs directly from our tracking list
         selected_tools = []
+
+        # Return capture metadata comes from the current scanned image in this session.
+        current_tx = getattr(app.session, 'current_transaction', {}) if hasattr(app, 'session') else {}
+        temp_img_filename = current_tx.get('temp_img_filename')
+        classification_correct = current_tx.get('classification_correct')
+        captured_img_name = current_tx.get('img_filename') or temp_img_filename
+        img_ext = '.jpg'
+        if captured_img_name:
+            img_ext = (captured_img_name.rsplit('.', 1)[-1] and f".{captured_img_name.rsplit('.', 1)[-1]}") if '.' in captured_img_name else '.jpg'
         
-        for tx_id, d in self._selected_tools.items():
-            selected_tools.append({
+        for index, (tx_id, d) in enumerate(self._selected_tools.items()):
+            tool_name = d.get('tool_name', "Unknown Tool")
+            tx_payload = {
                 'transaction_id': tx_id,
                 'tool_id': d.get('tool_id', None),
-                'tool_name': d.get('tool_name', "Unknown Tool")
-            })
+                'tool_name': tool_name
+            }
+
+            # Only attach one captured image to one returned transaction.
+            if index == 0 and temp_img_filename:
+                safe_tool = tool_name.replace(' ', '')
+                tx_payload['temp_img_filename'] = temp_img_filename
+                tx_payload['return_img_filename'] = f"{safe_tool}_{tx_id}_RETURN{img_ext}"
+                tx_payload['classification_correct'] = classification_correct
+
+            selected_tools.append(tx_payload)
         
         if not selected_tools:
             print("[UI] No tools selected.")

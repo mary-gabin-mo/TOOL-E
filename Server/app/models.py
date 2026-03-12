@@ -78,6 +78,7 @@ class TransactionUpdate(BaseModel):
     purpose: Optional[str] = None
     image_path: Optional[str] = None
     return_image_path: Optional[str] = None
+    temp_img_filename: Optional[str] = None
     classification_correct: Optional[bool] = None
     weight: Optional[int] = None
 
