@@ -107,7 +107,7 @@ class TransactionConfirmScreen(BaseScreen):
             print(f"Checkout Transaction Confirmed! Return Date: {self.return_date}")
             # Format Date for Backend (YYYY-MM-DD HH:MM:SS)
             if isinstance(self.return_date, date) and not isinstance(self.return_date, datetime):
-                formatted_date = f"{self.return_date.strftime('%Y-%m-%d')} 12:00:00"
+                formatted_date = f"{self.return_date.strftime('%Y-%m-%d')} 23:59:59"
             else:
                 formatted_date = self.return_date.strftime("%Y-%m-%d %H:%M:%S")
 

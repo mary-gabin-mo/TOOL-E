@@ -420,11 +420,8 @@ async def create_kiosk_transaction(transaction: KioskTransactionRequest):
             desired_return = None
             if transaction.return_date:
                 try:
-                    # Parse the incoming date
+                    # Parse the incoming date sent from the kiosk
                     desired_return = datetime.strptime(transaction.return_date, "%Y-%m-%d %H:%M:%S")
-                    
-                    # Force the time to 23:59:59 so they have the whole day before it's marked overdue
-                    desired_return = desired_return.replace(hour=23, minute=59, second=59)
                 except ValueError:
                     pass # Or handle error
 
