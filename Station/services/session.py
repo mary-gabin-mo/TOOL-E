@@ -1,3 +1,4 @@
+import os
 from kivy.event import EventDispatcher
 from kivy.properties import StringProperty, ObjectProperty, ListProperty, DictProperty, BooleanProperty
 
@@ -98,7 +99,21 @@ class SessionManager(EventDispatcher):
 
         # Update the tool name
         self.current_transaction["tool_name"] = tool_name
-        
+
+        # Determine desired filename for payload (no disk renaming)
+        orig_path = self.current_transaction.get("img_filename")
+        if orig_path:
+            dirpath, orig_fname = os.path.split(orig_path)
+            ext = os.path.splitext(orig_fname)[1] or ".jpg"
+            # sanitize tool name: remove spaces but keep case
+            sanitized_tool = tool_name.replace(" ", "")
+            action = self.transaction_type.upper() if self.transaction_type else ""
+            new_fname = f"{sanitized_tool}_{self.current_transaction['transaction_id']}_{action}{ext}"
+            print(f"[SESSION] Will use payload filename: {new_fname}")
+            # store original full path separately so uploads still work
+            self.current_transaction["img_path"] = orig_path
+            self.current_transaction["img_filename"] = new_fname
+
         # Add to the main list
         self.transactions.append(dict(self.current_transaction))
         print(f"[SESSION] Confirmed Tool: {tool_name} (ID: {self.current_transaction['transaction_id']})")

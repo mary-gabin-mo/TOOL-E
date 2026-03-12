@@ -1,3 +1,4 @@
+import os
 import threading
 from kivy.clock import mainthread
 from kivy.app import App
@@ -125,12 +126,22 @@ class TransactionConfirmScreen(BaseScreen):
         user_name = f"{first_name} {last_name}".strip()
 
         # Construct the final payload for the API
+        # strip directory from any image paths so only the filename is sent
+        raw_tx = getattr(app.session, 'transactions', [])
+        tx_list = []
+        for tx in raw_tx:
+            tx_copy = dict(tx)
+            img = tx_copy.get('img_filename')
+            if img:
+                tx_copy['img_filename'] = os.path.basename(img)
+            tx_list.append(tx_copy)
+
         final_payload = {
             "user_id": str(user_id), 
             "user_name": user_name or "Unknown User",
             "return_date": formatted_date,
             "purpose": self.purpose,
-            "transactions": getattr(app.session, 'transactions', [])
+            "transactions": tx_list
         }
         
         print(f"[UI] Submitting Transaction via APIClient...")

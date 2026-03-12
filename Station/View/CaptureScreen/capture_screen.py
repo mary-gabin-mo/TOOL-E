@@ -308,6 +308,14 @@ class CaptureScreen(BaseScreen):
             result = app.api_client.upload_tool_image(filepath)
         except Exception as e:
             result = {'success': False, 'error': str(e)}
+
+        # delete the local file after attempt; it is no longer needed
+        try:
+            if os.path.exists(filepath):
+                os.remove(filepath)
+                print(f"[UI] Deleted image file {filepath} after upload.")
+        except Exception as del_e:
+            print(f"[UI] Warning: could not delete image {filepath}: {del_e}")
         
         # Pass result back to Main UI Thread
         self.handle_identification_result(result)
