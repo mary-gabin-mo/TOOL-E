@@ -78,6 +78,7 @@ class TransactionUpdate(BaseModel):
     purpose: Optional[str] = None
     image_path: Optional[str] = None
     return_image_path: Optional[str] = None
+    temp_img_filename: Optional[str] = None
     classification_correct: Optional[bool] = None
     weight: Optional[int] = None
 
@@ -88,6 +89,7 @@ class TransactionBatchInput(BaseModel):
 class KioskToolItem(BaseModel):
     transaction_id: str 
     img_filename: str
+    temp_img_filename: Optional[str] = None
     tool_name: str
     classification_correct: Optional[bool] = None
 

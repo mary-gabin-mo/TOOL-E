@@ -113,6 +113,7 @@ class APIClient(EventDispatcher):
             # Open file in binary mode
             filename = os.path.basename(image_path)
             with open(image_path, 'rb') as img_file:
+                upload_name = os.path.basename(image_path)
                 # 'file' matches the parameter name in the FastAPI endpoint
                 # Value is a tuple: (filename, file_object, content_type)
                 files = {'file': (filename, img_file, 'image/jpeg')}
@@ -194,8 +195,14 @@ class APIClient(EventDispatcher):
                 
             payload = {
                 "return_timestamp": current_time,
-                "return_image_path": return_image_name
             }
+
+            if tx.get('return_img_filename'):
+                payload["return_image_path"] = tx.get('return_img_filename')
+            if tx.get('temp_img_filename'):
+                payload["temp_img_filename"] = tx.get('temp_img_filename')
+            if tx.get('classification_correct') is not None:
+                payload["classification_correct"] = tx.get('classification_correct')
 
             print(f"[API] Return payload for {tx_id}: {payload}")
             

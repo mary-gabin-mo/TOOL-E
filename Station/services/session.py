@@ -51,27 +51,16 @@ class SessionManager(EventDispatcher):
         Called by Capture Screen immediately after taking a photo.
         Initializes a new pending transaction.
         """
+        temp_filename = os.path.basename(img_filename)
         self.current_transaction = {
             "transaction_id": transaction_id,
-            "img_filename": img_filename, # Initially holds the absolute local path for the UI (e.g. C:\...)
+            "img_filename": temp_filename,  # Final filename for backend persistence; set on confirm
+            "temp_img_filename": temp_filename,  # Temp filename uploaded to /identify_tool
             "local_img_path": img_filename, # Keep a backup of the local path for the UI preview
             "tool_name": None,  # Will be filled after ML/User confirmation
             "classification_correct": None # User feedback on ML prediction
         }
         print(f"[SESSION] Started Transaction: {transaction_id}")
-
-    def update_current_transaction_filename(self, new_filename):
-        """
-        Updates the img_filename to the server's temporary uuid filename
-        so the final POST request references the correct uploaded file.
-        """
-        if not self.current_transaction:
-            return
-        
-        tx = dict(self.current_transaction)
-        tx['img_filename'] = new_filename
-        self.current_transaction = tx
-        print(f"[SESSION] Updated pending transaction image filename to: {new_filename}")
 
     def set_classification_correct(self, is_correct):
         """
@@ -100,18 +89,14 @@ class SessionManager(EventDispatcher):
         # Update the tool name
         self.current_transaction["tool_name"] = tool_name
 
-        # Determine desired filename for payload (no disk renaming)
-        orig_path = self.current_transaction.get("img_filename")
-        if orig_path:
-            dirpath, orig_fname = os.path.split(orig_path)
-            ext = os.path.splitext(orig_fname)[1] or ".jpg"
-            # sanitize tool name: remove spaces but keep case
+        # Determine final filename for payload. temp_img_filename stays unchanged
+        temp_fname = self.current_transaction.get("temp_img_filename") or self.current_transaction.get("img_filename")
+        if temp_fname:
+            ext = os.path.splitext(os.path.basename(temp_fname))[1] or ".jpg"
             sanitized_tool = tool_name.replace(" ", "")
             action = self.transaction_type.upper() if self.transaction_type else ""
             new_fname = f"{sanitized_tool}_{self.current_transaction['transaction_id']}_{action}{ext}"
-            print(f"[SESSION] Will use payload filename: {new_fname}")
-            # store original full path separately so uploads still work
-            self.current_transaction["img_path"] = orig_path
+            print(f"[SESSION] Final image filename for payload: {new_fname}")
             self.current_transaction["img_filename"] = new_fname
 
         # Add to the main list
