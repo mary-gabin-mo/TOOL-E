@@ -3,41 +3,50 @@
 
     MDBoxLayout:
         orientation: 'vertical'
-        padding: "40dp"
-        spacing: "30dp"
+        padding: "36dp"
+        spacing: "20dp"
         pos_hint: {"center_x": .5, "center_y": .5}
 
         # -- Logo Area Placeholder --
         Widget:
-            size_hint_y: 0.45
+            size_hint_y: 0.2
             
         # --- Status Container (swaps between Text and Loading) ---
         MDBoxLayout:
             id: status_container
             orientation: 'vertical'
-            size_hint_y: 0.4
-            spacing: "10dp"
+            size_hint_y: None
+            height: "220dp"
+            spacing: "14dp"
             pos_hint: {"center_x": .5}
             
             # STATE A: Normal Text (Default)
             MDBoxLayout:
                 id: instruction_box
                 orientation: 'vertical'
+                spacing: "50dp"
                 opacity: 1  # Visible
                 
                 MDLabel:
                     text: "Checkout / Return Tools Here"
                     halign: "center"
-                    font_style: "H4"
+                    font_style: "H3"
                     bold: True
                     theme_text_color: "Primary"
-                    
-                
+                    size_hint_y: None
+                    height: "100dp"
+                    text_size: self.width, None
+                    valign: "middle"
+
                 MDLabel:
                     text: "Please TAP your UNICARD to begin"
                     halign: "center"
-                    font_style: "H5"
+                    font_style: "H3"
                     theme_text_color: "Secondary"
+                    size_hint_y: None
+                    height: "100dp"
+                    text_size: self.width, None
+                    valign: "middle"
                     # pos_hint: {"top": 0.5, "center_x": .5}
                     
             # STATE B: Loading Animation (Hidden by default)
@@ -60,25 +69,26 @@
                 MDLabel:
                     text: "Verifying User..."
                     halign: "center"
-                    font_style: "H5"
+                    font_style: "H3"
                     theme_text_color: "Primary"
 
         # -- Spacer --
         Widget:
-            size_hint_y: 0.1
+            size_hint_y: 0.04
             
         # -- Footer Buttons --
         MDBoxLayout:
             id: footer_buttons
             orientation: 'horizontal'
-            size_hint_y: 0.4
-            spacing: "10dp"
+            size_hint_y: None
+            height: "118dp"
+            spacing: "18dp"
 
             # -- DEV BUTTON --
             AppButton:
                 text: "DEV - SCAN CARD \n(server ON)"
-                font_size: "20sp"
-                size_hint: 0.7, 0.3
+                font_size: "24sp"
+                size_hint: 1, 1
                 pos_hint: {"center_x": .5}
                 background_color: 0.4, 0.4, 0.4, 1  # Grey
                 # move on to the next page
@@ -87,8 +97,8 @@
             # -- DEV BUTTON --
             AppButton:
                 text: "DEV - SCAN CARD \n(server OFFLINE)"
-                font_size: "20sp"
-                size_hint: 0.8, 0.3
+                font_size: "24sp"
+                size_hint: 1, 1
                 pos_hint: {"center_x": .5}
                 background_color: 0.4, 0.4, 0.4, 1  # Grey
                 # move on to the next page
@@ -97,12 +107,14 @@
         # -- Manual Entry Button --
         AppButton:
             text: "MANUAL UCID ENTRY"
-            font_size: "24sp"
-            size_hint: 0.6, 0.2
+            font_size: "28sp"
+            size_hint: 1, None
+            height: "96dp"
             pos_hint: {"center_x": .5}
-            background_color: 0.9, 0.17, 0.25, 1  # Red
+            background_color: 0.85, 0.85, 0.85, 1  # Light grey
+            color: 0.35, 0.35, 0.35, 1  # Dark grey text
             on_release: root.go_to('manual entry screen')    
         
         # -- Spacer --
         Widget:
-            size_hint_y: 0.1
+            size_hint_y: 0.04

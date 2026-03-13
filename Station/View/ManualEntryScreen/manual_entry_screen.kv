@@ -24,10 +24,10 @@
                 background_normal: ''
                 background_color: 0,0,0,0
                 text: '<'  # simple back arrow
-                font_size: '32sp'
+                font_size: '48sp'
                 color: 0,0,0,1
                 size_hint_x: None
-                width: dp(60)
+                width: dp(80)
                 on_release: root.cancel_transaction()
 
             # Label:
@@ -48,7 +48,7 @@
                 id: ucid_input
                 hint_text: "Enter UCID Number"
                 text: ""
-                font_size: "48sp"
+                font_size: "60sp"
                 halign: "center"
                 readonly: True  # Vital: Prevents OS keyboard from popping up
                 background_color: 1,1,1,1
@@ -60,12 +60,12 @@
         # --- NUMBER PAD GRID ---
         GridLayout:
             cols: 3
-            spacing: "4dp"
-            padding: "60dp", "20dp"
+            spacing: "8dp"
+            padding: "80dp", "30dp"
             size_hint_y: 0.55
             pos_hint: {"center_x": .5}
             row_force_default: True
-            row_default_height: 80
+            row_default_height: 100
 
             # Row 1
             NumpadButton:
@@ -103,7 +103,7 @@
             # Row 4
             NumpadButton:
                 text: "CLR"
-                font_size: "22sp"
+                font_size: "28sp"
                 on_release: root.clear_input()
 
             NumpadButton:
@@ -112,20 +112,20 @@
 
             NumpadButton:
                 text: "DEL"
-                font_size: "22sp"
+                font_size: "28sp"
                 on_release: root.delete_last()
 
         # --- CONTROL BUTTONS ---
         BoxLayout:
             orientation: 'horizontal'
-            spacing: "10dp"
-            padding: "40dp", "10dp", "40dp", "20dp"
+            spacing: "15dp"
+            padding: "60dp", "15dp", "60dp", "30dp"
             size_hint_y: 0.18
             pos_hint: {"center_x": .5}
 
             Button:
                 text: "CANCEL"
-                font_size: "22sp"
+                font_size: "28sp"
                 background_normal: ''
                 background_color: 0.9, 0.2, 0.2, 1  # Red
                 color: 1,1,1,1
@@ -133,7 +133,7 @@
 
             Button:
                 text: "ENTER"
-                font_size: "22sp"
+                font_size: "28sp"
                 background_normal: ''
                 background_color: 0.2, 0.8, 0.2, 1  # Green
                 color: 1,1,1,1
@@ -142,7 +142,7 @@
 # --- Custom Button Component ---
 # This prevents code duplication for the number keys
 <NumpadButton@Button>:
-    font_size: "28sp"
+    font_size: "36sp"
     size_hint: 1, 1
     background_normal: ''
     background_color: 0.82, 0.82, 0.82, 1  # Light Grey

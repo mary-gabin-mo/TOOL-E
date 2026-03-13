@@ -1,9 +1,9 @@
 <ReturnToolItem>:
     orientation: "horizontal"
-    padding: "10dp"
-    spacing: "10dp"
+    padding: "15dp"
+    spacing: "15dp"
     size_hint_y: None
-    height: "72dp"
+    height: "100dp"
     
     MDBoxLayout:
         orientation: "vertical"
@@ -36,27 +36,27 @@
 
     MDBoxLayout:
         orientation: 'vertical'
-        padding: "20dp"
-        spacing: "15dp"
+        padding: "30dp"
+        spacing: "20dp"
 
         # --- Header ---
         MDLabel:
             id: title_label
             text: "Select Tool to Return"
             halign: "center"
-            font_style: "H5"
+            font_style: "H3"
             bold: True
             size_hint_y: None
-            height: "60dp"
+            height: "80dp"
 
         # --- Instructions ---
         MDLabel:
             text: "Check the tool(s) you want to return"
             halign: "center"
             theme_text_color: "Secondary"
-            font_style: "Body1"
+            font_style: "Subtitle1"
             size_hint_y: None
-            height: "40dp"
+            height: "60dp"
 
         # --- Tool List Container ---
         MDCard:
