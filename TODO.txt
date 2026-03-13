@@ -11,3 +11,13 @@ Return
 - Limit Multiselection when selecting returning tool/transaction
 - Img name fix(ToolName_id_Return(or Borrow))  (server)
 
+UI Fix (Pages needed to change from KviyMD to Kivy)
+- Tool return confirmation screen
+- Select tool to return list
+- Tool returned confirmation screen
+- Tool borrow confirmation screen
+- (Done) Select tool borrow list
+- Return date screen
+- (Done) Checkout confirmation screen
+- 
+
