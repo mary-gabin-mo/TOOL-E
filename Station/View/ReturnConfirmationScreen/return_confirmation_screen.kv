@@ -1,7 +1,12 @@
 <ReturnConfirmationScreen>:
-    md_bg_color: 1, 1, 1, 1  # White background
+    canvas.before:
+        Color:
+            rgba: 1, 1, 1, 1  # White background
+        Rectangle:
+            pos: self.pos
+            size: self.size
 
-    MDBoxLayout:
+    BoxLayout:
         orientation: 'vertical'
         padding: "50dp"
         spacing: "40dp"
@@ -11,9 +16,9 @@
         Widget:
             size_hint_y: 0.3
 
-        # --- Success Icon/Checkmark Area ---
-        MDIcon:
-            icon: "check-circle"
+        # --- Success Checkmark ---
+        Label:
+            text: "✓"
             halign: "center"
             theme_text_color: "Custom"
             text_color: 0.2, 0.8, 0.2, 1  # Green
@@ -22,22 +27,22 @@
             height: "140dp"
 
         # --- Title ---
-        MDLabel:
+        Label:
             text: "Return Confirmed!"
             halign: "center"
-            font_style: "H2"
+            font_size: "36sp"
             bold: True
-            theme_text_color: "Primary"
+            color: 0, 0, 0, 1
             size_hint_y: None
             height: "80dp"
 
         # --- Message Display ---
-        MDLabel:
+        Label:
             id: message_display
             text: "Return confirmed!"
             halign: "center"
-            font_style: "H5"
-            theme_text_color: "Secondary"
+            font_size: "20sp"
+            color: 0.5, 0.5, 0.5, 1
             size_hint_y: None
             height: "100dp"
 
@@ -46,33 +51,36 @@
             size_hint_y: 0.3
 
         # --- Continue Button (Keep User Logged In) ---
-        MDFillRoundFlatButton:
+        Button:
             text: "RETURN TO SELECTION"
             font_size: "28sp"
             size_hint: 0.8, None
             height: "100dp"
             pos_hint: {"center_x": .5}
-            md_bg_color: 0.2, 0.6, 0.8, 1  # Blue
+            background_normal: ''
+            background_color: 0.2, 0.6, 0.8, 1  # Blue
             on_release: root.continue_with_user()
 
         # --- Return Button ---
-        MDFillRoundFlatButton:
+        Button:
             text: "RETURN TO START"
             font_size: "28sp"
             size_hint: 0.8, None
             height: "100dp"
             pos_hint: {"center_x": .5}
-            md_bg_color: 0.9, 0.17, 0.25, 1  # Red
+            background_normal: ''
+            background_color: 0.9, 0.17, 0.25, 1  # Red
             on_release: root.return_to_menu()
 
         # --- Cancel Button ---
-        MDFillRoundFlatButton:
+        Button:
             text: "CANCEL"
             font_size: "24sp"
             size_hint: 0.8, None
             height: "80dp"
             pos_hint: {"center_x": .5}
-            md_bg_color: 0.6, 0.6, 0.6, 1  # Grey
+            background_normal: ''
+            background_color: 0.6, 0.6, 0.6, 1  # Grey
             on_release: root.cancel_transaction()
 
         # --- Spacer ---

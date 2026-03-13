@@ -123,7 +123,6 @@ class CaptureScreen(BaseScreen):
         if is_processing:
             # Show Spinner Overlay
             self.ids.processing_overlay.opacity = 1
-            self.ids.loading_spinner.active = True
             self.ids.loading_label.text = message
             
             # Dim the camera feed slightly to focus on spinner
@@ -137,7 +136,6 @@ class CaptureScreen(BaseScreen):
         else:
             # Show live feed
             self.ids.processing_overlay.opacity = 0
-            self.ids.loading_spinner.active = False
             self.ids.camera_preview.opacity = 1
             
     def update_feed(self, dt):

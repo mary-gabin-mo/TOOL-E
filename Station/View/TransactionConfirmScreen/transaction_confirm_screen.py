@@ -2,10 +2,19 @@ import os
 import threading
 from kivy.clock import mainthread
 from kivy.app import App
-from kivymd.uix.list import OneLineListItem
+from kivy.uix.boxlayout import BoxLayout as KivyBoxLayout
+from kivy.uix.label import Label as KivyLabel
+from kivy.uix.behaviors import ButtonBehavior
+from kivy.properties import ListProperty
 from View.baseScreen import BaseScreen
 from widgets.calendar_popup import CalendarPopup
 from datetime import datetime, date
+
+
+class BorderedBox(ButtonBehavior, KivyBoxLayout):
+    """BoxLayout with clickable behavior and a dynamic colored border."""
+    line_color = ListProperty([1, 0, 0, 1])
+    bg_color = ListProperty([0.95, 0.95, 0.95, 1])
 
 class TransactionConfirmScreen(BaseScreen):
     
@@ -33,9 +42,9 @@ class TransactionConfirmScreen(BaseScreen):
             self.ids.confirm_finish_btn.text = "CONFIRM CHECKOUT"
             
             # Reset the red border box visuals
-            self.ids.date_box.line_color = (1,0,0,1) # Red border
+            self.ids.date_box.line_color = (1, 0, 0, 1)  # Red border
             self.ids.date_label.text = "Tap to select Return Date"
-            self.ids.date_label.text_color = (0.5, 0.5, 0.5, 1)
+            self.ids.date_label.color = (0.5, 0.5, 0.5, 1)
         
         # Load tool info from session
         transactions = getattr(app.session, 'transactions', [])
@@ -46,13 +55,13 @@ class TransactionConfirmScreen(BaseScreen):
         
         if not transactions:
             # Fallback if list is empty (shouldn't happen in flow)
-            list_container.add_widget(OneLineListItem(text="No tools scanned"))
+            list_container.add_widget(KivyLabel(text="No tools scanned", size_hint_y=None, height='48dp', color=(0, 0, 0, 1)))
         else:
             # Populate list with all scanned tools
             for tx in transactions:
                 # Handle dictionary or simple string
-                tool_name = tx.get('tool_name', 'Unknown Tool') # if isinstance(tool, dict) else str(tool)
-                list_container.add_widget(OneLineListItem(text=tool_name))
+                tool_name = tx.get('tool_name', 'Unknown Tool')
+                list_container.add_widget(KivyLabel(text=tool_name, size_hint_y=None, height='48dp', color=(0, 0, 0, 1)))
         
     def open_calendar(self):
         """Open the custom popup"""
@@ -65,7 +74,7 @@ class TransactionConfirmScreen(BaseScreen):
         
         # Update UI to show success
         self.ids.date_label.text = f"Returning on: {date_obj.strftime('%b %d, %Y')}"
-        self.ids.date_label.text_color = (0, 0, 0, 1) # Black text
+        self.ids.date_label.color = (0, 0, 0, 1)  # Black text
         
         # Change border from Red to Blue/Grey to indicate "Done"
         self.ids.date_box.line_color = (0.2, 0.6, 0.8, 1)
@@ -77,15 +86,15 @@ class TransactionConfirmScreen(BaseScreen):
         
         # Update colors
         if selected_purpose == "Academic Course":
-            self.ids.btn_academic.md_bg_color = (0.2, 0.6, 0.8, 1) # Blue
-            self.ids.btn_academic.text_color = (1, 1, 1, 1)        # White text
-            self.ids.btn_personal.md_bg_color = (0.9, 0.9, 0.9, 1) # Grey
-            self.ids.btn_personal.text_color = (0, 0, 0, 1)        # Black text
+            self.ids.btn_academic.background_color = (0.2, 0.6, 0.8, 1)  # Blue
+            self.ids.btn_academic.color = (1, 1, 1, 1)                   # White text
+            self.ids.btn_personal.background_color = (0.9, 0.9, 0.9, 1)  # Grey
+            self.ids.btn_personal.color = (0, 0, 0, 1)                   # Black text
         else:
-            self.ids.btn_personal.md_bg_color = (0.2, 0.6, 0.8, 1) # Blue
-            self.ids.btn_personal.text_color = (1, 1, 1, 1)        # White text
-            self.ids.btn_academic.md_bg_color = (0.9, 0.9, 0.9, 1) # Grey
-            self.ids.btn_academic.text_color = (0, 0, 0, 1)        # Black text
+            self.ids.btn_personal.background_color = (0.2, 0.6, 0.8, 1)  # Blue
+            self.ids.btn_personal.color = (1, 1, 1, 1)                   # White text
+            self.ids.btn_academic.background_color = (0.9, 0.9, 0.9, 1)  # Grey
+            self.ids.btn_academic.color = (0, 0, 0, 1)                   # Black text
             
         self.check_can_finish()
 

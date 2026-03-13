@@ -1,7 +1,12 @@
 <CaptureScreen>:
-    md_bg_color: 1, 1, 1, 1  # White background
+    canvas.before:
+        Color:
+            rgba: 1, 1, 1, 1  # White background
+        Rectangle:
+            pos: self.pos
+            size: self.size
 
-    MDBoxLayout:
+    BoxLayout:
         orientation: 'vertical'
         padding: "50dp"
         spacing: "15dp"
@@ -10,7 +15,7 @@
         Widget:
             size_hint_y: 0.15
 
-        MDBoxLayout:
+        BoxLayout:
             orientation: 'vertical'
             padding: "20dp"
             spacing: "20dp"
@@ -20,14 +25,16 @@
             Widget:
                 size_hint_y: 0.2
 
-            MDLabel:
+            Label:
                 text: "Place tool on Bed"
                 halign: "center"
-                font_style: "H4"
+                font_size: "36sp"
+                bold: True
+                color: 0, 0, 0, 1
                 size_hint_y: 0.1
 
         # --- CAMERA CONTAINER ---
-        MDRelativeLayout:
+        RelativeLayout:
             size_hint_y: 0.5
 
             # 1. The Camera Feed
@@ -36,38 +43,36 @@
                 source: "assets/images/logo_white.png"
                 allow_stretch: True
                 keep_ratio: True
-                opacity: 0 
+                opacity: 0
 
             # 2. Processing Overlay (Spinner + Text)
-            MDBoxLayout:
+            BoxLayout:
                 id: processing_overlay
                 orientation: 'vertical'
-                adaptive_size: True
-                size_hint: 1, 1
+                size_hint: None, None
+                size: '180dp', '80dp'
                 pos_hint: {'center_x': 0.5, 'center_y': 0.5}
                 spacing: "15dp"
 
                 # Hidden by default (opacity 0)
                 opacity: 0
 
-                MDSpinner:
+                Label:
                     id: loading_spinner
-                    size_hint: None, None
-                    size: "60dp", "60dp"
-                    pos_hint: {'center_x': .5}
-                    active: False
-                    palette: [ [0.2, 0.6, 0.8, 1] ]
+                    text: "..."
+                    font_size: "40sp"
+                    halign: "center"
+                    color: 0.2, 0.6, 0.8, 1
 
-                MDLabel:
+                Label:
                     id: loading_label
                     text: "Initializing..."
                     halign: "center"
-                    theme_text_color: "Custom"
-                    text_color: 0.2, 0.6, 0.8, 1 # Match Spinner Blue
-                    font_style: "H3"
+                    font_size: "24sp"
                     bold: True
+                    color: 0.2, 0.6, 0.8, 1
 
-        MDBoxLayout:
+        BoxLayout:
             orientation: 'horizontal'
             spacing: "25dp"             # Gap between buttons
             size_hint_y: None           # Don't expand vertically
@@ -81,7 +86,7 @@
                 size_hint: .2, 1        
                 background_color: 0.4, 0.4, 0.4, 1  # Grey
                 on_release: root.go_back('action selection screen')
-            
+
             AppButton:
                 text: "DEV - Capture"
                 font_size: "16sp"
