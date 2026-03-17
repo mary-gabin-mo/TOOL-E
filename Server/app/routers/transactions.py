@@ -402,21 +402,50 @@ async def create_kiosk_transaction(transaction: KioskTransactionRequest):
             ).fetchone()
 
             if not tool_row:
-                # If tool not found, we can either skip or create a record with NULL tool_id (like the debug endpoint did)
-                # But proper flow is to alert. For now, let's log and insert with NULL to avoid breaking kiosk flow 
-                # if name mismatch. But DB schema might enforce FK. 
-                # Let's assume strict for now, but handle gracefully.
-                # raise HTTPException(status_code=404, detail=f"Tool '{item.tool_name}' not found")
-                # RELAXED LOGIC for Kiosk Robustness:
+                print(f"[SERVER] Tool '{item.tool_name}' not found in DB. Creating new custom tool.")
                 t_id = None
-                print(f"[SERVER] Warning: Tool '{item.tool_name}' not found in DB. Recording generic transaction.")
+                
+                # Check if it's strictly "Other". If it's a real typed name, insert it in DB.
+                if item.tool_name and item.tool_name.lower() != 'other':
+                    try:
+                        result = conn.execute(
+                            text("""
+                                INSERT INTO tools (tool_name, tool_type, current_status, total_quantity, available_quantity) 
+                                VALUES (:name, :type, :status, :total, :avail)
+                            """),
+                            {
+                                "name": item.tool_name,
+                                "type": "Manual Entry",
+                                "status": "In Use",
+                                "total": 1,
+                                "avail": 0
+                            }
+                        )
+                        # Fetch the newly generated ID
+                        t_id = result.lastrowid
+                        print(f"[SERVER] Created new tool '{item.tool_name}' with ID: {t_id}")
+                        
+                        # Create folders for it
+                        safe_tool_name = "".join([c for c in item.tool_name if c.isalnum() or c in (' ', '-', '_')]).strip()
+                        for status_dir in ['Yes', 'No']:
+                            os.makedirs(os.path.join(image_service.CAPTURED_IMAGES_DIR, status_dir, safe_tool_name), exist_ok=True)
+                            
+                    except Exception as e:
+                        print(f"[SERVER] Error inserting custom tool: {e}")
             else:
                 t_id, avail_qty = tool_row
-                # Update Tool Status
-                conn.execute(
-                    text("UPDATE tools SET available_quantity = available_quantity - 1, current_status = IF(available_quantity - 1 > 0, 'Available', 'In Use') WHERE tool_id = :tid"),
-                    {"tid": t_id}
-                )
+                if avail_qty <= 0:
+                    print(f"[SERVER] Kiosk found unexpected '{item.tool_name}' (avail=0). Incrementing total_quantity by 1.")
+                    conn.execute(
+                        text("UPDATE tools SET total_quantity = total_quantity + 1, current_status = 'In Use' WHERE tool_id = :tid"),
+                        {"tid": t_id}
+                    )
+                else:
+                    # Update Tool Status
+                    conn.execute(
+                        text("UPDATE tools SET available_quantity = available_quantity - 1, current_status = IF(available_quantity - 1 > 0, 'Available', 'In Use') WHERE tool_id = :tid"),
+                        {"tid": t_id}
+                    )
 
             # Move Image to Permanent Storage (if path exists)
             final_img_path = item.img_filename
