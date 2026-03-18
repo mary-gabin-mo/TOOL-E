@@ -35,7 +35,7 @@ if IS_RASPBERRY_PI:
     Config.set('input', 'mouse', 'mouse, disable_multitouch')
 
     # Fix the "random spot" bug (Matches touch rotation to screen rotation)
-    Config.set('graphics', 'rotation', '0')
+    Config.set('graphics', 'rotation', '270')
     
 else:
     print("System: Dev Environment detected. Setting WINDOWED.")
