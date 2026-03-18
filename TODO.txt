@@ -9,7 +9,6 @@ Img handling fix.
 Return 
 - UI fix (Remove time, only dates) Bigger texts for dates
 - Limit Multiselection when selecting returning tool/transaction
-- Img name fix(ToolName_id_Return(or Borrow))  (server)
 
 UI Fix (Pages needed to change from KviyMD to Kivy)
 - Tool return confirmation screen
@@ -20,11 +19,6 @@ UI Fix (Pages needed to change from KviyMD to Kivy)
 - Return date screen
 - (Done) Checkout confirmation screen
 - 
-
-
-- Save Unkown Tools as other, change
--- input for "Other" tools?
-
 
 - Sees frequencies for which courses is used
 - Mirror the purpose to signing into makerspace\

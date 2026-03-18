@@ -220,9 +220,9 @@ def _process_single_transaction(conn, transaction: TransactionInput):
               if tool_row:
                   tool_name = tool_row[0]
               else:
-                  tool_name = "Unknown_Tool"
+                  tool_name = "Other"
         else:
-              tool_name = "Unknown_Tool"
+              tool_name = "Other"
 
         is_correct = transaction.classification_correct if transaction.classification_correct is not None else False
         

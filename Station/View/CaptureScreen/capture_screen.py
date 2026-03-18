@@ -163,16 +163,19 @@ class CaptureScreen(BaseScreen):
             # Flip vertical (Kivy standard)
             frame = cv2.flip(frame, 0)
             
-            # Create texture
-            # Note: Frame.shape is (height, width, colors)
-            texture = Texture.create(
-                size=(frame.shape[1], frame.shape[0]),
-                colorfmt='rgb'
-            )
-            # Convert to bytes
-            texture.blit_buffer(frame.tobytes(), colorfmt='bgr', bufferfmt='ubyte')
             if self.ids.get('camera_preview'):
-                self.ids.camera_preview.texture = texture
+                expected_size = (frame.shape[1], frame.shape[0])
+                texture = self.ids.camera_preview.texture
+                
+                # Create a new texture only if it doesn't exist or size changed
+                if not texture or texture.size != expected_size:
+                    texture = Texture.create(size=expected_size, colorfmt='rgb')
+                    self.ids.camera_preview.texture = texture
+                
+                # Update texture with new bytes
+                texture.blit_buffer(frame.tobytes(), colorfmt='bgr', bufferfmt='ubyte')
+                # Force widget update
+                self.ids.camera_preview.canvas.ask_update()
             
     def handle_load_cell_trigger(self, instance, weight):
         """
@@ -325,6 +328,7 @@ class CaptureScreen(BaseScreen):
         
         if result and result.get('success'):
             app = App.get_running_app()
+            tool_data = {}
             if hasattr(app, 'session'):
                 # Extract the nested dictionary from 'data'
                 # API returns: {'success': True, 'data': {'prediction': '...', ...}}
@@ -333,8 +337,15 @@ class CaptureScreen(BaseScreen):
                     
                 print(f"[DEBUG] Saved tool info to session: {tool_data}")
                 
-            # Navigate to Confirmation
-            self.go_to('tool confirm screen')
+            prediction = tool_data.get('prediction', 'UNKNOWN')
+            score = tool_data.get('score', 0)
+            
+            if str(prediction).upper() == 'UNKNOWN' or float(score) < 0.60:
+                print(f"[UI] Low confidence ({score}) or UNKNOWN ({prediction}). Bypassing confirm screen.")
+                self.go_to('tool selection screen')
+            else:
+                # Navigate to Confirmation
+                self.go_to('tool confirm screen')
         else:
             # Handle Error (e.g. show error screen or text)
             error_msg = result.get('error', 'Unknown Error') if result else "Connection Failed"
