@@ -31,15 +31,25 @@ if IS_RASPBERRY_PI:
     # Config.set('graphics', 'width', '800')
     # Config.set('graphics', 'height', '600')
     
-    # Fix "1 finger = 2 touches" bug (Disable Kivy's simulated red-dot multi-touch)
-    Config.set('input', 'mouse', 'mouse, disable_multitouch')
-    
-    # Force kivy to ignore raw touch sensors
-    if Config.has_section('input'):
-        if Config.has_option('input', 'mtdev_%(name)s'):
-            Config.remove_option('input', 'mtdev_%(name)s')
-        if Config.has_option('input', 'hid_%(name)s'):
-            Config.remove_option('input', 'hid_%(name)s')
+    # Fix "1 finger = 2 touches" by keeping only ONE touch provider.
+    # You can override at runtime: KIVY_TOUCH_PROVIDER=mtdev python3 main.py
+    if not Config.has_section('input'):
+        Config.add_section('input')
+
+    Config.set('input', 'mouse', 'mouse,disable_multitouch')
+    touch_provider = os.environ.get('KIVY_TOUCH_PROVIDER', 'hidinput').strip().lower()
+
+    # Remove probe providers that can duplicate the same physical touch.
+    for option in ('%(name)s', 'mtdev_%(name)s', 'hidinput_%(name)s'):
+        if Config.has_option('input', option):
+            Config.remove_option('input', option)
+
+    if touch_provider == 'mtdev':
+        Config.set('input', 'mtdev_%(name)s', 'probesysfs,provider=mtdev')
+        print("[INPUT] Touch provider: mtdev")
+    else:
+        Config.set('input', 'hidinput_%(name)s', 'probesysfs,provider=hidinput')
+        print("[INPUT] Touch provider: hidinput")
     
 else:
     print("System: Dev Environment detected. Setting WINDOWED.")
