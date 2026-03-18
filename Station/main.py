@@ -17,6 +17,7 @@ IS_RASPBERRY_PI = platform.machine() in ("aarch64", "armv7l")
 # Enable hot reload on Mac/Windows only
 ENABLE_HOT_RELOAD = not IS_RASPBERRY_PI
 
+
 if IS_RASPBERRY_PI:
     print("System: Raspberry Pi detected. Setting FULLSCREEN.")
     Config.set('graphics', 'fullscreen', 'auto')
@@ -29,6 +30,12 @@ if IS_RASPBERRY_PI:
     # Config.set('graphics', 'show_cursor', '1')
     # Config.set('graphics', 'width', '800')
     # Config.set('graphics', 'height', '600')
+    
+    # Fix "1 finger = 2 touches" bug (Disable Kivy's simulated red-dot multi-touch)
+    Config.set('input', 'mouse', 'mouse, disable_multitouch')
+
+    # Fix the "random spot" bug (Matches touch rotation to screen rotation)
+    Config.set('graphics', 'rotation', '90')
 else:
     print("System: Dev Environment detected. Setting WINDOWED.")
     Config.set('graphics', 'fullscreen', '0')
