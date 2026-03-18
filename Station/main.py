@@ -33,14 +33,13 @@ if IS_RASPBERRY_PI:
     
     # Fix "1 finger = 2 touches" bug (Disable Kivy's simulated red-dot multi-touch)
     Config.set('input', 'mouse', 'mouse, disable_multitouch')
-
-    # Fix the "random spot" bug (Matches touch rotation to screen rotation)
-    Config.set('graphics', 'rotation', '90')
     
-    # Force kivy to use the correct input providers for Pi
-    # This stops Kivy from reading both the raw touch driver AND the OS mouse driver
-    Config.set('input', 'mtdev_%(name)s', 'probesysfs,provider=mtdev')
-    Config.set('input', 'hid_%(name)s', 'probesysfs,provider=hidinput')
+    # Force kivy to ignore raw touch sensors
+    if Config.has_section('input'):
+        if Config.has_option('input' 'mtdev_%(name)s'):
+            Config.remove_option('input', 'mtdev_%(name)s')
+        if Config.has_option('input', 'hid_%(name)s'):
+            Config.remove_option('input', 'hid_%(name)s')
     
 else:
     print("System: Dev Environment detected. Setting WINDOWED.")
