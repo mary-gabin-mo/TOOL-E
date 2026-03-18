@@ -36,7 +36,7 @@ if IS_RASPBERRY_PI:
     
     # Force kivy to ignore raw touch sensors
     if Config.has_section('input'):
-        if Config.has_option('input' 'mtdev_%(name)s'):
+        if Config.has_option('input', 'mtdev_%(name)s'):
             Config.remove_option('input', 'mtdev_%(name)s')
         if Config.has_option('input', 'hid_%(name)s'):
             Config.remove_option('input', 'hid_%(name)s')
