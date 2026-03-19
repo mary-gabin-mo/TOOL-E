@@ -17,7 +17,6 @@ async def log_requests(request: Request, call_next):
 app.add_middleware(
     CORSMiddleware,
     # Allow all origins for development/LAN access
-    # In production, specify the exact IP of the Kiosk (e.g., "http://192.168.1.6:5173")
     allow_origins=["*"], 
     allow_credentials=True,
     allow_methods=["*"],

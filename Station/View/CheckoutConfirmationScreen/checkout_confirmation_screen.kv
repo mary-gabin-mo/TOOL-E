@@ -41,9 +41,32 @@
             size_hint_y: None
             height: "80dp"
 
+        # --- Transaction Summary ---
+        MDCard:
+            orientation: 'vertical'
+            padding: '10dp'
+            size_hint: 0.8, 0.4
+            pos_hint: {"center_x": .5}
+            elevation: 1
+            md_bg_color: 0.95, 0.95, 0.95, 1
+            radius: [10, 10, 10, 10]
+
+            MDLabel:
+                text: "Items Borrowed:"
+                halign: "center"
+                font_style: "Subtitle1"
+                theme_text_color: "Secondary"
+                size_hint_y: None
+                height: "30dp"
+                
+            MDScrollView:
+                bar_width: '10dp'
+                MDList:
+                    id: summary_list_container
+
         # --- Spacer ---
         Widget:
-            size_hint_y: 0.3
+            size_hint_y: 0.1
 
         # --- Continue Button (Keep User Logged In) ---
         MDFillRoundFlatButton:
