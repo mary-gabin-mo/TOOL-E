@@ -342,7 +342,7 @@ class CaptureScreen(BaseScreen):
             
             if str(prediction).upper() == 'UNKNOWN' or float(score) < 0.60:
                 print(f"[UI] Low confidence ({score}) or UNKNOWN ({prediction}). Bypassing confirm screen.")
-                self.go_to('tool selection screen')
+                self.go_to('tool select screen')
             else:
                 # Navigate to Confirmation
                 self.go_to('tool confirm screen')
