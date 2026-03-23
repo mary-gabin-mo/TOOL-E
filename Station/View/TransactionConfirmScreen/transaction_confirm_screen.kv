@@ -80,9 +80,10 @@
             # Purpose Selection Box
             BoxLayout:
                 orientation: 'vertical'
-                size_hint_y: 0.25
+                size_hint_y: None
+                height: self.minimum_height
                 padding: "10dp"
-                spacing: "5dp"
+                spacing: "8dp"
 
                 Label:
                     text: "Purpose of Checkout"
@@ -94,11 +95,14 @@
 
                 BoxLayout:
                     orientation: 'horizontal'
+                    size_hint_y: None
+                    height: "80dp"
                     spacing: "15dp"
 
                     Button:
                         id: btn_academic
                         text: "Academic Course"
+                        font_size: "20sp"
                         size_hint_x: 0.5
                         background_normal: ''
                         background_color: 0.9, 0.9, 0.9, 1
@@ -108,17 +112,97 @@
                     Button:
                         id: btn_personal
                         text: "Personal Project"
+                        font_size: "20sp"
                         size_hint_x: 0.5
                         background_normal: ''
                         background_color: 0.9, 0.9, 0.9, 1
                         color: 0, 0, 0, 1
                         on_release: root.select_purpose("Personal Project")
 
+                BoxLayout:
+                    orientation: 'horizontal'
+                    size_hint_y: None
+                    height: "80dp"
+                    spacing: "15dp"
+
+                    Button:
+                        id: btn_team
+                        text: "Team"
+                        font_size: "20sp"
+                        size_hint_x: 0.5
+                        background_normal: ''
+                        background_color: 0.9, 0.9, 0.9, 1
+                        color: 0, 0, 0, 1
+                        on_release: root.select_purpose("Team")
+
+                    Button:
+                        id: btn_research
+                        text: "Research"
+                        font_size: "20sp"
+                        size_hint_x: 0.5
+                        background_normal: ''
+                        background_color: 0.9, 0.9, 0.9, 1
+                        color: 0, 0, 0, 1
+                        on_release: root.select_purpose("Research")
+
+                # Course code input (shown only when Academic Course is selected)
+                BoxLayout:
+                    id: course_code_box
+                    orientation: 'horizontal'
+                    size_hint_y: None
+                    height: 0
+                    opacity: 0
+                    spacing: "10dp"
+
+                    Label:
+                        text: "Course Code:"
+                        size_hint_x: 0.35
+                        font_size: "18sp"
+                        color: 0, 0, 0, 1
+                        halign: "right"
+                        valign: "middle"
+                        text_size: self.size
+
+                    CourseCodeInput:
+                        id: course_code_input
+                        hint_text: "e.g. ENEL500"
+                        font_size: "22sp"
+                        multiline: False
+                        size_hint_x: 0.65
+                        on_text: root.on_course_code_changed(self.text)
+
+                # Team name input (shown only when Team is selected)
+                BoxLayout:
+                    id: team_name_box
+                    orientation: 'horizontal'
+                    size_hint_y: None
+                    height: 0
+                    opacity: 0
+                    spacing: "10dp"
+
+                    Label:
+                        text: "Team Name:"
+                        size_hint_x: 0.35
+                        font_size: "18sp"
+                        color: 0, 0, 0, 1
+                        halign: "right"
+                        valign: "middle"
+                        text_size: self.size
+
+                    TextInput:
+                        id: team_name_input
+                        hint_text: "Enter team name"
+                        font_size: "22sp"
+                        multiline: False
+                        size_hint_x: 0.65
+                        on_text: root.on_team_name_changed(self.text)
+
             # 3. Required Action: Date Selection Box
             BorderedBox:
                 id: date_box
                 orientation: 'vertical'
-                size_hint_y: 0.2
+                size_hint_y: None
+                height: "90dp"
                 bg_color: 0.95, 0.95, 0.95, 1
                 line_color: 1, 0, 0, 1  # Initial Red (Changed in Python code)
                 on_release: root.open_calendar()
@@ -128,6 +212,7 @@
                     text: "Tap to select Return Date"
                     halign: "center"
                     valign: "center"
+                    font_size: "22sp"
                     color: 0.8, 0.2, 0.2, 1  # Red text initially
 
             # Spacer to push buttons down

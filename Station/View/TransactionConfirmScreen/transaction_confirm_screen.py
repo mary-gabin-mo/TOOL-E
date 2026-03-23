@@ -4,6 +4,7 @@ from kivy.clock import mainthread
 from kivy.app import App
 from kivy.uix.boxlayout import BoxLayout as KivyBoxLayout
 from kivy.uix.label import Label as KivyLabel
+from kivy.uix.textinput import TextInput
 from kivy.uix.behaviors import ButtonBehavior
 from kivy.properties import ListProperty
 from View.baseScreen import BaseScreen
@@ -16,6 +17,24 @@ class BorderedBox(ButtonBehavior, KivyBoxLayout):
     line_color = ListProperty([1, 0, 0, 1])
     bg_color = ListProperty([0.95, 0.95, 0.95, 1])
 
+
+class CourseCodeInput(TextInput):
+    """TextInput restricted to 4 uppercase letters followed by 3 digits (e.g. CSCI101)."""
+    def insert_text(self, substring, from_undo=False):
+        current = self.text
+        filtered = ''
+        for ch in substring:
+            pos = len(current) + len(filtered)
+            if pos >= 7:
+                break
+            if pos < 4:
+                if ch.isalpha():
+                    filtered += ch.upper()
+            else:
+                if ch.isdigit():
+                    filtered += ch
+        super().insert_text(filtered, from_undo=from_undo)
+
 class TransactionConfirmScreen(BaseScreen):
     
     return_date = None
@@ -24,6 +43,13 @@ class TransactionConfirmScreen(BaseScreen):
     def on_enter(self):
         """Reset state when entering screen."""
         self.return_date = None
+        self.purpose = None
+        self.ids.course_code_box.height = 0
+        self.ids.course_code_box.opacity = 0
+        self.ids.course_code_input.text = ''
+        self.ids.team_name_box.height = 0
+        self.ids.team_name_box.opacity = 0
+        self.ids.team_name_input.text = ''
         
         app = App.get_running_app()
         transaction_type = getattr(app.session, 'transaction_type', 'borrow')
@@ -83,27 +109,59 @@ class TransactionConfirmScreen(BaseScreen):
         
     def select_purpose(self, selected_purpose):
         self.purpose = selected_purpose
-        
-        # Update colors
+        from kivy.metrics import dp
+
+        all_btns = [
+            (self.ids.btn_academic, "Academic Course"),
+            (self.ids.btn_personal, "Personal Project"),
+            (self.ids.btn_team, "Team"),
+            (self.ids.btn_research, "Research"),
+        ]
+        for btn, label in all_btns:
+            if label == selected_purpose:
+                btn.background_color = (0.2, 0.6, 0.8, 1)  # Blue
+                btn.color = (1, 1, 1, 1)
+            else:
+                btn.background_color = (0.9, 0.9, 0.9, 1)  # Grey
+                btn.color = (0, 0, 0, 1)
+
+        # Show/hide course code input
         if selected_purpose == "Academic Course":
-            self.ids.btn_academic.background_color = (0.2, 0.6, 0.8, 1)  # Blue
-            self.ids.btn_academic.color = (1, 1, 1, 1)                   # White text
-            self.ids.btn_personal.background_color = (0.9, 0.9, 0.9, 1)  # Grey
-            self.ids.btn_personal.color = (0, 0, 0, 1)                   # Black text
+            self.ids.course_code_box.height = dp(50)
+            self.ids.course_code_box.opacity = 1
         else:
-            self.ids.btn_personal.background_color = (0.2, 0.6, 0.8, 1)  # Blue
-            self.ids.btn_personal.color = (1, 1, 1, 1)                   # White text
-            self.ids.btn_academic.background_color = (0.9, 0.9, 0.9, 1)  # Grey
-            self.ids.btn_academic.color = (0, 0, 0, 1)                   # Black text
-            
+            self.ids.course_code_box.height = 0
+            self.ids.course_code_box.opacity = 0
+            self.ids.course_code_input.text = ''
+
+        # Show/hide team name input
+        if selected_purpose == "Team":
+            self.ids.team_name_box.height = dp(50)
+            self.ids.team_name_box.opacity = 1
+        else:
+            self.ids.team_name_box.height = 0
+            self.ids.team_name_box.opacity = 0
+            self.ids.team_name_input.text = ''
+
+        self.check_can_finish()
+
+    def on_course_code_changed(self, text):
+        self.check_can_finish()
+
+    def on_team_name_changed(self, text):
         self.check_can_finish()
 
     def check_can_finish(self):
-        # Enable the final button only if both date and purpose are selected
-        if self.return_date and self.purpose:
-            self.ids.confirm_finish_btn.disabled = False
+        date_ok = self.return_date is not None
+        purpose_ok = self.purpose is not None
+        if self.purpose == "Academic Course":
+            code = self.ids.course_code_input.text
+            extra_ok = len(code) == 7 and code[:4].isalpha() and code[4:].isdigit()
+        elif self.purpose == "Team":
+            extra_ok = len(self.ids.team_name_input.text.strip()) > 0
         else:
-            self.ids.confirm_finish_btn.disabled = True
+            extra_ok = True
+        self.ids.confirm_finish_btn.disabled = not (date_ok and purpose_ok and extra_ok)
 
     def finish_transaction(self):
         app = App.get_running_app()
@@ -148,11 +206,18 @@ class TransactionConfirmScreen(BaseScreen):
                 tx_copy['temp_img_filename'] = os.path.basename(temp_img)
             tx_list.append(tx_copy)
 
+        if self.purpose == "Academic Course":
+            purpose_str = f"Academic Course: {self.ids.course_code_input.text}"
+        elif self.purpose == "Team":
+            purpose_str = f"Team: {self.ids.team_name_input.text.strip()}"
+        else:
+            purpose_str = self.purpose
+
         final_payload = {
-            "user_id": str(user_id), 
+            "user_id": str(user_id),
             "user_name": user_name or "Unknown User",
             "return_date": formatted_date,
-            "purpose": self.purpose,
+            "purpose": purpose_str,
             "transactions": tx_list
         }
         
