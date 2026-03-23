@@ -13,54 +13,30 @@
 
         # -- Logo Area Placeholder --
         Widget:
-            size_hint_y: 0.40
-
-        # --- HEADER (Back Button + Title) ---
-        BoxLayout:
-            size_hint_y: 0.1
-            spacing: "20dp"
-            
-            Button:
-                background_normal: ''
-                background_color: 0,0,0,0
-                text: '<'  # simple back arrow
-                font_size: '48sp'
-                color: 0,0,0,1
-                size_hint_x: None
-                width: dp(80)
-                on_press: root.cancel_transaction()
-
-            # Label:
-            #     text: "Enter UCID Manually"
-            #     font_size: "24sp"
-            #     bold: True
-            #     color: 0,0,0,1
-            #     halign: 'center'
-            #     valign: 'middle'
-            #     text_size: self.size
+            size_hint_y: 0.20
 
         # --- DISPLAY AREA ---
         BoxLayout:
-            size_hint_y: 0.2
+            size_hint_y: 0.1
             padding: "40dp", "0dp"
             
             TextInput:
                 id: ucid_input
                 hint_text: "Enter UCID Number"
                 text: ""
-                font_size: "60sp"
+                font_size: "42sp"
                 halign: "center"
                 readonly: True  # Vital: Prevents OS keyboard from popping up
                 background_color: 1,1,1,1
                 foreground_color: 0,0,0,1
                 cursor_color: 0,0,0,1
                 size_hint_y: None
-                height: self.font_size * 2
+                height: dp(78)
 
         # --- NUMBER PAD GRID ---
         GridLayout:
             cols: 3
-            spacing: "8dp"
+            spacing: "10dp"
             padding: "80dp", "30dp"
             size_hint_y: 0.55
             pos_hint: {"center_x": .5}
@@ -123,11 +99,12 @@
             size_hint_y: 0.18
             pos_hint: {"center_x": .5}
 
-            Button:
+            ActionButton:
                 text: "CANCEL"
                 font_size: "28sp"
                 background_normal: ''
-                background_color: 0.9, 0.2, 0.2, 1  # Red
+                base_color: 0.9, 0.2, 0.2, 1  # Red
+                down_color: 0.75, 0.15, 0.15, 1
                 color: 1,1,1,1
                 on_press: root.cancel_transaction()
 
@@ -145,10 +122,9 @@
 
 # --- Custom Button Component ---
 # This prevents code duplication for the number keys
-<NumpadButton@Button>:
+<NumpadButton@ActionButton>:
     font_size: "36sp"
     size_hint: 1, 1
-    background_normal: ''
-    background_color: 0.82, 0.82, 0.82, 1  # Light Grey
     color: 0, 0, 0, 1         # Black Text
-    # no radius or ripple to keep it simple
+    width: dp(120)
+    height: dp(96)
