@@ -1,10 +1,14 @@
 import os
 import time
 import shutil
+from dotenv import load_dotenv
+
+load_dotenv('.env.local')
 
 # Paths
 BASE_DIR = os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
-CAPTURED_IMAGES_DIR = os.path.join(BASE_DIR, 'captured_images')
+# Allow overriding the image storage directory via environment variables (e.g., to a separate disk)
+CAPTURED_IMAGES_DIR = os.getenv('IMAGE_STORAGE_PATH', os.path.join(BASE_DIR, 'captured_images'))
 TEMP_IMAGES_DIR = os.path.join(CAPTURED_IMAGES_DIR, 'temp')
 
 def init_image_dirs():

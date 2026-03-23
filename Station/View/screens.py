@@ -9,6 +9,7 @@ from View.TransactionConfirmScreen.transaction_confirm_screen import Transaction
 from View.UserErrorScreen.user_error_screen import UserErrorScreen
 from View.CheckoutConfirmationScreen.checkout_confirmation_screen import CheckoutConfirmationScreen
 from View.ReturnConfirmationScreen.return_confirmation_screen import ReturnConfirmationScreen
+from View.ManualToolEntryScreen.manual_tool_entry_screen import ManualToolEntryScreen
 
 screens = {
     "welcome screen": {
@@ -43,5 +44,8 @@ screens = {
     },
     "user error screen": {
         "view": UserErrorScreen
+    },
+    "manual tool entry screen": {
+        "view": ManualToolEntryScreen
     },
 }

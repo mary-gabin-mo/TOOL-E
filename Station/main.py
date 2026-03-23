@@ -126,7 +126,7 @@ if ENABLE_HOT_RELOAD:
                 try:
                     import RPi.GPIO as GPIO
                     GPIO.cleanup()
-                except:
+                except ImportError:
                     pass
                 
 else:
@@ -178,7 +178,7 @@ else:
                 try:
                     import RPi.GPIO as GPIO
                     GPIO.cleanup()
-                except:
+                except (ImportError, RuntimeError):
                     pass
 
 KioskApp().run()

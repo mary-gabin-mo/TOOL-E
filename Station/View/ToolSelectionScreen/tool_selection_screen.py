@@ -114,6 +114,10 @@ class ToolSelectionScreen(BaseScreen):
         User clicked Next. Confirm this tool and save to transaction list.
         Compatible with both 'Camera Flow' and 'Dev Flow'.
         """
+        if self.selected_tool and self.selected_tool['name'] == "Other":
+            self.go_to('manual tool entry screen')
+            return
+
         app = App.get_running_app()
         if hasattr(app, 'session'):
             session = app.session
