@@ -1,14 +1,23 @@
 from kivy.app import App
-from kivy.properties import ObjectProperty, DictProperty
-from kivymd.uix.list import TwoLineListItem
+from kivy.properties import ObjectProperty, DictProperty, StringProperty, ListProperty
+from kivy.uix.recycleview.views import RecycleDataViewBehavior
+from kivy.uix.boxlayout import BoxLayout
+from kivy.uix.behaviors import ButtonBehavior
 import threading
 from kivy.clock import mainthread
 
 from View.baseScreen import BaseScreen
 
-class SelectableToolItem(TwoLineListItem):
+class SelectableToolItem(RecycleDataViewBehavior, ButtonBehavior, BoxLayout):
+    text = StringProperty('')
+    secondary_text = StringProperty('')
     tool_data = DictProperty()
-    
+    text_color = ListProperty([0, 0, 0, 1])
+
+    def refresh_view_attrs(self, rv, index, data):
+        self.index = index
+        return super().refresh_view_attrs(rv, index, data)
+
     def handle_selection(self):
         app = App.get_running_app()
         # Find the active screen using app.manager_screens
@@ -32,7 +41,7 @@ class ToolSelectionScreen(BaseScreen):
         tool_rv = self.ids.tool_recycle_view
         
         # Show a loading placeholder
-        tool_rv.data = [{"text": "Loading tools...", "secondary_text": "Please wait", "tool_data": {}}]
+        tool_rv.data = [{"text": "Loading tools...", "secondary_text": "Please wait", "tool_data": {}, "text_color": [0, 0, 0, 1]}]
         
         threading.Thread(target=self._fetch_tools_thread).start()
         
@@ -47,7 +56,7 @@ class ToolSelectionScreen(BaseScreen):
         tool_rv = self.ids.tool_recycle_view
         
         if not all_tools:
-            tool_rv.data = [{"text": "No API tools found", "secondary_text": "Check server connection", "tool_data": {}}]
+            tool_rv.data = [{"text": "No API tools found", "secondary_text": "Check server connection", "tool_data": {}, "text_color": [0, 0, 0, 1]}]
         
         else:
             rv_data = []
@@ -57,8 +66,7 @@ class ToolSelectionScreen(BaseScreen):
                     "text": f"{tool_obj['name']} (ID: {tool_obj['id']})",
                     "secondary_text": f"Status: {tool_obj['status']} | Available: {tool_obj['available_quantity']}",
                     "tool_data": tool_obj,
-                    "theme_text_color": "Primary",
-                    "text_color": (0,0,0,1)
+                    "text_color": [0, 0, 0, 1]
                 })
 
             # 4. Add "Other" Option to the bottom
@@ -67,8 +75,7 @@ class ToolSelectionScreen(BaseScreen):
                 "text": "Other / Not Listed",
                 "secondary_text": "Select this if you can't find the tool",
                 "tool_data": other_tool,
-                "theme_text_color": "Primary",
-                "text_color": (0,0,0,1)
+                "text_color": [0, 0, 0, 1]
             })
             
             tool_rv.data = rv_data
@@ -89,11 +96,9 @@ class ToolSelectionScreen(BaseScreen):
         rv = self.ids.tool_recycle_view
         for i, item in enumerate(rv.data):
             if item.get('tool_data', {}).get('id') == tool_data.get('id'):
-                rv.data[i]['theme_text_color'] = "Custom"
-                rv.data[i]['text_color'] = (0, 0, 1, 1) # Blue
+                rv.data[i]['text_color'] = [0, 0, 1, 1]  # Blue
             else:
-                rv.data[i]['theme_text_color'] = "Primary"
-                # rv.data[i]['text_color'] = (0, 0, 0, 1) # Depends on KivyMD theme
+                rv.data[i]['text_color'] = [0, 0, 0, 1]  # Black
         
         rv.refresh_from_data()
         

@@ -42,7 +42,6 @@ class WelcomeScreen(BaseScreen):
             self.ids.instruction_box.opacity = 0
             self.ids.loading_box.opacity = 1
             self.ids.loading_box.height = dp(100) # Set height
-            self.ids.loading_spinner.active = True
             self.ids.footer_buttons.opacity = 0 # Hide buttons so user can't click twice
             self.ids.footer_buttons.disabled = True
         else:
@@ -50,7 +49,6 @@ class WelcomeScreen(BaseScreen):
             self.ids.instruction_box.opacity = 1
             self.ids.loading_box.opacity = 0
             self.ids.loading_box.height = 0 # Collapse to 0 pixels
-            self.ids.loading_spinner.active = False
             self.ids.footer_buttons.opacity = 1 
             self.ids.footer_buttons.disabled = False
     

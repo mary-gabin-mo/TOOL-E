@@ -1,103 +1,85 @@
 <CheckoutConfirmationScreen>:
-    md_bg_color: 1, 1, 1, 1  # White background
+    canvas.before:
+        Color:
+            rgba: 1, 1, 1, 1  # White background
+        Rectangle:
+            pos: self.pos
+            size: self.size
 
-    MDBoxLayout:
+    BoxLayout:
         orientation: 'vertical'
-        padding: "40dp"
-        spacing: "30dp"
+        padding: "50dp"
+        spacing: "40dp"
         pos_hint: {"center_x": .5, "center_y": .5}
 
         # --- Logo Area Placeholder ---
         Widget:
-            size_hint_y: 0.3
-
-        # --- Success Icon/Checkmark Area ---
-        MDIcon:
-            icon: "check-circle"
-            halign: "center"
-            theme_text_color: "Custom"
-            text_color: 0.2, 0.8, 0.2, 1  # Green
-            font_size: "80sp"
-            size_hint_y: None
-            height: "100dp"
+            size_hint_y: 0.6
 
         # --- Title ---
-        MDLabel:
+        Label:
             text: "Checkout Confirmed!"
             halign: "center"
-            font_style: "H4"
+            font_size: "36sp"
             bold: True
-            theme_text_color: "Primary"
+            color: 0, 0, 0, 1
             size_hint_y: None
-            height: "60dp"
+            height: "80dp"
 
         # --- Date Display ---
-        MDLabel:
+        Label:
             id: date_display
             text: "Check confirmed for this date:"
             halign: "center"
-            font_style: "H6"
-            theme_text_color: "Secondary"
+            font_size: "20sp"
+            color: 0.5, 0.5, 0.5, 1
             size_hint_y: None
             height: "80dp"
 
-        # --- Transaction Summary ---
-        MDCard:
-            orientation: 'vertical'
-            padding: '10dp'
-            size_hint: 0.8, 0.4
-            pos_hint: {"center_x": .5}
-            elevation: 1
-            md_bg_color: 0.95, 0.95, 0.95, 1
-            radius: [10, 10, 10, 10]
-
-            MDLabel:
-                text: "Items Borrowed:"
-                halign: "center"
-                font_style: "Subtitle1"
-                theme_text_color: "Secondary"
-                size_hint_y: None
-                height: "30dp"
-                
-            MDScrollView:
-                bar_width: '10dp'
-                MDList:
-                    id: summary_list_container
-
-        # --- Spacer ---
-        Widget:
-            size_hint_y: 0.1
+        # --- Success Checkmark ---
+        Label:
+            text: "✓"
+            halign: "center"
+            color: 0.2, 0.8, 0.2, 1  # Green
+            font_size: "80sp"
+            font_name: 'DejaVuSans'
+            size_hint_y: None
+            height: "80dp"
 
         # --- Continue Button (Keep User Logged In) ---
-        MDFillRoundFlatButton:
+        Button:
             text: "RETURN TO SELECTION"
-            font_size: "24sp"
-            size_hint: 0.7, None
+            font_size: "28sp"
+            size_hint: 0.8, None
             height: "80dp"
             pos_hint: {"center_x": .5}
-            md_bg_color: 0.2, 0.6, 0.8, 1  # Blue
+            background_normal: ''
+            background_color: 0.2, 0.6, 0.8, 1  # Blue
             on_release: root.continue_with_user()
 
         # --- Return Button ---
-        MDFillRoundFlatButton:
+        Button:
             text: "RETURN TO START"
-            font_size: "24sp"
-            size_hint: 0.7, None
+            font_size: "28sp"
+            size_hint: 0.8, None
             height: "80dp"
             pos_hint: {"center_x": .5}
-            md_bg_color: 0.9, 0.17, 0.25, 1  # Red
+            background_normal: ''
+            background_color: 0.9, 0.17, 0.25, 1  # Red
             on_release: root.return_to_menu()
 
         # --- Cancel Button ---
-        MDFillRoundFlatButton:
+        Button:
             text: "CANCEL"
-            font_size: "20sp"
-            size_hint: 0.7, None
-            height: "60dp"
+            font_size: "24sp"
+            size_hint: 0.8, None
+            height: "80dp"
             pos_hint: {"center_x": .5}
-            md_bg_color: 0.6, 0.6, 0.6, 1  # Grey
+            background_normal: ''
+            background_color: 0.6, 0.6, 0.6, 1  # Grey
             on_release: root.cancel_transaction()
 
         # --- Spacer ---
         Widget:
-            size_hint_y: 0.1
+            size_hint_y: None
+            height: "44dp"

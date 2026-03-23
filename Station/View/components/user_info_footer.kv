@@ -2,42 +2,42 @@
 
 <UserInfoFooter>:
     orientation: 'horizontal'
-    padding: "10dp"
-    spacing: "15dp"
+    padding: "18dp"
+    spacing: "24dp"
     size_hint_y: None
-    height: "60dp"
+    height: "120dp"
     md_bg_color: 0.95, 0.95, 0.95, 1  # Light gray background
     
     # Left: User Info
     MDBoxLayout:
         orientation: 'vertical'
-        spacing: "2dp"
+        spacing: "5dp"
         size_hint_x: 0.7
         
         MDLabel:
             text: root.user_name
-            font_style: "Body1"
+            font_style: "H6"
             bold: True
             theme_text_color: "Primary"
             size_hint_y: None
-            height: "20dp"
+            height: "40dp"
             
         MDLabel:
             text: f"{int(root.user_ucid):08d}" if root.user_ucid != 0 else "--" + " | " + root.user_email
-            font_style: "Caption"
+            font_style: "Subtitle1"
             theme_text_color: "Secondary"
             size_hint_y: None
-            height: "15dp"
+            height: "34dp"
     
     # Right: Transaction Type Badge
     MDLabel:
         text: root.transaction_type
-        font_style: "Caption"
+        font_style: "Subtitle1"
         bold: True
         theme_text_color: "Custom"
         text_color: 1, 1, 1, 1  # White text
         size_hint_x: 0.3
-        padding: "10dp"
+        padding: "18dp"
         halign: "center"
         canvas.before:
             Color:
