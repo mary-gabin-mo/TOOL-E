@@ -26,6 +26,10 @@ if IS_RASPBERRY_PI:
     Config.set('graphics', 'multisampling', '0')  # Disable anti-aliasing
     Config.set('kivy', 'touch_log_fn', '')  # Disable touch logging overhead
     Config.set('postproc', 'enabled', '0')  # Disable post-processing
+
+    # Enable onscreen virtual keyboard for Pi (docked inside Kivy)
+    Config.set('kivy', 'keyboard_mode', 'dock')
+
     # Config.set('graphics', 'fullscreen', '0')
     # Config.set('graphics', 'show_cursor', '1')
     # Config.set('graphics', 'width', '800')
