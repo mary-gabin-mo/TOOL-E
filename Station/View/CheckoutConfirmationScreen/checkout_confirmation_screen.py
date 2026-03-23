@@ -1,4 +1,5 @@
 from View.baseScreen import BaseScreen
+from kivymd.uix.list import OneLineListItem
 
 class CheckoutConfirmationScreen(BaseScreen):
     
@@ -16,6 +17,19 @@ class CheckoutConfirmationScreen(BaseScreen):
             self.ids.date_display.text = f"Check confirmed for this date:\n{date_str}"
         else:
             self.ids.date_display.text = "Check confirmed!"
+            
+        # Add summary of items
+        transactions = getattr(app.session, 'transactions', [])
+        
+        list_container = self.ids.summary_list_container
+        list_container.clear_widgets()
+        
+        if not transactions:
+            list_container.add_widget(OneLineListItem(text="No tools tracked"))
+        else:
+            for idx, tx in enumerate(transactions, 1):
+                tool_name = tx.get('tool_name', 'Unknown Tool')
+                list_container.add_widget(OneLineListItem(text=f"{idx}. {tool_name}"))
     
     def return_to_menu(self):
         # Clear session data

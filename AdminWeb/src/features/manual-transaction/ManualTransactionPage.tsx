@@ -36,13 +36,11 @@ export const ManualTransactionPage = () => {
   const [selectedToolId, setSelectedToolId] = useState('');
   const [purpose, setPurpose] = useState('');
   const [desiredReturnDate, setDesiredReturnDate] = useState('');
+  const [formError, setFormError] = useState<string | null>(null);
 
   const [returnUserId, setReturnUserId] = useState('');
   const [lookupUserId, setLookupUserId] = useState('');
   const [selectedTransactionId, setSelectedTransactionId] = useState<number | null>(null);
-  const [returnPurpose, setReturnPurpose] = useState('');
-  const [returnWeight, setReturnWeight] = useState(0);
-  const [returnClassificationCorrect, setReturnClassificationCorrect] = useState<boolean | null>(null);
 
   const queryClient = useQueryClient();
 
@@ -69,7 +67,11 @@ export const ManualTransactionPage = () => {
       setSelectedToolId('');
       setPurpose('');
       setDesiredReturnDate('');
+      setFormError(null);
     },
+    onError: (err: any) => {
+       setFormError(err.response?.data?.message || "Failed to create transaction.");
+    }
   });
 
   const { data: userTransactions = [], isFetching: isFetchingReturns, isError, error } = useQuery<any[]>({
@@ -96,18 +98,12 @@ export const ManualTransactionPage = () => {
       if (!selectedTransactionId) return;
       await api.put(`/transactions/${selectedTransactionId}`, {
         return_timestamp: new Date().toISOString(),
-        purpose: returnPurpose || selectedTransaction?.purpose || null,
-        weight: returnWeight,
-        classification_correct: returnClassificationCorrect,
       });
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['transactions', lookupUserId] });
       queryClient.invalidateQueries({ queryKey: ['transactions'] });
       setSelectedTransactionId(null);
-      setReturnPurpose('');
-      setReturnWeight(0);
-      setReturnClassificationCorrect(null);
     },
   });
 
@@ -139,10 +135,47 @@ export const ManualTransactionPage = () => {
           <form
             onSubmit={(e) => {
               e.preventDefault();
+              setFormError(null);
+
+              if (!userId) {
+                setFormError("Please enter a UCID.");
+                return;
+              }
+
+              if (!/^\d+$/.test(userId)) {
+                setFormError("UCID must contain only numbers.");
+                return;
+              }
+
+              if (!selectedToolId) {
+                setFormError("Please select a tool.");
+                return;
+              }
+
+              if (!desiredReturnDate) {
+                 setFormError("Please select a desired return date.");
+                 return;
+              }
+
+              const [y, m, d] = desiredReturnDate.split('-').map(Number);
+              const returnDate = new Date(y, m - 1, d);
+              const today = new Date();
+              today.setHours(0, 0, 0, 0);
+              
+              if (returnDate < today) {
+                setFormError("Return date cannot be in the past.");
+                return;
+              }
+
               checkoutMutation.mutate();
             }}
             className="space-y-4"
           >
+            {formError && (
+              <div className="bg-red-50 border border-red-200 text-red-700 px-4 py-3 rounded relative text-sm">
+                <span className="block sm:inline">{formError}</span>
+              </div>
+            )}
             <div>
               <label className="block text-sm font-medium text-gray-700 mb-1">UCID</label>
               <input
@@ -281,11 +314,6 @@ export const ManualTransactionPage = () => {
                             key={tx.transaction_id}
                             onClick={() => {
                               setSelectedTransactionId(tx.transaction_id);
-                              setReturnPurpose(tx.purpose || '');
-                              setReturnWeight(tx.weight || 0);
-                              setReturnClassificationCorrect(
-                                tx.classification_correct === null ? null : Boolean(tx.classification_correct)
-                              );
                             }}
                             className={`cursor-pointer transition-colors ${
                               isSelected 
@@ -321,74 +349,27 @@ export const ManualTransactionPage = () => {
             </div>
 
             {selectedTransaction && (
-              <form
-                onSubmit={(e) => {
-                  e.preventDefault();
-                  returnMutation.mutate();
-                }}
-                className="space-y-4"
-              >
-                <div className="text-sm text-gray-600">
-                  Updating Transaction #{selectedTransaction.transaction_id}
-                </div>
-
-
-            <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1">Purpose</label>
-              <div className="flex gap-3">
-                {['Academic Course', 'Personal Project'].map((option) => (
+              <div className="space-y-4 pt-4 border-t border-gray-100">
+                <div className="flex items-center justify-between bg-blue-50 p-4 rounded-lg border border-blue-100">
+                  <div>
+                    <h3 className="font-semibold text-blue-900">Return Action</h3>
+                    <p className="text-sm text-blue-700">
+                      Mark Transaction #{selectedTransaction.transaction_id} as returned at {new Date().toLocaleTimeString()}?
+                    </p>
+                  </div>
                   <button
-                    key={option}
-                    type="button"
-                    onClick={() => setReturnPurpose(option)}
-                    className={`px-4 py-2 rounded-md text-sm font-medium border transition-colors ${
-                      returnPurpose === option
-                        ? 'bg-blue-600 text-white border-blue-600'
-                        : 'bg-white text-gray-700 border-gray-300 hover:bg-gray-50'
-                    }`}
-                  >
-                    {option}
-                  </button>
-                ))}
-              </div>
-            </div>
-
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1">Weight</label>
-                  <input
-                    type="number"
-                    value={returnWeight}
-                    onChange={(e) => setReturnWeight(Number(e.target.value))}
-                    className="w-full px-3 py-2 border border-gray-300 rounded-md"
-                  />
-                </div>
-
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1">Classification Correct</label>
-                  <select
-                    value={returnClassificationCorrect === null ? '' : returnClassificationCorrect ? 'true' : 'false'}
-                    onChange={(e) => {
-                      const value = e.target.value;
-                      setReturnClassificationCorrect(value === '' ? null : value === 'true');
-                    }}
-                    className="w-full px-3 py-2 border border-gray-300 rounded-md bg-white"
-                  >
-                    <option value="">Not set</option>
-                    <option value="true">Yes</option>
-                    <option value="false">No</option>
-                  </select>
-                </div>
-
-                <div className="pt-2 flex justify-end">
-                  <button
-                    type="submit"
+                    onClick={() => returnMutation.mutate()}
                     disabled={returnMutation.isPending}
-                    className="px-6 py-2 bg-blue-600 text-white font-medium rounded-md hover:bg-blue-700 disabled:bg-gray-400"
+                    className="px-6 py-2 bg-blue-600 text-white font-medium rounded-md hover:bg-blue-700 disabled:bg-gray-400 shadow-sm flex items-center gap-2"
                   >
-                    {returnMutation.isPending ? 'Updating...' : 'Update Transaction'}
+                    {returnMutation.isPending ? (
+                      <>Processing...</> 
+                    ) : (
+                      <>Confirm Return (Now)</>
+                    )}
                   </button>
                 </div>
-              </form>
+              </div>
             )}
           </div>
         )}

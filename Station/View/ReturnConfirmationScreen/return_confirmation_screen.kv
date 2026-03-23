@@ -1,4 +1,4 @@
-<CheckoutConfirmationScreen>:
+<ReturnConfirmationScreen>:
     canvas.before:
         Color:
             rgba: 1, 1, 1, 1  # White background
@@ -14,11 +14,21 @@
 
         # --- Logo Area Placeholder ---
         Widget:
-            size_hint_y: 0.6
+            size_hint_y: 0.3
+
+        # --- Success Checkmark ---
+        Label:
+            text: "✓"
+            halign: "center"
+            theme_text_color: "Custom"
+            text_color: 0.2, 0.8, 0.2, 1  # Green
+            font_size: "120sp"
+            size_hint_y: None
+            height: "140dp"
 
         # --- Title ---
         Label:
-            text: "Checkout Confirmed!"
+            text: "Return Confirmed!"
             halign: "center"
             font_size: "36sp"
             bold: True
@@ -26,32 +36,26 @@
             size_hint_y: None
             height: "80dp"
 
-        # --- Date Display ---
+        # --- Message Display ---
         Label:
-            id: date_display
-            text: "Check confirmed for this date:"
+            id: message_display
+            text: "Return confirmed!"
             halign: "center"
             font_size: "20sp"
             color: 0.5, 0.5, 0.5, 1
             size_hint_y: None
-            height: "80dp"
+            height: "100dp"
 
-        # --- Success Checkmark ---
-        Label:
-            text: "✓"
-            halign: "center"
-            color: 0.2, 0.8, 0.2, 1  # Green
-            font_size: "80sp"
-            font_name: 'DejaVuSans'
-            size_hint_y: None
-            height: "80dp"
+        # --- Spacer ---
+        Widget:
+            size_hint_y: 0.3
 
         # --- Continue Button (Keep User Logged In) ---
         Button:
             text: "RETURN TO SELECTION"
             font_size: "28sp"
             size_hint: 0.8, None
-            height: "80dp"
+            height: "100dp"
             pos_hint: {"center_x": .5}
             background_normal: ''
             background_color: 0.2, 0.6, 0.8, 1  # Blue
@@ -62,7 +66,7 @@
             text: "RETURN TO START"
             font_size: "28sp"
             size_hint: 0.8, None
-            height: "80dp"
+            height: "100dp"
             pos_hint: {"center_x": .5}
             background_normal: ''
             background_color: 0.9, 0.17, 0.25, 1  # Red

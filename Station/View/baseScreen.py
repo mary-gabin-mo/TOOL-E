@@ -1,9 +1,12 @@
+from kivy.app import App
 from kivymd.uix.screen import MDScreen
+from View.components.user_info_footer import UserInfoFooter
 
 class BaseScreen(MDScreen):
     """
     Parent class for all screens.
     Includes helper methods for navigation.
+    All screens should include the UserInfoFooter at the bottom.
     """
     
     def go_to(self, screen_name):
@@ -18,3 +21,12 @@ class BaseScreen(MDScreen):
         if self.manager:
             self.manager.transition.direction = 'right'
             self.manager.current = screen_name
+            
+    def cancel_transaction(self):
+        """
+        User clicked CANCEL. Reset session and go back to welcome screen.
+        """
+        app = App.get_running_app()
+        if hasattr(app, 'session'):
+            app.session.reset()
+        self.go_back('welcome screen')

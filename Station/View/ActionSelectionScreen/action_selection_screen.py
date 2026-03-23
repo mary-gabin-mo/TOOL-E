@@ -15,7 +15,8 @@ class ActionSelectionScreen(BaseScreen):
         if hasattr(app, 'session'):
             app.session.transactions = []
             app.session.current_transaction = {}
-            print("[UI] ActionSelection: Cleared partial transactions.")
+            app.session.transaction_type = ""  # Reset to no action selected
+            print("[UI] ActionSelection: Cleared partial transactions and reset transaction type.")
 
     def select_borrow(self):
         """persist borrow state"""

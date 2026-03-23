@@ -35,7 +35,7 @@ async def validate_user_route(request: UserRequest):
         email = user[2]
         try:
              found_ucid = int(user[3])
-        except:
+        except (ValueError, TypeError):
              found_ucid = 0
              
         waiver_date = user[5]        

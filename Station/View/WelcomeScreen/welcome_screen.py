@@ -42,7 +42,6 @@ class WelcomeScreen(BaseScreen):
             self.ids.instruction_box.opacity = 0
             self.ids.loading_box.opacity = 1
             self.ids.loading_box.height = dp(100) # Set height
-            self.ids.loading_spinner.active = True
             self.ids.footer_buttons.opacity = 0 # Hide buttons so user can't click twice
             self.ids.footer_buttons.disabled = True
         else:
@@ -50,7 +49,6 @@ class WelcomeScreen(BaseScreen):
             self.ids.instruction_box.opacity = 1
             self.ids.loading_box.opacity = 0
             self.ids.loading_box.height = 0 # Collapse to 0 pixels
-            self.ids.loading_spinner.active = False
             self.ids.footer_buttons.opacity = 1 
             self.ids.footer_buttons.disabled = False
     
@@ -81,6 +79,8 @@ class WelcomeScreen(BaseScreen):
         """RESULT HANDLER: Runs back on the Main UI Thread"""
         if result['success']: # Success Logic
             # Once the user is validated, save the user info in SessionManager.
+            # make sure no transaction type is pre-set
+            app.session.transaction_type = ""
             app.session.user_data = result['user']
             # Save the specific ID (mapping API 'ucid' to session 'user_id')
             app.session.user_id = str(result['user'].get('ucid', ''))
@@ -90,9 +90,25 @@ class WelcomeScreen(BaseScreen):
             error_screen = self.manager.get_screen('user error screen')
             error_screen.set_error_message(result['error'])
             self.go_to('user error screen')
-        
-    def go_to(self, screen):
-        self.manager_screens.transition.direction = 'left'
-        self.manager_screens.current = screen
 
+    ### DEV ### 
+    def submit_ucid(self):
+        ucid = "10131867" # Mary's UCID for testing
+        print(f"Submitting UCID: {ucid}")
+        
+        app = App.get_running_app()
+        result = app.api_client.validate_user(ucid)
+        if result['success'] == True:
+            # Save the user info to the session once validated
+            app.session.transaction_type = ""  # ensure fresh start
+            app.session.user_data = result['user']
+            # Save the specific ID (mapping API 'ucid' to session 'user_id')
+            app.session.user_id = str(result['user'].get('ucid', ''))
+            self.go_to('action selection screen')
+            
+        else:
+            # if the validation failed, show the appropriate error message
+            error_screen = self.manager.get_screen('user error screen')
+            error_screen.set_error_message(result['error'])
+            self.go_to('user error screen')
         

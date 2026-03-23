@@ -1,14 +1,23 @@
-from fastapi import FastAPI
+from fastapi import FastAPI, Request
 from fastapi.middleware.cors import CORSMiddleware
 from app.routers import auth, tools, transactions, ml, analytics
 from app.services import ml_service, image_service
 
 app = FastAPI(title="TOOL-E Backend Server (Modular)")
 
+@app.middleware("http")
+async def log_requests(request: Request, call_next):
+    print(f"INCOMING REQUEST: {request.method} {request.url}")
+    print(f"PATH HEX: {request.url.path.encode('utf-8').hex()}") # Detect hidden chars
+    response = await call_next(request)
+    print(f"OUTGOING RESPONSE: {response.status_code}")
+    return response
+
 # Configure CORS
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["http://localhost:5173", "http://127.0.0.1:5173"],
+    # Allow all origins for development/LAN access
+    allow_origins=["*"], 
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],

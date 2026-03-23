@@ -1,0 +1,145 @@
+<ReturnToolItem>:
+    orientation: "horizontal"
+    padding: '12dp', '8dp'
+    spacing: '2dp'
+    size_hint_y: None
+    height: "72dp"
+    canvas.before:
+        Color:
+            rgba: 1, 1, 1, 1
+        Rectangle:
+            pos: self.pos
+            size: self.size
+
+    BoxLayout:
+        orientation: "vertical"
+        spacing: '2dp'
+
+        Label:
+            text: root.text
+            color: 0, 0, 0, 1
+            font_size: '16sp'
+            halign: 'left'
+            valign: 'middle'
+            shorten: True
+            shorten_from: "right"
+            text_size: self.size
+
+        Label:
+            text: root.secondary_text
+            color: 0.5, 0.5, 0.5, 1
+            font_size: '13sp'
+            halign: 'left'
+            valign: 'middle'
+            shorten: True
+            shorten_from: "right"
+            text_size: self.size
+
+    Button:
+        id: cb
+        size_hint: None, None
+        size: "48dp", "48dp"
+        pos_hint: {"center_y": .5}
+        text: "●" if root.is_active else "○"
+        font_size: "28sp"
+        background_normal: ''
+        background_color: 0, 0, 0, 0
+        color: (0.2, 0.6, 0.8, 1) if root.is_active else (0.6, 0.6, 0.6, 1)
+        on_release: root.on_checkbox_hit(True)
+
+<ToolReturnSelectionScreen>:
+    canvas.before:
+        Color:
+            rgba: 1, 1, 1, 1
+        Rectangle:
+            pos: self.pos
+            size: self.size
+
+    BoxLayout:
+        orientation: 'vertical'
+        padding: "40dp"
+        spacing: "30dp"
+        pos_hint: {"center_x": .5, "center_y": .5}
+
+        # -- Logo Area Placeholder --
+        Widget:
+            size_hint_y: 0.3
+
+        Label:
+            id: title_label
+            text: "Select Tool to Return"
+            halign: "center"
+            font_size: "24sp"
+            color: 0, 0, 0, 1
+            size_hint_y: 0.1
+
+        # --- Tool List Container ---
+        BoxLayout:
+            orientation: 'vertical'
+            padding: '5dp'
+            size_hint: .9, .6
+            pos_hint: {"center_x": .5}
+            canvas.before:
+                Color:
+                    rgba: 1, 1, 1, 1
+                RoundedRectangle:
+                    pos: self.pos
+                    size: self.size
+                    radius: [10, 10, 10, 10]
+                Color:
+                    rgba: 0.4, 0.4, 0.4, 1  # Grey border
+                Line:
+                    rounded_rectangle: (self.x, self.y, self.width, self.height, 10, 10, 10, 10, 100)
+                    width: 1.5
+
+            RecycleView:
+                id: tool_recycle_view
+                viewclass: 'ReturnToolItem'
+                RecycleBoxLayout:
+                    default_size: None, dp(72)
+                    default_size_hint: 1, None
+                    size_hint_y: None
+                    height: self.minimum_height
+                    orientation: 'vertical'
+
+        # --- Empty Message (hidden when list has items) ---
+        Label:
+            id: empty_message
+            text: "No unreturned tools found"
+            halign: "center"
+            color: 0.5, 0.5, 0.5, 1
+            font_size: "20sp"
+            opacity: 0
+            size_hint_y: None
+            height: "60dp"
+
+        # --- Bottom Button Row ---
+        BoxLayout:
+            orientation: 'horizontal'
+            spacing: "20dp"
+            size_hint_y: None
+            height: '80dp'
+            pos_hint: {"center_x": .5}
+            padding: '10dp'
+
+            Button:
+                text: "Back"
+                font_size: "20sp"
+                size_hint: 0.4, 1
+                background_normal: ''
+                background_color: 0.7, 0.7, 0.7, 1  # Grey
+                on_release: root.go_back()
+
+            Button:
+                id: continue_btn
+                text: "Confirm Return"
+                font_size: "20sp"
+                size_hint: 0.6, 1
+                background_normal: ''
+                background_color: 0.2, 0.7, 0.2, 1  # Green
+                disabled: True
+                on_release: root.confirm_selection()
+
+        Widget:
+            size_hint_y: None
+            height: "44dp"

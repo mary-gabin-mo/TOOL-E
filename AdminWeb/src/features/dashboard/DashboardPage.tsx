@@ -1,11 +1,90 @@
 import React, { useState } from 'react';
 import { useQuery } from '@tanstack/react-query';
 import { api } from '../../lib/axios';
-import { Loader2, Calendar } from 'lucide-react';
+import { Loader2, Calendar, Settings, X } from 'lucide-react';
 import { BarChart, Bar, XAxis, YAxis, Tooltip, ResponsiveContainer, CartesianGrid } from 'recharts';
+
+const TermConfigModal = ({ isOpen, onClose }: { isOpen: boolean; onClose: () => void }) => {
+  if (!isOpen) return null;
+
+  // Mock list of terms for the UI
+  const terms = [
+    { id: 'winter_2026', name: 'Winter 2026', start: '2026-01-01', end: '2026-04-30' },
+    { id: 'fall_2025', name: 'Fall 2025', start: '2025-09-01', end: '2025-12-31' },
+    { id: 'summer_2025', name: 'Summer 2025', start: '2025-05-01', end: '2025-08-31' },
+    { id: 'winter_2025', name: 'Winter 2025', start: '2025-01-01', end: '2025-04-30' },
+  ];
+
+  return (
+    <div className="fixed inset-0 z-50 flex items-center justify-center bg-gray-500/30 backdrop-blur-sm">
+      <div className="bg-white rounded-lg shadow-lg w-full max-w-2xl p-6">
+        <div className="flex justify-between items-center mb-4">
+          <h3 className="text-xl font-bold text-gray-900">Configure Terms</h3>
+          <button onClick={onClose} className="text-gray-400 hover:text-gray-600">
+            <X className="w-5 h-5" />
+          </button>
+        </div>
+        
+        <p className="text-sm text-gray-500 mb-6">Set the start and end dates for academic terms. These dates are used for analytics filtering.</p>
+
+        <div className="space-y-4">
+          <div className="grid grid-cols-[2fr_1fr_1fr_auto] gap-4 font-semibold text-sm text-gray-600 px-2">
+            <div>Term Name</div>
+            <div>Start Date</div>
+            <div>End Date</div>
+            <div></div>
+          </div>
+          
+          <div className="max-h-60 overflow-y-auto space-y-2">
+            {terms.map(term => (
+              <div key={term.id} className="grid grid-cols-[2fr_1fr_1fr_auto] gap-4 items-center bg-gray-50 p-2 rounded border border-gray-100">
+                <input 
+                  type="text" 
+                  defaultValue={term.name}
+                  className="border border-gray-300 rounded px-2 py-1 text-sm w-full outline-none focus:border-blue-500"
+                />
+                <input 
+                  type="date" 
+                  defaultValue={term.start}
+                  className="border border-gray-300 rounded px-2 py-1 text-sm w-full outline-none focus:border-blue-500" 
+                />
+                <input 
+                  type="date" 
+                  defaultValue={term.end}
+                  className="border border-gray-300 rounded px-2 py-1 text-sm w-full outline-none focus:border-blue-500" 
+                />
+                <button className="text-red-500 hover:text-red-700 text-sm px-2">Remove</button>
+              </div>
+            ))}
+          </div>
+          
+          <button className="text-blue-600 hover:text-blue-700 text-sm font-medium flex items-center gap-1 mt-2">
+            + Add New Term
+          </button>
+        </div>
+
+        <div className="mt-8 flex justify-end gap-3">
+          <button 
+            onClick={onClose} 
+            className="px-4 py-2 border border-gray-300 rounded-md text-sm font-medium text-gray-700 hover:bg-gray-50"
+          >
+            Cancel
+          </button>
+          <button 
+            onClick={onClose} 
+            className="px-4 py-2 bg-blue-600 text-white rounded-md text-sm font-medium hover:bg-blue-700"
+          >
+            Save Changes
+          </button>
+        </div>
+      </div>
+    </div>
+  );
+};
 
 export const DashboardPage = () => {
   const [period, setPeriod] = useState('1_month');
+  const [showConfigModal, setShowConfigModal] = useState(false);
 
   const { data, isLoading, isError } = useQuery({
     queryKey: ['dashboard', period],
@@ -56,6 +135,13 @@ export const DashboardPage = () => {
                     <option key={p.value} value={p.value}>{p.label}</option>
                 ))}
             </select>
+            <button 
+              onClick={() => setShowConfigModal(true)}
+              className="p-2 hover:bg-gray-100 rounded-full transition-colors text-gray-500 hover:text-gray-700 ml-1"
+              title="Configure Term Dates"
+            >
+              <Settings className="w-5 h-5" />
+            </button>
         </div>
       </div>
 
@@ -133,6 +219,11 @@ export const DashboardPage = () => {
             </div>
         </div>
       </div>
+      
+      <TermConfigModal 
+        isOpen={showConfigModal} 
+        onClose={() => setShowConfigModal(false)} 
+      />
     </div>
   );
 };

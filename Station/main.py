@@ -1,6 +1,12 @@
 import importlib
 import os
 import platform
+import logging
+
+# --- Suppress library debug logging ---
+logging.getLogger('picamera2').setLevel(logging.WARNING)
+logging.getLogger('libcamera').setLevel(logging.WARNING)
+logging.getLogger('picamera2.job').setLevel(logging.WARNING)
 
 # --- Config - must run before other Kivy imports ---
 from kivy.config import Config 
@@ -11,10 +17,40 @@ IS_RASPBERRY_PI = platform.machine() in ("aarch64", "armv7l")
 # Enable hot reload on Mac/Windows only
 ENABLE_HOT_RELOAD = not IS_RASPBERRY_PI
 
+
 if IS_RASPBERRY_PI:
     print("System: Raspberry Pi detected. Setting FULLSCREEN.")
     Config.set('graphics', 'fullscreen', 'auto')
-    Config.set('graphics', 'show_cursor', '1')
+    Config.set('graphics', 'show_cursor', '0')
+    # Performance optimizations for Pi touchscreen responsiveness
+    Config.set('graphics', 'multisampling', '0')  # Disable anti-aliasing
+    Config.set('kivy', 'touch_log_fn', '')  # Disable touch logging overhead
+    Config.set('postproc', 'enabled', '0')  # Disable post-processing
+    # Config.set('graphics', 'fullscreen', '0')
+    # Config.set('graphics', 'show_cursor', '1')
+    # Config.set('graphics', 'width', '800')
+    # Config.set('graphics', 'height', '600')
+    
+    # Fix "1 finger = 2 touches" by keeping only ONE touch provider.
+    # You can override at runtime: KIVY_TOUCH_PROVIDER=mtdev python3 main.py
+    if not Config.has_section('input'):
+        Config.add_section('input')
+
+    Config.set('input', 'mouse', 'mouse,disable_multitouch')
+    touch_provider = os.environ.get('KIVY_TOUCH_PROVIDER', 'hidinput').strip().lower()
+
+    # Remove probe providers that can duplicate the same physical touch.
+    for option in ('%(name)s', 'mtdev_%(name)s', 'hidinput_%(name)s'):
+        if Config.has_option('input', option):
+            Config.remove_option('input', option)
+
+    if touch_provider == 'mtdev':
+        Config.set('input', 'mtdev_%(name)s', 'probesysfs,provider=mtdev')
+        print("[INPUT] Touch provider: mtdev")
+    else:
+        Config.set('input', 'hidinput_%(name)s', 'probesysfs,provider=hidinput')
+        print("[INPUT] Touch provider: hidinput")
+    
 else:
     print("System: Dev Environment detected. Setting WINDOWED.")
     Config.set('graphics', 'fullscreen', '0')
@@ -39,7 +75,8 @@ if ENABLE_HOT_RELOAD:
     from kivymd.uix.screenmanager import MDScreenManager
 
     class KioskApp(MDApp):
-        KV_DIRS = [os.path.join(os.getcwd(), "View")]
+        # Get the directory where this main.py file is located
+        KV_DIRS = [os.path.join(os.path.dirname(os.path.abspath(__file__)), "View")]
 
         def build_app(self) -> MDScreenManager:
             
@@ -51,7 +88,13 @@ if ENABLE_HOT_RELOAD:
             
             # Initialize Services (Singleton)
             if not hasattr(self, 'hardware'):
+                print("[MAIN] Creating HardwareManager...")
                 self.hardware = HardwareManager()
+                # Diagnostic check
+                if self.hardware.lgpio_handle is not None:
+                    print("[MAIN] ✓ Hardware initialized successfully with GPIO handle")
+                else:
+                    print("[MAIN] ✗ WARNING: Hardware initialized but GPIO handle is None!")
             if not hasattr(self, 'api_client'):
                 self.api_client = APIClient()
             if not hasattr(self, 'session'):
@@ -83,13 +126,16 @@ if ENABLE_HOT_RELOAD:
                 try:
                     import RPi.GPIO as GPIO
                     GPIO.cleanup()
-                except:
+                except ImportError:
                     pass
                 
 else:
     # --- Kivy/KivyMD imports ---
     from kivymd.app import MDApp
     from kivymd.uix.screenmanager import MDScreenManager
+    
+    # Import footer component to make it available in KV files
+    from View.components.user_info_footer import UserInfoFooter
     
     from View.screens import screens
     
@@ -132,7 +178,7 @@ else:
                 try:
                     import RPi.GPIO as GPIO
                     GPIO.cleanup()
-                except:
+                except (ImportError, RuntimeError):
                     pass
 
 KioskApp().run()
