@@ -29,6 +29,22 @@ if IS_RASPBERRY_PI:
 
     # Enable onscreen virtual keyboard for Pi (docked inside Kivy)
     Config.set('kivy', 'keyboard_mode', 'dock')
+    
+    # Increase Keyboard Size
+    from kivy.lang import Builder
+    Builder.load_string("""
+<VKeyboard>:
+    # Increase height of virtual keyboard. 
+    # Default is often too small on Pi touchscreens.
+    # size_hint_y: None
+    # height: dp(350)
+    
+    # Or use scale if you just want everything bigger
+    # scale: 1.5
+    
+    # Simple approach: Force a larger size hint
+    size_hint_y: 0.4
+""")
 
     # Config.set('graphics', 'fullscreen', '0')
     # Config.set('graphics', 'show_cursor', '1')
