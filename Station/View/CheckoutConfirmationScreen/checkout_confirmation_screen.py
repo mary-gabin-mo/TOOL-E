@@ -1,5 +1,5 @@
 from View.baseScreen import BaseScreen
-from kivymd.uix.list import OneLineListItem
+from kivy.uix.label import Label
 
 class CheckoutConfirmationScreen(BaseScreen):
     
@@ -25,11 +25,20 @@ class CheckoutConfirmationScreen(BaseScreen):
         list_container.clear_widgets()
         
         if not transactions:
-            list_container.add_widget(OneLineListItem(text="No tools tracked"))
+            list_container.add_widget(
+                Label(text="No tools tracked", size_hint_y=None, height="40dp", color=(0,0,0,1))
+            )
         else:
             for idx, tx in enumerate(transactions, 1):
                 tool_name = tx.get('tool_name', 'Unknown Tool')
-                list_container.add_widget(OneLineListItem(text=f"{idx}. {tool_name}"))
+                lbl = Label(
+                    text=f"{idx}. {tool_name}", 
+                    size_hint_y=None, 
+                    height="40dp", 
+                    color=(0,0,0,1),
+                    font_size="24sp"
+                )
+                list_container.add_widget(lbl)
     
     def return_to_menu(self):
         # Clear session data

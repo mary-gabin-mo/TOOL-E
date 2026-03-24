@@ -1,5 +1,6 @@
 from View.baseScreen import BaseScreen
 from kivy.app import App
+from kivy.core.window import Window
 import time
 
 import threading
@@ -13,8 +14,33 @@ class ManualEntryScreen(BaseScreen):
         self._last_input_time = 0
         self._debounce_delay = 0.35  # 350ms debounce for Pi touchscreen
 
-    def on_leave(self):
-        self.clear_input()
+    def on_enter(self, *args):
+        super().on_enter(*args)
+        Window.bind(on_key_down=self._on_keyboard_down)
+
+    def on_leave(self, *args):
+        Window.unbind(on_key_down=self._on_keyboard_down)
+        self.clear_input(bypass_debounce=True)
+        super().on_leave(*args)
+
+    def _on_keyboard_down(self, instance, keyboard, keycode, text, modifiers):
+        """Handle hardware keyboard input (e.g. barcode scanner)"""
+        # Handle Enter key (13 or 'enter')
+        if keyboard == 13 or text == '\r':
+            self.submit_ucid()
+            return True
+        
+        # Handle Backspace (8)
+        if keyboard == 8:
+            self.delete_last(bypass_debounce=True)
+            return True
+            
+        # Handle Numbers
+        if text and text.isdigit():
+            self.add_digit(text, bypass_debounce=True)
+            return True
+            
+        return False
 
     def _check_debounce(self):
         """Check if enough time has passed since last input"""
@@ -24,9 +50,9 @@ class ManualEntryScreen(BaseScreen):
             return True
         return False
 
-    def add_digit(self, digit):
+    def add_digit(self, digit, bypass_debounce=False):
         """Add a digit to the input with debouncing"""
-        if not self._check_debounce():
+        if not bypass_debounce and not self._check_debounce():
             return
         
         # Limit length to avoid infinite strings
@@ -35,16 +61,16 @@ class ManualEntryScreen(BaseScreen):
             self.ids.ucid_input.text += digit
             print(f"[INPUT] Added digit: {digit}")
 
-    def clear_input(self):
+    def clear_input(self, bypass_debounce=False):
         """Clear all input"""
-        if not self._check_debounce():
+        if not bypass_debounce and not self._check_debounce():
             return
         self.ids.ucid_input.text = ""
         print("[INPUT] Cleared input")
 
-    def delete_last(self):
+    def delete_last(self, bypass_debounce=False):
         """Remove the last character from the UCID input."""
-        if not self._check_debounce():
+        if not bypass_debounce and not self._check_debounce():
             return
         current_text = self.ids.ucid_input.text
         if len(current_text) > 0:
