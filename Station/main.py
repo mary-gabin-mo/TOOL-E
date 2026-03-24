@@ -33,18 +33,16 @@ if IS_RASPBERRY_PI:
     # Increase Keyboard Size
     from kivy.lang import Builder
     Builder.load_string("""
-<VKeyboard>:
-    # Increase height of virtual keyboard. 
-    # Default is often too small on Pi touchscreens.
-    # size_hint_y: None
-    # height: dp(350)
-    
-    # Or use scale if you just want everything bigger
-    # scale: 1.5
-    
-    # Simple approach: Force a larger size hint
-    size_hint_y: 0.4
-""")
+        <VKeyboard>:
+            # Increase height of virtual keyboard. 
+            # height: dp(350)
+            
+            # Or use scale if you just want everything bigger
+            # scale: 1.5
+            
+            # Simple approach: Force a larger size hint
+            size_hint_y: 0.4
+        """)
 
     # Config.set('graphics', 'fullscreen', '0')
     # Config.set('graphics', 'show_cursor', '1')
@@ -74,8 +72,8 @@ if IS_RASPBERRY_PI:
 else:
     print("System: Dev Environment detected. Setting WINDOWED.")
     Config.set('graphics', 'fullscreen', '0')
-    Config.set('graphics', 'width', '600')
-    Config.set('graphics', 'height', '1024')
+    Config.set('graphics', 'width', '800')
+    Config.set('graphics', 'height', '1280')
     
     Window.top = 0
     Window.left = 1400
