@@ -33,22 +33,40 @@
             height: "105dp"
             pos_hint: {"bottom": 0.05, "center_x": .5, "x": 0}
             size_hint_x: 1
+            
 # --- Global button style ---
 <AppButton@Button>:
+    base_color: 0.90, 0.90, 0.90, 1
+    down_color: 0.74, 0.74, 0.74, 1
     background_normal: ''
-    background_color: 0.2,0.6,0.86,1  # default blue
-    color: 1,1,1,1
-    font_size: '28sp'
-    size_hint: None, None
-    height: dp(90)
-    width: dp(280)
+    background_down: ''
+    background_color: 0, 0, 0, 0
+    color: 0.35, 0.35, 0.35, 1
+    # font_size: '28sp'
+    # size_hint: None, None
+    # height: dp(90)
+    # width: dp(280)
     canvas.before:
         Color:
-            rgba: self.background_color
+            rgba: 0, 0, 0, 0.16
+        RoundedRectangle:
+            pos: self.x, self.y - 3
+            size: self.size
+            radius: [22, 22, 22, 22]
+
+        Color:
+            rgba: self.down_color if self.state == 'down' else self.base_color
         RoundedRectangle:
             pos: self.pos
             size: self.size
             radius: [22, 22, 22, 22]
+    canvas.after:
+        Color:
+            rgba: (0.55, 0.55, 0.55, 1) if self.state == 'down' else (0.68, 0.68, 0.68, 1)
+        Line:
+            width: 1.4
+            rounded_rectangle: (self.x, self.y, self.width, self.height, 22, 22, 22, 22, 120)
+
 
 # Reusable neutral action button style for use across screens.
 <ActionButton@AppButton>:

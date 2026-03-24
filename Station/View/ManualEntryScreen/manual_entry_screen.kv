@@ -17,28 +17,32 @@
 
         # --- DISPLAY AREA ---
         BoxLayout:
-            size_hint_y: 0.1
-            padding: "40dp", "0dp"
+            size_hint_y: 0.2
+            padding: "40dp", "5dp"
             
             TextInput:
                 id: ucid_input
                 hint_text: "Enter UCID Number"
                 text: ""
-                font_size: "42sp"
+                font_size: "44sp"
                 halign: "center"
-                readonly: True  # Vital: Prevents OS keyboard from popping up
+                valign: "center"
+                readonly: False
+                multiline: False
+                input_filter: 'int'
+                on_text: self.text = self.text[:8]
                 background_color: 1,1,1,1
                 foreground_color: 0,0,0,1
                 cursor_color: 0,0,0,1
                 size_hint_y: None
-                height: dp(78)
+                height: dp(62)
 
         # --- NUMBER PAD GRID ---
         GridLayout:
             cols: 3
             spacing: "10dp"
-            padding: "80dp", "30dp"
-            size_hint_y: 0.55
+            padding: "40dp", "30dp"
+            size_hint_y: 0.7
             pos_hint: {"center_x": .5}
             row_force_default: True
             row_default_height: 100
@@ -47,6 +51,7 @@
             NumpadButton:
                 text: "1"
                 on_press: root.add_digit("1")
+
             NumpadButton:
                 text: "2"
                 on_press: root.add_digit("2")
@@ -99,20 +104,21 @@
             size_hint_y: 0.18
             pos_hint: {"center_x": .5}
 
-            ActionButton:
+            AppButton:
                 text: "CANCEL"
                 font_size: "28sp"
-                background_normal: ''
+                # background_normal: ''
                 base_color: 0.9, 0.2, 0.2, 1  # Red
                 down_color: 0.75, 0.15, 0.15, 1
                 color: 1,1,1,1
                 on_press: root.cancel_transaction()
 
-            Button:
+            AppButton:
                 text: "ENTER"
                 font_size: "28sp"
-                background_normal: ''
-                background_color: 0.2, 0.8, 0.2, 1  # Green
+                # background_normal: ''
+                base_color: 0.2, 0.8, 0.2, 1  # Green
+                down_color: 0.15, 0.65, 0.15, 1
                 color: 1,1,1,1
                 on_press: root.submit_ucid()
 
@@ -124,7 +130,7 @@
 # This prevents code duplication for the number keys
 <NumpadButton@ActionButton>:
     font_size: "36sp"
-    size_hint: 1, 1
+    size_hint: .5, 1
     color: 0, 0, 0, 1         # Black Text
-    width: dp(120)
-    height: dp(96)
+    width: dp(60)
+    height: dp(120)

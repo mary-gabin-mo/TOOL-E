@@ -3,7 +3,7 @@ from kivy.app import App
 import time
 
 import threading
-from kivy.clock import mainthread
+from kivy.clock import Clock, mainthread
 
 class ManualEntryScreen(BaseScreen):
 
@@ -15,6 +15,14 @@ class ManualEntryScreen(BaseScreen):
 
     def on_leave(self):
         self.clear_input()
+
+    def on_enter(self):
+        # Delay focus by one frame so the TextInput is fully ready.
+        Clock.schedule_once(self._focus_ucid_input, 0)
+
+    def _focus_ucid_input(self, _dt):
+        if 'ucid_input' in self.ids:
+            self.ids.ucid_input.focus = True
 
     def _check_debounce(self):
         """Check if enough time has passed since last input"""

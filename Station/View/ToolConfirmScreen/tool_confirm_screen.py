@@ -122,4 +122,4 @@ class ToolConfirmScreen(BaseScreen):
     def go_back_to_capture(self):
         """Back button handler for confirm screen."""
         self._delete_current_image()
-        self.go_to('capture screen')
+        self.go_back('capture screen')

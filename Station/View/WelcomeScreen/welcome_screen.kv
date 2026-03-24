@@ -14,7 +14,7 @@
 
         # -- Logo Area Placeholder --
         Widget:
-            size_hint_y: 0.07
+            size_hint_y: 0.1
 
         # --- Status Container (swaps between Text and Loading) ---
         BoxLayout:
@@ -47,11 +47,12 @@
                     text: "Please TAP your UNICARD to begin"
                     halign: "center"
                     font_size: "38sp"
-                    color: 0.5, 0.5, 0.5, 1
+                    color: 0.9, 0.2, 0.2, 1
                     size_hint_y: None
                     height: "100dp"
                     text_size: self.width, None
                     valign: "middle"
+                    bold: True
 
             # STATE B: Loading (Hidden by default)
             BoxLayout:
@@ -110,7 +111,13 @@
             #     on_release: root.go_to('action selection screen')
 
         # -- Manual Entry Button --
-        ActionButton:
+        AppButton:
+            text: "TEMP - TRANS CONFIRM"
+            size_hint_y: 0.01
+            pos_hint: {"center_x": .5}
+            on_release: root.go_to('transaction confirm screen')
+
+        AppButton:
             text: "MANUAL UCID ENTRY"
             font_size: "25sp"
             size_hint: .65, None

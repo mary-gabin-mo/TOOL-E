@@ -29,7 +29,7 @@
 
         # --- Logo Area Placeholder ---
         Widget:
-            size_hint_y: 0.3
+            size_hint_y: 0.15
 
         # --- Title ---
         Label:
@@ -45,8 +45,8 @@
         BoxLayout:
             orientation: 'vertical'
             padding: '15dp'
-            spacing: '15dp'
-            size_hint: .8, .6  # 80% width, fill remaining height
+            spacing: '12dp'
+            size_hint: .9, .8  # Wider card so purpose buttons can be wider
             pos_hint: {"center_x": .5}
             canvas.before:
                 Color:
@@ -67,7 +67,7 @@
 
             # 2. Scrollable List of Tools
             ScrollView:
-                size_hint_y: 0.5  # Take up 50% of the card height
+                size_hint_y: 0.8  # Give list more space to reduce squish
                 bar_width: '10dp'
 
                 GridLayout:
@@ -82,7 +82,7 @@
                 orientation: 'vertical'
                 size_hint_y: None
                 height: self.minimum_height
-                padding: "10dp"
+                padding: "4dp", "10dp"
                 spacing: "8dp"
 
                 Label:
@@ -96,7 +96,7 @@
                 BoxLayout:
                     orientation: 'horizontal'
                     size_hint_y: None
-                    height: "80dp"
+                    height: "52dp"
                     spacing: "15dp"
 
                     Button:
@@ -122,14 +122,14 @@
                 BoxLayout:
                     orientation: 'horizontal'
                     size_hint_y: None
-                    height: "80dp"
+                    height: "52dp"
                     spacing: "15dp"
 
                     Button:
                         id: btn_team
                         text: "Team"
                         font_size: "20sp"
-                        size_hint_x: 0.5
+                        size_hint_x: 0.6
                         background_normal: ''
                         background_color: 0.9, 0.9, 0.9, 1
                         color: 0, 0, 0, 1
@@ -139,11 +139,15 @@
                         id: btn_research
                         text: "Research"
                         font_size: "20sp"
-                        size_hint_x: 0.5
+                        size_hint_x: 0.6
                         background_normal: ''
                         background_color: 0.9, 0.9, 0.9, 1
                         color: 0, 0, 0, 1
                         on_release: root.select_purpose("Research")
+
+                Widget:
+                    size_hint_y: None
+                    height: "8dp"
 
                 # Course code input (shown only when Academic Course is selected)
                 BoxLayout:
@@ -169,6 +173,7 @@
                         font_size: "22sp"
                         multiline: False
                         size_hint_x: 0.65
+                        height: "20dp"
                         on_text: root.on_course_code_changed(self.text)
 
                 # Team name input (shown only when Team is selected)
@@ -195,6 +200,7 @@
                         font_size: "22sp"
                         multiline: False
                         size_hint_x: 0.65
+                        height: "20dp"
                         on_text: root.on_team_name_changed(self.text)
 
             # 3. Required Action: Date Selection Box
@@ -202,7 +208,7 @@
                 id: date_box
                 orientation: 'vertical'
                 size_hint_y: None
-                height: "90dp"
+                height: "82dp"
                 bg_color: 0.95, 0.95, 0.95, 1
                 line_color: 1, 0, 0, 1  # Initial Red (Changed in Python code)
                 on_release: root.open_calendar()
@@ -223,7 +229,7 @@
         BoxLayout:
             orientation: 'horizontal'
             size_hint_y: None
-            height: '200dp'
+            height: '100dp'
             spacing: '20dp'
             padding: '10dp'
 
