@@ -107,7 +107,6 @@
             AppButton:
                 text: "CANCEL"
                 font_size: "28sp"
-                # background_normal: ''
                 base_color: 0.9, 0.2, 0.2, 1  # Red
                 down_color: 0.75, 0.15, 0.15, 1
                 color: 1,1,1,1
@@ -128,7 +127,7 @@
 
 # --- Custom Button Component ---
 # This prevents code duplication for the number keys
-<NumpadButton@ActionButton>:
+<NumpadButton@AppButton>:
     font_size: "36sp"
     size_hint: .5, 1
     color: 0, 0, 0, 1         # Black Text

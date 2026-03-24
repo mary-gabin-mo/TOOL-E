@@ -46,7 +46,7 @@
             orientation: 'vertical'
             padding: '15dp'
             spacing: '12dp'
-            size_hint: .9, .8  # Wider card so purpose buttons can be wider
+            size_hint: 1, .8  # Wider card so purpose buttons can be wider
             pos_hint: {"center_x": .5}
             canvas.before:
                 Color:
@@ -58,7 +58,7 @@
 
             # 1. Scanned Items Header
             Label:
-                text: "Items to Return"
+                text: "Items to Checkout"
                 halign: "center"
                 font_size: "20sp"
                 color: 0.5, 0.5, 0.5, 1
@@ -67,7 +67,8 @@
 
             # 2. Scrollable List of Tools
             ScrollView:
-                size_hint_y: 0.8  # Give list more space to reduce squish
+                # size_hint_y: 1.0  # Expand list area and push controls lower
+                height: "100dp"
                 bar_width: '10dp'
 
                 GridLayout:
@@ -99,23 +100,23 @@
                     height: "52dp"
                     spacing: "15dp"
 
-                    Button:
+                    AppButton:
                         id: btn_academic
                         text: "Academic Course"
                         font_size: "20sp"
                         size_hint_x: 0.5
                         background_normal: ''
-                        background_color: 0.9, 0.9, 0.9, 1
+                        base_color: 0.9, 0.9, 0.9, 1
                         color: 0, 0, 0, 1
                         on_release: root.select_purpose("Academic Course")
 
-                    Button:
+                    AppButton:
                         id: btn_personal
                         text: "Personal Project"
                         font_size: "20sp"
                         size_hint_x: 0.5
                         background_normal: ''
-                        background_color: 0.9, 0.9, 0.9, 1
+                        base_color: 0.9, 0.9, 0.9, 1
                         color: 0, 0, 0, 1
                         on_release: root.select_purpose("Personal Project")
 
@@ -125,23 +126,23 @@
                     height: "52dp"
                     spacing: "15dp"
 
-                    Button:
+                    AppButton:
                         id: btn_team
                         text: "Team"
                         font_size: "20sp"
                         size_hint_x: 0.6
                         background_normal: ''
-                        background_color: 0.9, 0.9, 0.9, 1
+                        base_color: 0.9, 0.9, 0.9, 1
                         color: 0, 0, 0, 1
                         on_release: root.select_purpose("Team")
 
-                    Button:
+                    AppButton:
                         id: btn_research
                         text: "Research"
                         font_size: "20sp"
                         size_hint_x: 0.6
                         background_normal: ''
-                        background_color: 0.9, 0.9, 0.9, 1
+                        base_color: 0.9, 0.9, 0.9, 1
                         color: 0, 0, 0, 1
                         on_release: root.select_purpose("Research")
 
@@ -149,59 +150,66 @@
                     size_hint_y: None
                     height: "8dp"
 
-                # Course code input (shown only when Academic Course is selected)
-                BoxLayout:
-                    id: course_code_box
-                    orientation: 'horizontal'
+                # Fixed-height slot prevents purpose buttons from shifting when input mode changes
+                FloatLayout:
                     size_hint_y: None
-                    height: 0
-                    opacity: 0
-                    spacing: "10dp"
+                    height: "50dp"
 
-                    Label:
-                        text: "Course Code:"
-                        size_hint_x: 0.35
-                        font_size: "18sp"
-                        color: 0, 0, 0, 1
-                        halign: "right"
-                        valign: "middle"
-                        text_size: self.size
+                    # Course code input (shown only when Academic Course is selected)
+                    BoxLayout:
+                        id: course_code_box
+                        orientation: 'horizontal'
+                        size_hint: 1, 1
+                        pos_hint: {"x": 0, "y": 0}
+                        opacity: 0
+                        disabled: True
+                        spacing: "10dp"
 
-                    CourseCodeInput:
-                        id: course_code_input
-                        hint_text: "e.g. ENEL500"
-                        font_size: "22sp"
-                        multiline: False
-                        size_hint_x: 0.65
-                        height: "20dp"
-                        on_text: root.on_course_code_changed(self.text)
+                        Label:
+                            text: "Course Code:"
+                            size_hint_x: 0.35
+                            font_size: "18sp"
+                            color: 0, 0, 0, 1
+                            halign: "right"
+                            valign: "middle"
+                            text_size: self.size
 
-                # Team name input (shown only when Team is selected)
-                BoxLayout:
-                    id: team_name_box
-                    orientation: 'horizontal'
-                    size_hint_y: None
-                    height: 0
-                    opacity: 0
-                    spacing: "10dp"
+                        CourseCodeInput:
+                            id: course_code_input
+                            hint_text: "e.g. ENEL500"
+                            font_size: "22sp"
+                            multiline: False
+                            size_hint_x: 0.65
+                            height: "20dp"
+                            on_text: root.on_course_code_changed(self.text)
 
-                    Label:
-                        text: "Team Name:"
-                        size_hint_x: 0.35
-                        font_size: "18sp"
-                        color: 0, 0, 0, 1
-                        halign: "right"
-                        valign: "middle"
-                        text_size: self.size
+                    # Team name input (shown only when Team is selected)
+                    BoxLayout:
+                        id: team_name_box
+                        orientation: 'horizontal'
+                        size_hint: 1, 1
+                        pos_hint: {"x": 0, "y": 0}
+                        opacity: 0
+                        disabled: True
+                        spacing: "10dp"
 
-                    TextInput:
-                        id: team_name_input
-                        hint_text: "Enter team name"
-                        font_size: "22sp"
-                        multiline: False
-                        size_hint_x: 0.65
-                        height: "20dp"
-                        on_text: root.on_team_name_changed(self.text)
+                        Label:
+                            text: "Team Name:"
+                            size_hint_x: 0.35
+                            font_size: "18sp"
+                            color: 0, 0, 0, 1
+                            halign: "right"
+                            valign: "middle"
+                            text_size: self.size
+
+                        TextInput:
+                            id: team_name_input
+                            hint_text: "Enter team name"
+                            font_size: "22sp"
+                            multiline: False
+                            size_hint_x: 0.65
+                            height: "20dp"
+                            on_text: root.on_team_name_changed(self.text)
 
             # 3. Required Action: Date Selection Box
             BorderedBox:
@@ -221,9 +229,10 @@
                     font_size: "22sp"
                     color: 0.8, 0.2, 0.2, 1  # Red text initially
 
-            # Spacer to push buttons down
+            # Keep only a tiny fixed gap before the action bar
             Widget:
-                size_hint_y: 0.1
+                size_hint_y: None
+                height: "6dp"
 
         # --- BOTTOM ACTION BAR ---
         BoxLayout:
@@ -233,25 +242,29 @@
             spacing: '20dp'
             padding: '10dp'
 
-            Button:
+            AppButton:
                 text: "CANCEL"
                 font_size: "20sp"
                 size_hint_x: 0.4
                 background_normal: ''
-                background_color: 0.6, 0.6, 0.6, 1
+                base_color: 0.6, 0.6, 0.6, 1
+                down_color: 0.5, 0.5, 0.5, 1
+                color: 1, 1, 1, 1
                 on_release: root.cancel_transaction()
 
-            Button:
+            AppButton:
                 id: confirm_finish_btn
                 text: "CONFIRM & FINISH"
                 font_size: '20sp'
                 size_hint_x: 0.6
                 disabled: True  # Disabled until date selected
                 background_normal: ''
-                background_color: 0.2, 0.7, 0.2, 1  # Green
+                base_color: 0.2, 0.7, 0.2, 1  # Green
+                down_color: 0.15, 0.6, 0.15, 1
+                color: 1, 1, 1, 1
                 on_release: root.finish_transaction()
 
         Widget:
             size_hint_y: None
-            height: "44dp"
+            height: "40dp"
 

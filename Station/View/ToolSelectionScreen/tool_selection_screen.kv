@@ -89,40 +89,48 @@
             pos_hint: {"center_x": .5}
             padding: '15dp'             # Optional padding around the row
 
-            Button:
+            AppButton:
                 text: "Back"
                 font_size: "24sp"
                 size_hint: 0.4, 1
                 background_normal: ''
-                background_color: 0.7, 0.7, 0.7, 1  # Grey
+                base_color: 0.7, 0.7, 0.7, 1  # Grey
+                down_color: 0.6, 0.6, 0.6, 1
+                color: 1, 1, 1, 1
                 on_release: root.go_back('tool confirm screen')
 
-            Button:
+            AppButton:
                 text: "Scan More"
                 font_size: "24sp"
                 size_hint: 0.4, 1
                 background_normal: ''
-                background_color: 0.7, 0.7, 0.7, 1  # Grey
+                base_color: 0.7, 0.7, 0.7, 1  # Grey
+                down_color: 0.6, 0.6, 0.6, 1
+                color: 1, 1, 1, 1
                 on_release: root.confirm_scan_more()
 
-            Button:
+            AppButton:
                 id: next_button
                 text: "Next"
                 font_size: "24sp"
                 size_hint: 0.4, 1
                 background_normal: ''
-                background_color: 0.2, 0.7, 0.2, 1  # Green
+                base_color: 0.2, 0.7, 0.2, 1  # Green
+                down_color: 0.15, 0.6, 0.15, 1
+                color: 1, 1, 1, 1
                 disabled: True
                 on_release: root.proceed()
 
-        # -- Cancel Button --
-        Button:
+        # -- Cancel AppButton --
+        AppButton:
             text: "CANCEL"
             font_size: "28sp"
             size_hint: 1, 0.1
             pos_hint: {"center_x": .5}
             background_normal: ''
-            background_color: 0.9, 0.17, 0.25, 1  # Red
+            base_color: 0.9, 0.17, 0.25, 1  # Red
+            down_color: 0.8, 0.1, 0.15, 1
+            color: 1, 1, 1, 1
             on_release: root.cancel_transaction()
 
         Widget:
