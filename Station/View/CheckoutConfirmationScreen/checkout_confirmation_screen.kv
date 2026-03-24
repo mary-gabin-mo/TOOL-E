@@ -14,7 +14,7 @@
 
         # --- Logo Area Placeholder ---
         Widget:
-            size_hint_y: 0.6
+            size_hint_y: 0.1
 
         # --- Title ---
         Label:
@@ -25,6 +25,15 @@
             color: 0, 0, 0, 1
             size_hint_y: None
             height: "80dp"
+
+        # --- Summary List ---
+        ScrollView:
+            size_hint_y: 0.3
+            BoxLayout:
+                id: summary_list_container
+                orientation: 'vertical'
+                size_hint_y: None
+                height: self.minimum_height
 
         # --- Date Display ---
         Label:
