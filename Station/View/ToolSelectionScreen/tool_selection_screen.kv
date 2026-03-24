@@ -7,14 +7,14 @@
     on_release: self.handle_selection()
     canvas.before:
         Color:
-            rgba: 1, 1, 1, 1
+            rgba: root.bg_color
         Rectangle:
             pos: self.pos
             size: self.size
 
     Label:
         text: root.text
-        color: root.text_color
+        color: 0, 0, 0, 1
         halign: 'left'
         valign: 'middle'
         font_size: '16sp'
@@ -92,24 +92,16 @@
             Button:
                 text: "Back"
                 font_size: "24sp"
-                size_hint: 0.4, 1
+                size_hint: 0.5, 1
                 background_normal: ''
                 background_color: 0.7, 0.7, 0.7, 1  # Grey
                 on_release: root.go_back('tool confirm screen')
 
             Button:
-                text: "Scan More"
-                font_size: "24sp"
-                size_hint: 0.4, 1
-                background_normal: ''
-                background_color: 0.7, 0.7, 0.7, 1  # Grey
-                on_release: root.confirm_scan_more()
-
-            Button:
                 id: next_button
-                text: "Next"
+                text: "Use This Tool"
                 font_size: "24sp"
-                size_hint: 0.4, 1
+                size_hint: 0.5, 1
                 background_normal: ''
                 background_color: 0.2, 0.7, 0.2, 1  # Green
                 disabled: True

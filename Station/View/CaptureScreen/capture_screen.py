@@ -386,10 +386,17 @@ class CaptureScreen(BaseScreen):
                 
             prediction = tool_data.get('prediction', 'UNKNOWN')
             score = tool_data.get('score', 0)
+            is_return_flow = hasattr(app, 'session') and app.session.transaction_type == "return"
             
             if str(prediction).upper() == 'UNKNOWN' or float(score) < 0.60:
                 print(f"[UI] Low confidence ({score}) or UNKNOWN ({prediction}). Bypassing confirm screen.")
-                self.go_to('tool select screen')
+                if is_return_flow:
+                    # Return transactions must stay on return-specific path.
+                    app.session.tool_was_confirmed = False
+                    app.session.set_classification_correct(False)
+                    self.go_to('tool return selection screen')
+                else:
+                    self.go_to('tool select screen')
             else:
                 # Navigate to Confirmation
                 self.go_to('tool confirm screen')

@@ -12,7 +12,7 @@ class SelectableToolItem(RecycleDataViewBehavior, ButtonBehavior, BoxLayout):
     text = StringProperty('')
     secondary_text = StringProperty('')
     tool_data = DictProperty()
-    text_color = ListProperty([0, 0, 0, 1])
+    bg_color = ListProperty([1, 1, 1, 1])
 
     def refresh_view_attrs(self, rv, index, data):
         self.index = index
@@ -32,6 +32,12 @@ class ToolSelectionScreen(BaseScreen):
     
     def on_enter (self):
         """Called every time the screen is displayed."""
+        app = App.get_running_app()
+        if hasattr(app, 'session') and app.session.transaction_type == "return":
+            print("[UI] Guard: return flow cannot use ToolSelectionScreen. Redirecting.")
+            self.go_to('tool return selection screen')
+            return
+
         self.selected_tool = None
         self.ids.next_button.disabled = True
         self.populate_list()
@@ -41,7 +47,7 @@ class ToolSelectionScreen(BaseScreen):
         tool_rv = self.ids.tool_recycle_view
         
         # Show a loading placeholder
-        tool_rv.data = [{"text": "Loading tools...", "secondary_text": "Please wait", "tool_data": {}, "text_color": [0, 0, 0, 1]}]
+        tool_rv.data = [{"text": "Loading tools...", "secondary_text": "Please wait", "tool_data": {}, "bg_color": [1, 1, 1, 1]}]
         
         threading.Thread(target=self._fetch_tools_thread).start()
         
@@ -56,7 +62,7 @@ class ToolSelectionScreen(BaseScreen):
         tool_rv = self.ids.tool_recycle_view
         
         if not all_tools:
-            tool_rv.data = [{"text": "No API tools found", "secondary_text": "Check server connection", "tool_data": {}, "text_color": [0, 0, 0, 1]}]
+            tool_rv.data = [{"text": "No API tools found", "secondary_text": "Check server connection", "tool_data": {}, "bg_color": [1, 1, 1, 1]}]
         
         else:
             rv_data = []
@@ -66,7 +72,7 @@ class ToolSelectionScreen(BaseScreen):
                     "text": f"{tool_obj['name']} (ID: {tool_obj['id']})",
                     "secondary_text": f"Status: {tool_obj['status']} | Available: {tool_obj['available_quantity']}",
                     "tool_data": tool_obj,
-                    "text_color": [0, 0, 0, 1]
+                    "bg_color": [1, 1, 1, 1]
                 })
 
             # 4. Add "Other" Option to the bottom
@@ -75,7 +81,7 @@ class ToolSelectionScreen(BaseScreen):
                 "text": "Other / Not Listed",
                 "secondary_text": "Select this if you can't find the tool",
                 "tool_data": other_tool,
-                "text_color": [0, 0, 0, 1]
+                "bg_color": [1, 1, 1, 1]
             })
             
             tool_rv.data = rv_data
@@ -92,22 +98,15 @@ class ToolSelectionScreen(BaseScreen):
         self.selected_tool = tool_data
         self.ids.next_button.disabled = False
         
-        # Visual feedback: Reset all items text color in data model
+        # Visual feedback: highlight selected row in data model
         rv = self.ids.tool_recycle_view
         for i, item in enumerate(rv.data):
             if item.get('tool_data', {}).get('id') == tool_data.get('id'):
-                rv.data[i]['text_color'] = [0, 0, 1, 1]  # Blue
+                rv.data[i]['bg_color'] = [0.86, 0.93, 1, 1]
             else:
-                rv.data[i]['text_color'] = [0, 0, 0, 1]  # Black
+                rv.data[i]['bg_color'] = [1, 1, 1, 1]
         
         rv.refresh_from_data()
-        
-    def confirm_scan_more(self):
-        app = App.get_running_app()
-        if hasattr(app, 'session'):
-            # Use the session method we defined earlier
-            app.session.confirm_current_tool(self.selected_tool['name'])
-        self.go_to('capture screen') 
         
     def proceed(self):
         """
@@ -119,35 +118,38 @@ class ToolSelectionScreen(BaseScreen):
             return
 
         app = App.get_running_app()
+        if hasattr(app, 'session') and app.session.transaction_type == "return":
+            print("[UI] Guard: return flow cannot proceed via ToolSelectionScreen. Redirecting.")
+            self.go_to('tool return selection screen')
+            return
+
+        app = App.get_running_app()
         if hasattr(app, 'session'):
             session = app.session
-            
-            # DEV MODE SUPPORT: 
-            # If we came here directly (skipping camera), there is no 'current_transaction'.
-            # We must start one artificially so 'confirm' has something to work with.
+
+            # Ensure there is an active transaction for this correction flow.
             if not session.current_transaction:
                 print("[UI] Dev Mode: Creating dummy transaction for manual selection.")
-                
+
                 from datetime import datetime
-                
-                # 1. Generate Timestamp ID (Same format as CaptureScreen)
+
                 now = datetime.now()
                 timestamp = now.strftime("%Y%m%d_%H%M%S")
                 milliseconds = int(now.microsecond / 1000)
                 timestamp_id = f"{timestamp}-{milliseconds:03d}"
-                
-                # 2. Create Filename (Placeholder)
-                filename = f"{timestamp_id}.jpg" 
-                
+                filename = f"{timestamp_id}.jpg"
+
                 session.start_new_transaction(timestamp_id, filename)
 
-            # Now we can safely confirm
-            # If classification_correct has not been set (e.g., coming from Dev Mode or unexpected flow),
-            # default to False because the user had to manually select it.
-            if session.current_transaction.get('classification_correct') is None:
-                 session.set_classification_correct(False)
-                 
-            session.confirm_current_tool(self.selected_tool['name'])
-            
-        # Navigate to completion screen
-        self.go_to('transaction confirm screen') 
+            # Manual correction should keep classification as incorrect.
+            session.set_classification_correct(False)
+
+            # Replace predicted tool shown on ToolConfirm screen with user's selected tool.
+            selected_name = self.selected_tool.get('name', 'Unknown Tool')
+            session.identified_tool_data = {
+                'prediction': selected_name,
+                'score': 1.0,
+            }
+
+        # Return to ToolConfirm so scan-more/finish decisions happen in one place.
+        self.go_to('tool confirm screen')
