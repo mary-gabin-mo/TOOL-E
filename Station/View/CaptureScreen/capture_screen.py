@@ -1,9 +1,6 @@
 import cv2
 import platform
 import os
-import time
-import threading
-import numpy as np
 import logging
 from datetime import datetime
 from concurrent.futures import ThreadPoolExecutor
@@ -21,14 +18,19 @@ logging.getLogger('picamera2.job').setLevel(logging.WARNING)
 # Detect if we are on the Pi
 IS_RASPBERRY_PI = platform.machine() in ("aarch64", "armv7l")
 
-# Thread pool for background tasks (reuse threads instead of creating new ones)
-_thread_pool = ThreadPoolExecutor(max_workers=2, thread_name_prefix="CaptureScreen-Worker-")
+# Separate pools keep camera startup responsive even while identification is running.
+_camera_init_pool = ThreadPoolExecutor(max_workers=1, thread_name_prefix="CaptureScreen-Init-")
+_identify_pool = ThreadPoolExecutor(max_workers=2, thread_name_prefix="CaptureScreen-Identify-")
 
 class CaptureScreen(BaseScreen):
     
     capture = None  # For OpenCV (laptop)
     picam2 = None   # For Picamera2 (Pi)
     update_event = None
+    _pending_capture_event = None
+    _is_initializing = False
+    _is_capturing = False
+    _screen_active = False
     
     def on_enter(self):
         """
@@ -36,51 +38,32 @@ class CaptureScreen(BaseScreen):
         Starts listeining to hardware events here.
         """
         print(f"[DEBUG] CaptureScreen: on_enter called.")
+        self._screen_active = True
+        self._is_capturing = False
         
-        # 1. Reset UI to "Initializing" State
-        self.set_processing_mode(True, message="Initializing Camera...")
+_camera_init_pool = ThreadPoolExecutor(max_workers=1, thread_name_prefix="CaptureInit-")
+_capture_work_pool = ThreadPoolExecutor(max_workers=2, thread_name_prefix="CaptureWork-")
         
         # 2. Bind hardware Events
         app = App.get_running_app()
         if hasattr(app, 'hardware'):
             print("[DEBUG] Hardware manager found. Binding to on_load_cell_detect...")
             app.hardware.bind(on_load_cell_detect=self.handle_load_cell_trigger)
+    _pending_capture_event = None
+    _is_initializing = False
+    _is_capturing = False
+    _screen_active = False
             print("[DEBUG] Successfully bound to on_load_cell_detect event")
         else:
             print("[ERROR] Hardware manager not found in app!")
             
-        # 3. Start Camera in Background (So UI doesn't freeze)
-        # OPTIMIZATION: Use thread pool instead of creating new thread
-        _thread_pool.submit(self._init_camera_async)
-        
-    def _init_camera_async(self):
-        """background init to prevent UI freeze"""
-        print(f"[UI] Initializing Camera (Pi Mode: {IS_RASPBERRY_PI})...")
-        success = False
-        try:
-            if IS_RASPBERRY_PI:
-                from picamera2 import Picamera2
-                self.picam2 = Picamera2()
-                
-                # OPTIMIZATION: Optimized resolution for Pi - process at lower res
-                # Capture at 1280x720 (still good quality) instead of 1920x1080
-                # This reduces processing overhead significantly
-                config = self.picam2.create_still_configuration(
-                    main={"size": (1280, 720), "format": "RGB888"},
-                    lores={"size": (480, 360), "format": "RGB888"},
-                )
-                self.picam2.configure(config)
-                self.picam2.start()
-                success = True
-            else:
-                self.capture = cv2.VideoCapture(0)
-                if self.capture.isOpened():
-                    success = True
-        except Exception as e:
-            print(f"[UI] CRITICAL Picamera2 Error: {e}.")
-        
-        # Report back to Main Thread
-        self._on_camera_ready(success)
+        # 3. Start camera in background unless already initializing.
+        if self._is_initializing:
+            print("[DEBUG] Camera init already in progress; skipping duplicate on_enter init.")
+            return
+
+        self._is_initializing = True
+        _camera_init_pool.submit(self._init_camera_async)
         
     def _init_camera_async(self):
         """Background init to prevent UI freeze (run in thread pool)"""
@@ -88,21 +71,21 @@ class CaptureScreen(BaseScreen):
         success = False
         try:
             if IS_RASPBERRY_PI:
-                from picamera2 import Picamera2
-                self.picam2 = Picamera2()
-                
-                # OPTIMIZATION: Optimized resolution for Pi - process at lower res
-                # Capture at 1280x720 (still good quality) instead of 1920x1080
-                # This reduces processing overhead significantly
-                config = self.picam2.create_still_configuration(
-                    main={"size": (1280, 720), "format": "RGB888"},
-                    lores={"size": (480, 360), "format": "RGB888"},
-                )
-                self.picam2.configure(config)
-                self.picam2.start()
+                if self.picam2 is None:
+                    from picamera2 import Picamera2
+                    self.picam2 = Picamera2()
+                    
+                    # OPTIMIZATION: Optimized resolution for Pi - process at lower res
+                    config = self.picam2.create_still_configuration(
+                        main={"size": (1280, 720), "format": "RGB888"},
+                        lores={"size": (480, 360), "format": "RGB888"},
+                    )
+                    self.picam2.configure(config)
+                    self.picam2.start()
                 success = True
             else:
-                self.capture = cv2.VideoCapture(0)
+                if self.capture is None:
+                    self.capture = cv2.VideoCapture(0)
                 if self.capture.isOpened():
                     success = True
         except Exception as e:
@@ -114,13 +97,22 @@ class CaptureScreen(BaseScreen):
     @mainthread
     def _on_camera_ready(self, success):
         """Called on Main Thread after initializing"""
+        self._is_initializing = False
+
+        # If we already navigated away, do not start preview updates.
+        if not self._screen_active:
+            if success:
+                self._close_camera_resources()
+            return
+
         if success:
             # Turn off spinner, show camera
             self.set_processing_mode(False)
             # OPTIMIZATION: Reduce frame rate from 30fps to 15fps for Pi
             # This cuts CPU usage significantly while maintaining smooth visuals
             update_interval = 1.0 / 15.0 if IS_RASPBERRY_PI else 1.0 / 30.0
-            self.update_event = Clock.schedule_interval(self.update_feed, update_interval)
+            if self.update_event is None:
+                self.update_event = Clock.schedule_interval(self.update_feed, update_interval)
             
         else:
             self.ids.loading_label.text = "Camera Error!"
@@ -130,6 +122,10 @@ class CaptureScreen(BaseScreen):
         Called when leaving this screen.
         Stop listening so this logic doesn't get triggered on other screens.
         """
+        self._screen_active = False
+        self._is_initializing = False
+        self._is_capturing = False
+
         app = App.get_running_app()
         
         # 1. Unbind Hardware
@@ -140,14 +136,29 @@ class CaptureScreen(BaseScreen):
         if self.update_event:
             self.update_event.cancel()
             self.update_event = None
+
+        # Cancel delayed capture callback if it has not run yet.
+        if self._pending_capture_event:
+            self._pending_capture_event.cancel()
+            self._pending_capture_event = None
             
-        # 3. Stop Pi Camera
+        # 3. Release camera resources.
+        self._close_camera_resources()
+
+    def _close_camera_resources(self):
+        # Stop Pi Camera
         if self.picam2:
-            self.picam2.stop()
-            self.picam2.close()
+            try:
+                self.picam2.stop()
+            except Exception:
+                pass
+            try:
+                self.picam2.close()
+            except Exception:
+                pass
             self.picam2 = None
             print("[UI] Picamera2 closed.")
-        
+
         # Stop Laptop Camera
         if self.capture:
             self.capture.release()
@@ -218,7 +229,7 @@ class CaptureScreen(BaseScreen):
                 # OPTIMIZATION: Use bgr format directly to avoid extra conversion
                 # Also batch the buffer update with canvas update
                 try:
-                    texture.blit_buffer(frame.tobytes(), colorfmt='bgr', bufferfmt='ubyte')
+                    texture.blit_buffer(frame.tobytes(), colorfmt='rgb', bufferfmt='ubyte')
                 except:
                     # If blit fails (e.g., frame size mismatch), skip this frame
                     pass
@@ -229,6 +240,13 @@ class CaptureScreen(BaseScreen):
         Delays capture by 1.5 seconds to let object settle.
         Camera stays LIVE during the delay, then freezes when capture happens.
         """
+        if not self._screen_active or self._is_initializing:
+            return
+
+        if self._is_capturing or self._pending_capture_event is not None:
+            print("[DEBUG] Capture already in progress; ignoring extra load-cell trigger.")
+            return
+
         print(f"\n{'='*60}")
         print(f"[LOADCELL DETECTED] Raw Weight Value: {weight}")
         print(f"[LOADCELL DETECTED] Instance: {instance}")
@@ -240,19 +258,26 @@ class CaptureScreen(BaseScreen):
         
         # 2. Delay capture by 1.5 seconds to let object settle
         print("[DEBUG] Scheduling capture in 1.5 seconds...")
-        Clock.schedule_once(self._delayed_capture, 1.5)
+        self._pending_capture_event = Clock.schedule_once(self._delayed_capture, 1.5)
     
     def _delayed_capture(self, dt):
         """
         Called 1.5 seconds after load cell trigger.
         NOW freezes the camera and performs the actual image capture.
         """
+        self._pending_capture_event = None
+
+        if not self._screen_active or self._is_capturing:
+            return
+
+        self._is_capturing = True
+
         # NOW freeze the camera (right before capturing)
         print("[DEBUG] Freezing camera and capturing image...")
         self.set_processing_mode(True, message="Capturing Image...")
         
-        # OPTIMIZATION: Use thread pool instead of creating new thread
-        _thread_pool.submit(self.run_identification_task)
+        self._pending_capture_event = Clock.schedule_once(self._delayed_capture, 1.5)
+        _identify_pool.submit(self.run_identification_task)
     
     # --- DEV - CAPTURE WITH BUTTON - REMOVE LATER --- 
     def capture_btn(self, *args):
@@ -270,7 +295,7 @@ class CaptureScreen(BaseScreen):
         print(f"[DEBUG] self.capture: {self.capture}")
         
         # 1. Generate Transaction ID (Timestamp)
-        # Format: YYYYMMDD_HHMMSS-ms (e.g., 20260202_183005-123)
+        _capture_work_pool.submit(self.run_identification_task)
         timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
         milliseconds = int(datetime.now().microsecond / 1000)
         timestamp_id = f"{timestamp}-{milliseconds:03d}"
@@ -371,6 +396,7 @@ class CaptureScreen(BaseScreen):
         """
         Main Thread: Handle API response and navigate.
         """
+        self._is_capturing = False
         print(f"[UI] Identification Result: {result}")
         
         if result and result.get('success'):
@@ -410,4 +436,6 @@ class CaptureScreen(BaseScreen):
             
     def reset_feed(self):
         self.set_processing_mode(False) # hide spinner
-        self.update_event = Clock.schedule_interval(self.update_feed, 1.0/30.0)
+        update_interval = 1.0 / 15.0 if IS_RASPBERRY_PI else 1.0 / 30.0
+        if self.update_event is None:
+            self.update_event = Clock.schedule_interval(self.update_feed, update_interval)
