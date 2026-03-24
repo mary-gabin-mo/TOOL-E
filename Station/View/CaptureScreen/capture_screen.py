@@ -175,7 +175,7 @@ class CaptureScreen(BaseScreen):
             self.ids.camera_preview.texture = texture
 
         try:
-            texture.blit_buffer(frame.tobytes(), colorfmt='rgb', bufferfmt='ubyte')
+            texture.blit_buffer(frame.tobytes(), colorfmt='bgr', bufferfmt='ubyte')
             self.ids.camera_preview.canvas.ask_update()
         except Exception:
             pass
