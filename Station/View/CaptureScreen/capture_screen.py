@@ -34,6 +34,7 @@ class CaptureScreen(BaseScreen):
     _is_initializing = False
     _is_capturing = False
     _screen_active = False
+    _init_retry_count = 0
 
     def on_enter(self):
         """
@@ -43,6 +44,7 @@ class CaptureScreen(BaseScreen):
         print("[DEBUG] CaptureScreen: on_enter called.")
         self._screen_active = True
         self._is_capturing = False
+        self._init_retry_count = 0
 
         if self._pending_capture_event:
             self._pending_capture_event.cancel()
@@ -82,15 +84,56 @@ class CaptureScreen(BaseScreen):
                     )
                     self.picam2.configure(config)
                     self.picam2.start()
+                else:
+                    # Re-start camera if an existing instance was stopped.
+                    try:
+                        self.picam2.start()
+                    except Exception:
+                        pass
                 success = True
             else:
-                if self.capture is None:
-                    self.capture = cv2.VideoCapture(0)
-                success = bool(self.capture and self.capture.isOpened())
+                success = self._open_dev_camera()
         except Exception as e:
             print(f"[UI] CRITICAL camera init error: {e}")
 
         self._on_camera_ready(success)
+
+    def _open_dev_camera(self):
+        """Try multiple backends/indexes for more reliable camera bring-up on Windows dev."""
+        # Reuse existing opened camera if healthy.
+        if self.capture is not None and self.capture.isOpened():
+            ok, _ = self.capture.read()
+            if ok:
+                return True
+            self.capture.release()
+            self.capture = None
+
+        backends = [None]
+        if hasattr(cv2, 'CAP_DSHOW'):
+            backends.append(cv2.CAP_DSHOW)
+        if hasattr(cv2, 'CAP_MSMF'):
+            backends.append(cv2.CAP_MSMF)
+
+        for backend in backends:
+            for index in (0, 1):
+                try:
+                    if backend is None:
+                        cap = cv2.VideoCapture(index)
+                    else:
+                        cap = cv2.VideoCapture(index, backend)
+                    if cap and cap.isOpened():
+                        ok, _ = cap.read()
+                        if ok:
+                            self.capture = cap
+                            print(f"[UI] Opened dev camera index={index} backend={backend}")
+                            return True
+                    if cap:
+                        cap.release()
+                except Exception:
+                    pass
+
+        self.capture = None
+        return False
 
     @mainthread
     def _on_camera_ready(self, success):
@@ -106,6 +149,14 @@ class CaptureScreen(BaseScreen):
             self.set_processing_mode(False)
             self._start_feed()
         else:
+            # Retry once to handle transient startup contention.
+            if self._init_retry_count < 1 and self._screen_active:
+                self._init_retry_count += 1
+                self.ids.loading_label.text = "Retrying Camera..."
+                self._is_initializing = True
+                _camera_init_pool.submit(self._init_camera_async)
+                return
+
             self.ids.loading_label.text = "Camera Error!"
 
     def _start_feed(self):
