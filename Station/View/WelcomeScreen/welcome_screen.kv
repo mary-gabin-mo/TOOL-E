@@ -14,14 +14,14 @@
 
         # -- Logo Area Placeholder --
         Widget:
-            size_hint_y: 0.1
+            size_hint_y: 0.06
 
         # --- Status Container (swaps between Text and Loading) ---
         BoxLayout:
             id: status_container
             orientation: 'vertical'
             size_hint_y: None
-            height: "120dp"
+            height: "520dp"
             spacing: "14dp"
             pos_hint: {"center_x": .5}
 
@@ -35,11 +35,11 @@
                 Label:
                     text: "Checkout / Return Tools Here"
                     halign: "center"
-                    font_size: "30sp"
+                    font_size: "36sp"
                     bold: True
                     color: 0, 0, 0, 1
                     size_hint_y: None
-                    height: "100dp"
+                    height: "300dp"
                     text_size: self.width, None
                     valign: "middle"
 
@@ -49,7 +49,7 @@
                     font_size: "38sp"
                     color: 0.9, 0.2, 0.2, 1
                     size_hint_y: None
-                    height: "100dp"
+                    height: "200dp"
                     text_size: self.width, None
                     valign: "middle"
                     bold: True
@@ -82,7 +82,7 @@
         # -- Spacer --
         Widget:
             size_hint_y: None
-            height: "44dp"
+            height: "84dp"
 
         # -- Footer Buttons --
         BoxLayout:
@@ -92,14 +92,14 @@
             height: "118dp"
             spacing: "18dp"
 
-            # -- DEV BUTTON --
-            AppButton:
-                text: "DEV - SCAN CARD \n(server ON)"
-                font_size: "24sp"
-                pos_hint: {"center_x": .5}
-                base_color: .4, .4, .4, 1
-                color: 0.9, 0.9, 0.9, 1
-                on_release: root.submit_ucid()
+            # # -- DEV BUTTON --
+            # AppButton:
+            #     text: "DEV - SCAN CARD \n(server ON)"
+            #     font_size: "24sp"
+            #     pos_hint: {"center_x": .5}
+            #     base_color: .4, .4, .4, 1
+            #     color: 0.9, 0.9, 0.9, 1
+            #     on_release: root.submit_ucid()
 
             # # -- DEV BUTTON --
             # AppButton:
@@ -110,12 +110,12 @@
             #     background_color: 0.4, 0.4, 0.4, 1  # Grey
             #     on_release: root.go_to('action selection screen')
 
-        # -- Manual Entry Button --
-        AppButton:
-            text: "TEMP - TRANS CONFIRM"
-            size_hint_y: 0.01
-            pos_hint: {"center_x": .5}
-            on_release: root.go_to('transaction confirm screen')
+        # # -- Manual Entry Button --
+        # AppButton:
+        #     text: "TEMP - TRANS CONFIRM"
+        #     size_hint_y: 0.01
+        #     pos_hint: {"center_x": .5}
+        #     on_release: root.go_to('transaction confirm screen')
 
         AppButton:
             text: "MANUAL UCID ENTRY"
