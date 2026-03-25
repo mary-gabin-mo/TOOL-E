@@ -9,12 +9,12 @@
     BoxLayout:
         orientation: 'vertical'
         padding: "30dp"
-        spacing: "25dp"
+        spacing: "14dp"
         pos_hint: {"center_x": .5, "center_y": .5}
 
         # -- Logo Area Placeholder --
         Widget:
-            size_hint_y: 0.3
+            size_hint_y: 0.08
 
         # -- Header --
         Label:
@@ -23,14 +23,14 @@
             font_size: "36sp"
             bold: True
             color: 0, 0, 0, 1
-            size_hint_y: 0.1
+            size_hint_y: 0.08
 
         # -- Content Card --
         BoxLayout:
             orientation: "vertical"
             padding: "15dp"
             spacing: "8dp"
-            size_hint: 0.9, 0.35
+            size_hint: 0.96, 0.68
             pos_hint: {"center_x": .5}
             canvas.before:
                 Color:
@@ -46,7 +46,7 @@
                 source: "assets/images/logo_white.png"
                 allow_stretch: True
                 keep_ratio: True
-                size_hint_y: 0.6
+                size_hint_y: 0.9
                 canvas.before:
                     PushMatrix
                     Rotate:
@@ -58,20 +58,20 @@
             # 2. Prediction Info
             BoxLayout:
                 orientation: "vertical"
-                size_hint_y: 0.4
+                size_hint_y: 0.1
                 spacing: "5dp"
 
                 Label:
                     text: "Is this correct?"
                     halign: "center"
-                    font_size: "13sp"
+                    font_size: "14sp"
                     color: 0.5, 0.5, 0.5, 1
 
                 Label:
                     id: tool_name_label
                     text: "Loading..."
                     halign: "center"
-                    font_size: "36sp"
+                    font_size: "42sp"
                     bold: True
                     color: 0, 0, 0, 1
 
@@ -79,7 +79,7 @@
                     id: confidence_label
                     text: "--%"
                     halign: "center"
-                    font_size: "15sp"
+                    font_size: "18sp"
                     color: 0.2, 0.7, 0.2, 1  # Green
 
         Widget:

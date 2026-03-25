@@ -1,3 +1,5 @@
+import base64
+
 from fastapi import APIRouter, HTTPException
 from sqlalchemy import text
 from app.models import ToolInput, ToolUpdate
@@ -9,9 +11,33 @@ router = APIRouter()
 async def get_tools():
     """Get all tools from the database"""
     with engine_tools.connect() as conn:
-        result = conn.execute(text("SELECT tool_id, tool_name, tool_size, tool_type, current_status, total_quantity, available_quantity, consumed_quantity, trained FROM tools"))
+        result = conn.execute(text("""
+            SELECT
+                tool_id,
+                tool_name,
+                tool_size,
+                tool_type,
+                current_status,
+                total_quantity,
+                available_quantity,
+                consumed_quantity,
+                trained,
+                image
+            FROM tools
+        """))
         tools = []
         for row in result:
+             image_value = row.image
+             image_b64 = None
+
+             if image_value is not None:
+                 if isinstance(image_value, memoryview):
+                     image_value = image_value.tobytes()
+                 if isinstance(image_value, bytes):
+                     image_b64 = base64.b64encode(image_value).decode("ascii")
+                 elif isinstance(image_value, str):
+                     image_b64 = image_value
+
              tools.append({
                  "id": row.tool_id,
                  "name": row.tool_name,
@@ -21,7 +47,8 @@ async def get_tools():
                  "total_quantity": row.total_quantity,
                  "available_quantity": row.available_quantity,
                  "consumed_quantity": row.consumed_quantity,
-                 "trained": True if (row.trained == 1 or str(row.trained) == '1') else False
+                 "trained": True if (row.trained == 1 or str(row.trained) == '1') else False,
+                 "stock_image_b64": image_b64,
              })
         return tools
 
