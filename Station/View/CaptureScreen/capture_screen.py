@@ -118,7 +118,7 @@ class CaptureScreen(BaseScreen):
     @mainthread
     def set_processing_mode(self, is_processing, message="Processing..."):
         """
-        Toggles the UI between 'Live Feed' and 'Loading Spinner'.
+        Toggles the UI between 'Live Feed' and 'Loading Label'.
         """
         if is_processing:
             # Show Spinner Overlay
@@ -160,6 +160,8 @@ class CaptureScreen(BaseScreen):
         if frame is not None:
             # Flip vertical (Kivy standard)
             frame = cv2.flip(frame, 0)
+            # Rotate preview 180 degrees to match camera mounting.
+            frame = cv2.rotate(frame, cv2.ROTATE_180)
             
             if self.ids.get('camera_preview'):
                 expected_size = (frame.shape[1], frame.shape[0])
