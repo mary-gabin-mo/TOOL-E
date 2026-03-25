@@ -2,6 +2,7 @@ import requests
 import os
 import json
 from datetime import datetime
+import time
 from kivy.event import EventDispatcher
 from requests.adapters import HTTPAdapter
 from requests.packages.urllib3.util.retry import Retry
@@ -38,6 +39,11 @@ class APIClient(EventDispatcher):
         adapter = HTTPAdapter(max_retries=retry_strategy, pool_connections=2, pool_maxsize=2)
         self.session.mount("http://", adapter)
         self.session.mount("https://", adapter)
+
+        # Cache tool payload (including stock image blobs) to avoid repeated downloads.
+        self._tools_cache_data = None
+        self._tools_cache_at = 0.0
+        self._tools_cache_ttl_sec = 300
     
     def validate_user(self, id):
         """
@@ -96,13 +102,18 @@ class APIClient(EventDispatcher):
             print(f"[API] Error: {e}")
             return {'success': False, 'error': f"System Error: {e}"}
         
-    def get_tools(self):
+    def get_tools(self, force_refresh=False):
         """
         Get all tools from the database.
         
         Returns:
             list: List of tool dictionaries
         """
+        now = time.time()
+        if not force_refresh and self._tools_cache_data is not None:
+            if now - self._tools_cache_at < self._tools_cache_ttl_sec:
+                return self._tools_cache_data
+
         print("[API] Fetching all tools...")
         try:
             # OPTIMIZATION: Use pooled session
@@ -111,11 +122,20 @@ class APIClient(EventDispatcher):
                 timeout=NETWORK_TIMEOUT
             )
             response.raise_for_status()
-            return response.json()
+            data = response.json()
+            self._tools_cache_data = data
+            self._tools_cache_at = now
+            return data
             
         except Exception as e:
             print(f"[API] Error fetching tools: {e}")
+            if self._tools_cache_data is not None:
+                return self._tools_cache_data
             return []
+
+    def invalidate_tools_cache(self):
+        self._tools_cache_data = None
+        self._tools_cache_at = 0.0
 
     def upload_tool_image(self, image_path):
         """
