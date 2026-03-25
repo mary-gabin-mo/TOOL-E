@@ -41,7 +41,7 @@ if IS_RASPBERRY_PI:
             # scale: 1.5
             
             # Simple approach: Force a larger size hint
-            size_hint_y: 0.4
+            size_hint_y: 0.27
         """)
 
     # Config.set('graphics', 'fullscreen', '0')
@@ -76,7 +76,7 @@ else:
     Config.set('graphics', 'height', '1280')
     
     Window.top = 0
-    Window.left = 1400
+    Window.left = 1000
 
 Config.write()
 

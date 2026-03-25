@@ -45,7 +45,7 @@
             size_hint_y: 0.7
             pos_hint: {"center_x": .5}
             row_force_default: True
-            row_default_height: 100
+            row_default_height: 250
 
             # Row 1
             NumpadButton:
@@ -121,9 +121,9 @@
                 color: 1,1,1,1
                 on_press: root.submit_ucid()
 
+        # -- Spacer --
         Widget:
-            size_hint_y: None
-            height: "44dp"
+            size_hint_y: 0.2
 
 # --- Custom Button Component ---
 # This prevents code duplication for the number keys
