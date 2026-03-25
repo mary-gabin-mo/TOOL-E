@@ -148,7 +148,8 @@ class ToolSelectionScreen(BaseScreen):
             selected_name = self.selected_tool.get('name', 'Unknown Tool')
             session.identified_tool_data = {
                 'prediction': selected_name,
-                'score': 1.0,
+                'score': None,
+                'source': 'manual',
             }
 
         # Return to ToolConfirm so scan-more/finish decisions happen in one place.

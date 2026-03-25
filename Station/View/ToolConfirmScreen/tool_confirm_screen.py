@@ -31,8 +31,14 @@ class ToolConfirmScreen(BaseScreen):
             data = app.session.identified_tool_data
             if data:
                 tool_name = data.get('prediction', 'Unknown')
-                confidence = data.get('score', 0)
-                score = f"{int(confidence * 100)}% Match"
+                score_source = data.get('source')
+                confidence = data.get('score', None)
+                if score_source == 'manual':
+                    score = "Manually selected"
+                elif isinstance(confidence, (int, float)):
+                    score = f"{int(confidence * 100)}% Match"
+                else:
+                    score = ""
         
         self.predicted_name = tool_name
         self.ids.tool_name_label.text = tool_name
