@@ -34,7 +34,6 @@ if IS_RASPBERRY_PI:
     from kivy.lang import Builder
     Builder.load_string("""
         <VKeyboard>:
-            # Simple approach: Force a larger size hint
             size_hint_y: 0.27
         """)
 
