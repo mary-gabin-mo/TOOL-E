@@ -33,7 +33,9 @@ class HardwareManager(EventDispatcher):
         self.lgpio_handle = None
         self.stable_reads = 0
         self.offset = 382000  # From your calibration script
-        self.STABLE_READS_REQUIRED = 3
+        # OPTIMIZATION: Adjusted stable reads for lower polling frequency
+        # At 5Hz (0.2s), 2 reads = ~0.4s debounce (was 3 reads @ 10Hz = ~0.3s)
+        self.STABLE_READS_REQUIRED = 2
         self.poll_counter = 0  # For periodic debug output
         
         if self.is_pi:
@@ -74,9 +76,10 @@ class HardwareManager(EventDispatcher):
             print("[HARDWARE] LEDs configured. Yellow LED set to ON (idle).")
 
             # 4. Start polling the load cell 
-            # Run 10 times a second (0.1s interval)
-            print("[HARDWARE] Starting load cell polling (0.1s interval)...")
-            Clock.schedule_interval(self._poll_load_cell, 0.1)
+            # OPTIMIZATION: Reduce polling frequency from 10Hz (0.1s) to 5Hz (0.2s)
+            # This keeps responsiveness while cutting CPU usage in half
+            print("[HARDWARE] Starting load cell polling (0.2s interval - optimized)...")
+            Clock.schedule_interval(self._poll_load_cell, 0.2)
             print("[HARDWARE] Load cell polling scheduled successfully!")
 
         except ImportError:

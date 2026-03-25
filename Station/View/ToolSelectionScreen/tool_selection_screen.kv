@@ -1,23 +1,23 @@
 <SelectableToolItem>:
     orientation: 'vertical'
     size_hint_y: None
-    height: '72dp'
-    padding: '12dp', '8dp'
+    height: '92dp'
+    padding: '14dp', '10dp'
     spacing: '2dp'
     on_release: self.handle_selection()
     canvas.before:
         Color:
-            rgba: 1, 1, 1, 1
+            rgba: root.bg_color
         Rectangle:
             pos: self.pos
             size: self.size
 
     Label:
         text: root.text
-        color: root.text_color
+        color: 0, 0, 0, 1
         halign: 'left'
         valign: 'middle'
-        font_size: '16sp'
+        font_size: '22sp'
         text_size: self.size
 
     Label:
@@ -25,7 +25,7 @@
         color: 0.5, 0.5, 0.5, 1
         halign: 'left'
         valign: 'middle'
-        font_size: '13sp'
+        font_size: '16sp'
         text_size: self.size
 
 <ToolSelectionScreen>:
@@ -38,25 +38,25 @@
 
     BoxLayout:
         orientation: 'vertical'
-        padding: "50dp"
-        spacing: "40dp"
+        padding: "26dp"
+        spacing: "20dp"
         pos_hint: {"center_x": .5, "center_y": .5}
 
         # -- Logo Area Placeholder --
         Widget:
-            size_hint_y: 0.3
+            size_hint_y: 0.06
 
         Label:
             text: "Please select the correct tool:"
             halign: "center"
-            font_size: "24sp"
+            font_size: "30sp"
             color: 0, 0, 0, 1
             size_hint_y: 0.1
 
         BoxLayout:
             orientation: 'vertical'
             padding: '5dp'
-            size_hint: .9, .6
+            size_hint: .96, .78
             pos_hint: {"center_x": .5}
             canvas.before:
                 Color:
@@ -75,7 +75,7 @@
                 id: tool_recycle_view
                 viewclass: 'SelectableToolItem'
                 RecycleBoxLayout:
-                    default_size: None, dp(100)
+                    default_size: None, dp(110)
                     default_size_hint: 1, None
                     size_hint_y: None
                     height: self.minimum_height
@@ -85,14 +85,14 @@
             orientation: 'horizontal'
             spacing: "25dp"             # Gap between buttons
             size_hint_y: None           # Don't expand vertically
-            height: '110dp'              # Fixed height for this row
+            height: '120dp'              # Fixed height for this row
             pos_hint: {"center_x": .5}
             padding: '15dp'             # Optional padding around the row
 
             AppButton:
                 text: "Back"
-                font_size: "24sp"
-                size_hint: 0.4, 1
+                font_size: "28sp"
+                size_hint: 0.5, 1
                 background_normal: ''
                 base_color: 0.7, 0.7, 0.7, 1  # Grey
                 down_color: 0.6, 0.6, 0.6, 1
@@ -111,9 +111,9 @@
 
             AppButton:
                 id: next_button
-                text: "Next"
-                font_size: "24sp"
-                size_hint: 0.4, 1
+                text: "Use This Tool"
+                font_size: "28sp"
+                size_hint: 0.5, 1
                 background_normal: ''
                 base_color: 0.2, 0.7, 0.2, 1  # Green
                 down_color: 0.15, 0.6, 0.15, 1
@@ -124,7 +124,7 @@
         # -- Cancel AppButton --
         AppButton:
             text: "CANCEL"
-            font_size: "28sp"
+            font_size: "30sp"
             size_hint: 1, 0.1
             pos_hint: {"center_x": .5}
             background_normal: ''
