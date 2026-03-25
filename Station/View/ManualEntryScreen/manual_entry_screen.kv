@@ -31,6 +31,7 @@
                 multiline: False
                 input_filter: 'int'
                 on_text: self.text = self.text[:8]
+                on_text_validate: root.submit_ucid()
                 background_color: 1,1,1,1
                 foreground_color: 0,0,0,1
                 cursor_color: 0,0,0,1
