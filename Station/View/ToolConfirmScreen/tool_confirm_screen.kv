@@ -47,6 +47,13 @@
                 allow_stretch: True
                 keep_ratio: True
                 size_hint_y: 0.6
+                canvas.before:
+                    PushMatrix
+                    Rotate:
+                        angle: 180
+                        origin: self.center
+                canvas.after:
+                    PopMatrix
 
             # 2. Prediction Info
             BoxLayout:
