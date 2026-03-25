@@ -1,32 +1,3 @@
-<WelcomeActionButton@AppButton>:
-    background_normal: ''
-    background_down: ''
-    background_color: 0, 0, 0, 0
-    color: 0.35, 0.35, 0.35, 1
-    canvas.before:
-        # Soft shadow behind button body
-        Color:
-            rgba: 0, 0, 0, 0.16
-        RoundedRectangle:
-            pos: self.x, self.y - 3
-            size: self.size
-            radius: [22, 22, 22, 22]
-
-        # Main fill with pressed-state feedback
-        Color:
-            rgba: (0.74, 0.74, 0.74, 1) if self.state == 'down' else (0.90, 0.90, 0.90, 1)
-        RoundedRectangle:
-            pos: self.pos
-            size: self.size
-            radius: [22, 22, 22, 22]
-    canvas.after:
-        # Border stroke to define edges
-        Color:
-            rgba: (0.55, 0.55, 0.55, 1) if self.state == 'down' else (0.68, 0.68, 0.68, 1)
-        Line:
-            width: 1.4
-            rounded_rectangle: (self.x, self.y, self.width, self.height, 22, 22, 22, 22, 120)
-
 <WelcomeScreen>:
     canvas.before:
         Color:
@@ -43,14 +14,14 @@
 
         # -- Logo Area Placeholder --
         Widget:
-            size_hint_y: 0.07
+            size_hint_y: 0.06
 
         # --- Status Container (swaps between Text and Loading) ---
         BoxLayout:
             id: status_container
             orientation: 'vertical'
             size_hint_y: None
-            height: "120dp"
+            height: "520dp"
             spacing: "14dp"
             pos_hint: {"center_x": .5}
 
@@ -64,11 +35,11 @@
                 Label:
                     text: "Checkout / Return Tools Here"
                     halign: "center"
-                    font_size: "30sp"
+                    font_size: "36sp"
                     bold: True
                     color: 0, 0, 0, 1
                     size_hint_y: None
-                    height: "100dp"
+                    height: "300dp"
                     text_size: self.width, None
                     valign: "middle"
 
@@ -76,11 +47,12 @@
                     text: "Please TAP your UNICARD to begin"
                     halign: "center"
                     font_size: "38sp"
-                    color: 0.5, 0.5, 0.5, 1
+                    color: 0.9, 0.2, 0.2, 1
                     size_hint_y: None
-                    height: "100dp"
+                    height: "200dp"
                     text_size: self.width, None
                     valign: "middle"
+                    bold: True
 
             # STATE B: Loading (Hidden by default)
             BoxLayout:
@@ -110,7 +82,7 @@
         # -- Spacer --
         Widget:
             size_hint_y: None
-            height: "44dp"
+            height: "84dp"
 
         # -- Footer Buttons --
         BoxLayout:
@@ -124,9 +96,9 @@
             # AppButton:
             #     text: "DEV - SCAN CARD \n(server ON)"
             #     font_size: "24sp"
-            #     size_hint: 1, 1
             #     pos_hint: {"center_x": .5}
-            #     background_color: 0.4, 0.4, 0.4, 1  # Grey
+            #     base_color: .4, .4, .4, 1
+            #     color: 0.9, 0.9, 0.9, 1
             #     on_release: root.submit_ucid()
 
             # # -- DEV BUTTON --
@@ -138,8 +110,14 @@
             #     background_color: 0.4, 0.4, 0.4, 1  # Grey
             #     on_release: root.go_to('action selection screen')
 
-        # -- Manual Entry Button --
-        WelcomeActionButton:
+        # # -- Manual Entry Button --
+        # AppButton:
+        #     text: "TEMP - TRANS CONFIRM"
+        #     size_hint_y: 0.01
+        #     pos_hint: {"center_x": .5}
+        #     on_release: root.go_to('transaction confirm screen')
+
+        AppButton:
             text: "MANUAL UCID ENTRY"
             font_size: "25sp"
             size_hint: .65, None

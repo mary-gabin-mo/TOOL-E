@@ -44,16 +44,17 @@ class TransactionConfirmScreen(BaseScreen):
         """Reset state when entering screen."""
         self.return_date = None
         self.purpose = None
-        self.ids.course_code_box.height = 0
         self.ids.course_code_box.opacity = 0
+        self.ids.course_code_box.disabled = True
         self.ids.course_code_input.text = ''
-        self.ids.team_name_box.height = 0
         self.ids.team_name_box.opacity = 0
+        self.ids.team_name_box.disabled = True
         self.ids.team_name_input.text = ''
         
         app = App.get_running_app()
         transaction_type = getattr(app.session, 'transaction_type', 'borrow')
-
+                
+        # For returns, we don't need a return date - skip directly to finish
         if transaction_type == "return":
             print("[UI] Guard: return flow cannot use TransactionConfirmScreen. Redirecting.")
             self.go_to('tool return selection screen')
@@ -107,7 +108,6 @@ class TransactionConfirmScreen(BaseScreen):
         
     def select_purpose(self, selected_purpose):
         self.purpose = selected_purpose
-        from kivy.metrics import dp
 
         all_btns = [
             (self.ids.btn_academic, "Academic Course"),
@@ -117,28 +117,28 @@ class TransactionConfirmScreen(BaseScreen):
         ]
         for btn, label in all_btns:
             if label == selected_purpose:
-                btn.background_color = (0.2, 0.6, 0.8, 1)  # Blue
+                btn.base_color = (0.2, 0.6, 0.8, 1)  # Blue
                 btn.color = (1, 1, 1, 1)
             else:
-                btn.background_color = (0.9, 0.9, 0.9, 1)  # Grey
+                btn.base_color = (0.9, 0.9, 0.9, 1)  # Grey
                 btn.color = (0, 0, 0, 1)
 
         # Show/hide course code input
         if selected_purpose == "Academic Course":
-            self.ids.course_code_box.height = dp(50)
             self.ids.course_code_box.opacity = 1
+            self.ids.course_code_box.disabled = False
         else:
-            self.ids.course_code_box.height = 0
             self.ids.course_code_box.opacity = 0
+            self.ids.course_code_box.disabled = True
             self.ids.course_code_input.text = ''
 
         # Show/hide team name input
         if selected_purpose == "Team":
-            self.ids.team_name_box.height = dp(50)
             self.ids.team_name_box.opacity = 1
+            self.ids.team_name_box.disabled = False
         else:
-            self.ids.team_name_box.height = 0
             self.ids.team_name_box.opacity = 0
+            self.ids.team_name_box.disabled = True
             self.ids.team_name_input.text = ''
 
         self.check_can_finish()
