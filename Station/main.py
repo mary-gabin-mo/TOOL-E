@@ -33,9 +33,9 @@ if IS_RASPBERRY_PI:
     # Increase Keyboard Size
     from kivy.lang import Builder
     Builder.load_string("""
-        <VKeyboard>:
-            size_hint_y: 0.27
-        """)
+<VKeyboard>:
+    size_hint_y: 0.27
+""")
 
     # Config.set('graphics', 'fullscreen', '0')
     # Config.set('graphics', 'show_cursor', '1')
