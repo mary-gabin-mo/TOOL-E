@@ -35,7 +35,7 @@ if IS_RASPBERRY_PI:
     Builder.load_string("""
 <VKeyboard>:
     # Simple approach: Force a larger size hint.
-    size_hint_y: 0.4
+    size_hint_y: 0.27
 """)
 
     # Config.set('graphics', 'fullscreen', '0')
