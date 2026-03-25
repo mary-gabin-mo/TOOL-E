@@ -50,7 +50,16 @@ class ToolConfirmScreen(BaseScreen):
         if not hasattr(app, 'session') or not app.session.current_transaction:
             return
 
-        img_path = app.session.current_transaction.get('img_filename')
+        tx = app.session.current_transaction
+        # Prefer local absolute path from capture step; keep fallbacks for compatibility.
+        img_path = tx.get('local_img_path') or tx.get('img_filename')
+
+        # If only a filename is present, resolve it against current working directory.
+        if img_path and not os.path.isabs(img_path):
+            candidate = os.path.abspath(img_path)
+            if os.path.exists(candidate):
+                img_path = candidate
+
         if img_path and os.path.isabs(img_path) and os.path.exists(img_path):
             try:
                 os.remove(img_path)
