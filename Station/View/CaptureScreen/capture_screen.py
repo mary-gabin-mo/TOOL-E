@@ -166,7 +166,10 @@ class CaptureScreen(BaseScreen):
         if not self.ids.get('camera_preview'):
             return
 
-        if not IS_RASPBERRY_PI:
+        if IS_RASPBERRY_PI:
+            # Pi preview is mirrored; flip horizontally so left/right matches reality.
+            frame = cv2.rotate(frame, cv2.ROTATE_180)
+        else:
             frame = cv2.flip(frame, 0)
             # Rotate preview 180 degrees to match camera mounting.
             frame = cv2.rotate(frame, cv2.ROTATE_180)
