@@ -163,29 +163,31 @@ class CaptureScreen(BaseScreen):
         if frame is None:
             return
 
-        if not IS_RASPBERRY_PI:
+        if not self.ids.get('camera_preview'):
+            return
+
+        if IS_RASPBERRY_PI:
+            # Pi preview is mirrored; flip horizontally so left/right matches reality.
+            frame = cv2.flip(frame, 1)
+        else:
             frame = cv2.flip(frame, 0)
             # Rotate preview 180 degrees to match camera mounting.
             frame = cv2.rotate(frame, cv2.ROTATE_180)
-            
-            if not self.ids.get('camera_preview'):
-                return
-            
-            expected_size = (frame.shape[1], frame.shape[0])
-            texture = self.ids.camera_preview.texture
-                
-            # Create a new texture only if it doesn't exist or size changed
-            if not texture or texture.size != expected_size:
-                texture = Texture.create(size=expected_size, colorfmt='rgb')
-                self.ids.camera_preview.texture = texture
-            
-            try:    
-                # Update texture with new bytes
-                texture.blit_buffer(frame.tobytes(), colorfmt='bgr', bufferfmt='ubyte')
-                # Force widget update
-                self.ids.camera_preview.canvas.ask_update()
-            except Exception:
-                pass
+
+        expected_size = (frame.shape[1], frame.shape[0])
+        texture = self.ids.camera_preview.texture
+
+        # Create a new texture only if it doesn't exist or size changed.
+        if not texture or texture.size != expected_size:
+            texture = Texture.create(size=expected_size, colorfmt='rgb')
+            self.ids.camera_preview.texture = texture
+
+        try:
+            source_colorfmt = 'bgr' if IS_RASPBERRY_PI else 'rgb'
+            texture.blit_buffer(frame.tobytes(), colorfmt=source_colorfmt, bufferfmt='ubyte')
+            self.ids.camera_preview.canvas.ask_update()
+        except Exception as e:
+            print(f"[DEBUG] Texture update failed: {e}")
             
     def handle_load_cell_trigger(self, instance, weight):
         """
