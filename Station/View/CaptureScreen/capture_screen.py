@@ -168,7 +168,7 @@ class CaptureScreen(BaseScreen):
 
         if IS_RASPBERRY_PI:
             # Pi preview is mirrored; flip horizontally so left/right matches reality.
-            frame = cv2.rotate(frame, cv2.ROTATE_180)
+            frame = cv2.flip(frame, 1)
         else:
             frame = cv2.flip(frame, 0)
             # Rotate preview 180 degrees to match camera mounting.
