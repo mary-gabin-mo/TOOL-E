@@ -22,12 +22,15 @@ IS_RASPBERRY_PI = platform.machine() in ("aarch64", "armv7l")
 
 
 class CaptureScreen(BaseScreen):
+    MANUAL_CAPTURE_IDLE_SECONDS = 3.0
+
     capture = None  # For OpenCV (laptop)
     picam2 = None   # For Picamera2 (Pi)
     update_event = None
 
     _pending_capture_event = None
     _is_capturing = False
+    _manual_capture_idle_event = None
 
     def on_enter(self):
         """
@@ -37,6 +40,8 @@ class CaptureScreen(BaseScreen):
         print("[DEBUG] CaptureScreen: on_enter called")
 
         self._is_capturing = False
+        self._hide_manual_capture_button()
+        self._cancel_manual_capture_idle_timer()
         if self._pending_capture_event:
             self._pending_capture_event.cancel()
             self._pending_capture_event = None
@@ -89,6 +94,7 @@ class CaptureScreen(BaseScreen):
                 self.update_event.cancel()
                 self.update_event = None
             self.update_event = Clock.schedule_interval(self.update_feed, 1.0 / 30.0)
+            self._reset_manual_capture_idle_timer()
             print("[DEBUG] Feed scheduled")
         else:
             self.ids.loading_label.text = "Camera Error!"
@@ -110,6 +116,8 @@ class CaptureScreen(BaseScreen):
         if self._pending_capture_event:
             self._pending_capture_event.cancel()
             self._pending_capture_event = None
+
+        self._cancel_manual_capture_idle_timer()
 
         if self.picam2:
             try:
@@ -198,6 +206,9 @@ class CaptureScreen(BaseScreen):
             print("[DEBUG] Capture already in progress; ignoring extra trigger")
             return
 
+        self._hide_manual_capture_button()
+        self._cancel_manual_capture_idle_timer()
+
         print(f"\n{'='*60}")
         print(f"[LOADCELL DETECTED] Raw Weight Value: {weight}")
         print(f"[LOADCELL DETECTED] Instance: {instance}")
@@ -213,6 +224,8 @@ class CaptureScreen(BaseScreen):
             return
 
         self._is_capturing = True
+        self._hide_manual_capture_button()
+        self._cancel_manual_capture_idle_timer()
         print("[DEBUG] Freezing camera and capturing image...")
         self.set_processing_mode(True, message="Capturing Image...")
 
@@ -224,6 +237,32 @@ class CaptureScreen(BaseScreen):
         """Dev Button: Simulate load cell trigger"""
         print("[DEV] Manual capture button pressed")
         self.handle_load_cell_trigger(None, 100.0)
+
+    def _reset_manual_capture_idle_timer(self):
+        self._cancel_manual_capture_idle_timer()
+        self._manual_capture_idle_event = Clock.schedule_once(
+            self._show_manual_capture_after_idle,
+            self.MANUAL_CAPTURE_IDLE_SECONDS,
+        )
+
+    def _cancel_manual_capture_idle_timer(self):
+        if self._manual_capture_idle_event:
+            self._manual_capture_idle_event.cancel()
+            self._manual_capture_idle_event = None
+
+    @mainthread
+    def _show_manual_capture_after_idle(self, _dt):
+        if self._is_capturing or self._pending_capture_event is not None:
+            return
+        if 'manual_capture_btn' in self.ids:
+            self.ids.manual_capture_btn.opacity = 1
+            self.ids.manual_capture_btn.disabled = False
+
+    @mainthread
+    def _hide_manual_capture_button(self):
+        if 'manual_capture_btn' in self.ids:
+            self.ids.manual_capture_btn.opacity = 0
+            self.ids.manual_capture_btn.disabled = True
 
     def save_current_frame(self):
         """Save high-res photo and resize using PIL logic."""
@@ -345,3 +384,4 @@ class CaptureScreen(BaseScreen):
         self.set_processing_mode(False)
         if not self.update_event:
             self.update_event = Clock.schedule_interval(self.update_feed, 1.0 / 30.0)
+        self._reset_manual_capture_idle_timer()
