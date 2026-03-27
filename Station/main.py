@@ -76,7 +76,7 @@ else:
     Config.set('graphics', 'height', '1280')
     
     Window.top = 0
-    Window.left = 1000
+    Window.left = 1400
 
 Config.write()
 

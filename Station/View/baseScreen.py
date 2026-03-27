@@ -1,8 +1,8 @@
 from kivy.app import App
-from kivymd.uix.screen import MDScreen
+from kivy.uix.screenmanager import Screen
 from View.components.user_info_footer import UserInfoFooter
 
-class BaseScreen(MDScreen):
+class BaseScreen(Screen):
     """
     Parent class for all screens.
     Includes helper methods for navigation.

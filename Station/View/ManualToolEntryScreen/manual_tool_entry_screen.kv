@@ -1,7 +1,12 @@
 <ManualToolEntryScreen>:
-    md_bg_color: 1, 1, 1, 1
+    canvas.before:
+        Color:
+            rgba: 1, 1, 1, 1
+        Rectangle:
+            pos: self.pos
+            size: self.size
 
-    MDBoxLayout:
+    BoxLayout:
         orientation: 'vertical'
         padding: "40dp"
         spacing: "30dp"
@@ -11,18 +16,23 @@
         Widget:
             size_hint_y: 0.2
 
-        MDLabel:
+        Label:
             text: "Enter Tool Name Manually"
             halign: "center"
-            font_style: "H4"
-            theme_text_color: "Primary"
+            valign: "middle"
+            text_size: self.size
+            font_size: "44sp"
+            color: 0.2, 0.2, 0.2, 1
+            bold: True
             size_hint_y: None
             height: self.texture_size[1]
 
-        MDLabel:
+        Label:
             text: "Please type the name of the tool you are borrowing/returning:"
             halign: "center"
-            theme_text_color: "Secondary"
+            valign: "middle"
+            text_size: self.size
+            color: 0.4, 0.4, 0.4, 1
             size_hint_y: None
             height: self.texture_size[1]
 
@@ -31,35 +41,42 @@
             anchor_x: "center"
             anchor_y: "center"
 
-            MDTextField:
+            TextInput:
                 id: manual_tool_input
                 hint_text: "Tool Name"
-                mode: "rectangle"
                 size_hint_x: 0.7
                 font_size: "24sp"
                 multiline: False
+                foreground_color: 0, 0, 0, 1
+                background_color: 1, 1, 1, 1
+                cursor_color: 0, 0, 0, 1
+                padding: "12dp", "12dp"
                 on_text_validate: root.confirm_tool_name()
 
-        MDBoxLayout:
+        BoxLayout:
             orientation: 'horizontal'
             spacing: "20dp"
             size_hint_y: None
             height: "60dp"
             pos_hint: {"center_x": 0.5}
 
-            MDRaisedButton:
+            AppButton:
                 text: "Back"
                 font_size: "18sp"
                 size_hint_x: 0.5
-                md_bg_color: 0.5, 0.5, 0.5, 1
+                base_color: 0.5, 0.5, 0.5, 1
+                down_color: 0.4, 0.4, 0.4, 1
+                color: 1, 1, 1, 1
                 on_release: root.go_back()
 
-            MDRaisedButton:
+            AppButton:
                 id: confirm_button
                 text: "Confirm"
                 font_size: "20sp"
                 size_hint_x: 0.5
-                md_bg_color: 0.2, 0.6, 0.8, 1
+                base_color: 0.2, 0.6, 0.8, 1
+                down_color: 0.16, 0.5, 0.68, 1
+                color: 1, 1, 1, 1
                 disabled: True
                 on_release: root.confirm_tool_name()
 

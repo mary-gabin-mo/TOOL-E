@@ -1,7 +1,7 @@
-from kivymd.uix.screen import MDScreen
 from kivy.app import App
+from View.baseScreen import BaseScreen
 
-class UserErrorScreen(MDScreen):
+class UserErrorScreen(BaseScreen):
     
     def set_error_message(self, message):
         """
