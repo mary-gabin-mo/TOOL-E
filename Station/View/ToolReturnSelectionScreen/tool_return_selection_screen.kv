@@ -6,7 +6,7 @@
     height: "72dp"
     canvas.before:
         Color:
-            rgba: 1, 1, 1, 1
+            rgba: root.bg_color
         Rectangle:
             pos: self.pos
             size: self.size
@@ -34,18 +34,6 @@
             shorten: True
             shorten_from: "right"
             text_size: self.size
-
-    Button:
-        id: cb
-        size_hint: None, None
-        size: "48dp", "48dp"
-        pos_hint: {"center_y": .5}
-        text: "●" if root.is_active else "○"
-        font_size: "28sp"
-        background_normal: ''
-        background_color: 0, 0, 0, 0
-        color: (0.2, 0.6, 0.8, 1) if root.is_active else (0.6, 0.6, 0.6, 1)
-        on_release: root.on_checkbox_hit(True)
 
 <ToolReturnSelectionScreen>:
     canvas.before:

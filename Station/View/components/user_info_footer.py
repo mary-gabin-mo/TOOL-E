@@ -12,7 +12,7 @@ class UserInfoFooter(MDBoxLayout):
     user_ucid = NumericProperty(0)
     user_email = StringProperty("--")
     transaction_type = StringProperty("-----")
-    transaction_color = ListProperty([0.5, 0.5, 0.5, 1])  # Grey when no user
+    transaction_color = ListProperty([0.5, 0.5, 0.5, 1])  # Transaction label text color
     is_user_logged_in = BooleanProperty(False)
     
     def __init__(self, **kwargs):
