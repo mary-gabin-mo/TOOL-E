@@ -1,5 +1,6 @@
 import platform
 import traceback
+import subprocess
 from kivy.app import App
 from kivy.event import EventDispatcher
 from smartcard.System import readers
@@ -11,7 +12,9 @@ from kivy.core.window import Window
 from config import (
     PIN_LOAD_CELL_DAT, PIN_LOAD_CELL_CLK,
     PIN_LED_GREEN, PIN_LED_RED, PIN_LED_YELLOW,
-    LOAD_CELL_THRESHOLD
+    LOAD_CELL_THRESHOLD,
+    CARD_READER_POWER_ON_CMD,
+    CARD_READER_POWER_OFF_CMD,
 )
 
 # Check system type
@@ -101,6 +104,7 @@ class HardwareManager(EventDispatcher):
 
     def start_card_reader_polling(self):
         """Start PC/SC card polling loop if not already running."""
+        self._set_card_reader_power(True)
         if self._pcsc_poll_event is None:
             print("[HARDWARE] Starting PC/SC Reader Polling...")
             self._pcsc_poll_event = Clock.schedule_interval(self._check_pcsc_reader, 0.5)
@@ -111,6 +115,33 @@ class HardwareManager(EventDispatcher):
             self._pcsc_poll_event.cancel()
             self._pcsc_poll_event = None
             print("[HARDWARE] Stopped PC/SC Reader Polling.")
+        self._set_card_reader_power(False)
+
+    def _set_card_reader_power(self, enabled):
+        """
+        Optional USB power control for the card reader device.
+        Set CARD_READER_POWER_ON_CMD / CARD_READER_POWER_OFF_CMD in config/.env.
+        """
+        cmd = CARD_READER_POWER_ON_CMD if enabled else CARD_READER_POWER_OFF_CMD
+        if not cmd:
+            return
+
+        try:
+            result = subprocess.run(
+                cmd,
+                shell=True,
+                capture_output=True,
+                text=True,
+                timeout=3,
+            )
+            if result.returncode != 0:
+                stderr = (result.stderr or "").strip()
+                print(f"[HARDWARE] Card reader power command failed ({result.returncode}): {stderr}")
+            else:
+                state = "ON" if enabled else "OFF"
+                print(f"[HARDWARE] Card reader USB power set {state}.")
+        except Exception as e:
+            print(f"[HARDWARE] Card reader power command error: {e}")
         
     def _read_hx711_raw(self):
         """
