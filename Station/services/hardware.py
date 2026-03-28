@@ -1,5 +1,6 @@
 import platform
 import traceback
+from kivy.app import App
 from kivy.event import EventDispatcher
 from smartcard.System import readers
 from smartcard.util import toHexString
@@ -187,6 +188,13 @@ class HardwareManager(EventDispatcher):
             self.stable_reads = -50 # Simple "debounce" delay
         
     def _check_pcsc_reader(self, dt):
+        # Hard safety guard: only read cards while welcome screen is active.
+        app = App.get_running_app()
+        if not app or not getattr(app, 'manager_screens', None):
+            return
+        if app.manager_screens.current != 'welcome screen':
+            return
+
         try:
             # Get list of available readers
             r_list = readers()
