@@ -1,3 +1,5 @@
+# LOAD CELL
+
 import time
 import lgpio
 from single_capt import init_camera, take_picture, close_camera

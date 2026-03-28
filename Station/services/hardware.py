@@ -28,6 +28,7 @@ class HardwareManager(EventDispatcher):
     def __init__(self, **kwargs):
         super().__init__(*kwargs)
         self.is_pi = IS_PI
+        self._pcsc_poll_event = None
         
         # Load Cell State
         self.lgpio_handle = None
@@ -95,9 +96,20 @@ class HardwareManager(EventDispatcher):
         barcode = "#barcode_test#" ### Replace with the card reader input
         self.dispatch('on_card_scanned', barcode)
         
-        # # Start checking for smart cards every .5 second
-        print("[HARDWARE] Starting PC/SC Reader Polling...")
-        Clock.schedule_interval(self._check_pcsc_reader, 0.5)
+        # Card reader polling is controlled by screen lifecycle.
+
+    def start_card_reader_polling(self):
+        """Start PC/SC card polling loop if not already running."""
+        if self._pcsc_poll_event is None:
+            print("[HARDWARE] Starting PC/SC Reader Polling...")
+            self._pcsc_poll_event = Clock.schedule_interval(self._check_pcsc_reader, 0.5)
+
+    def stop_card_reader_polling(self):
+        """Stop PC/SC card polling loop if running."""
+        if self._pcsc_poll_event is not None:
+            self._pcsc_poll_event.cancel()
+            self._pcsc_poll_event = None
+            print("[HARDWARE] Stopped PC/SC Reader Polling.")
         
     def _read_hx711_raw(self):
         """
@@ -211,6 +223,7 @@ class HardwareManager(EventDispatcher):
             
     def cleanup(self):
         """Release GPIO resources on app exit."""
+        self.stop_card_reader_polling()
         if self.lgpio_handle is not None:
             import lgpio
             lgpio.gpiochip_close(self.lgpio_handle)
