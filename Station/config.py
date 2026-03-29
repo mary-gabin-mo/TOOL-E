@@ -33,6 +33,13 @@ PIN_LED_YELLOW    = 22
 LOAD_CELL_THRESHOLD = 20.0  # Minimum weight (grams) to trigger "Tool Detected"
 LOAD_CELL_DEBOUNCE  = 2.0   # Seconds weight must be stable
 
+# Optional USB card-reader power control commands.
+# Example with uhubctl:
+# CARD_READER_POWER_OFF_CMD='sudo uhubctl -l 1-1 -p 2 -a off'
+# CARD_READER_POWER_ON_CMD='sudo uhubctl -l 1-1 -p 2 -a on'
+CARD_READER_POWER_ON_CMD = os.getenv("CARD_READER_POWER_ON_CMD", "").strip()
+CARD_READER_POWER_OFF_CMD = os.getenv("CARD_READER_POWER_OFF_CMD", "").strip()
+
 
 # --- UI SETTINGS ---
 # Paths

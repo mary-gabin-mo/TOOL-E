@@ -31,8 +31,14 @@ class ToolConfirmScreen(BaseScreen):
             data = app.session.identified_tool_data
             if data:
                 tool_name = data.get('prediction', 'Unknown')
-                confidence = data.get('score', 0)
-                score = f"{int(confidence * 100)}% Match"
+                score_source = data.get('source')
+                confidence = data.get('score', None)
+                if score_source == 'manual':
+                    score = "Manually selected"
+                elif isinstance(confidence, (int, float)):
+                    score = f"{int(confidence * 100)}% Match"
+                else:
+                    score = ""
         
         self.predicted_name = tool_name
         self.ids.tool_name_label.text = tool_name
@@ -44,7 +50,16 @@ class ToolConfirmScreen(BaseScreen):
         if not hasattr(app, 'session') or not app.session.current_transaction:
             return
 
-        img_path = app.session.current_transaction.get('img_filename')
+        tx = app.session.current_transaction
+        # Prefer local absolute path from capture step; keep fallbacks for compatibility.
+        img_path = tx.get('local_img_path') or tx.get('img_filename')
+
+        # If only a filename is present, resolve it against current working directory.
+        if img_path and not os.path.isabs(img_path):
+            candidate = os.path.abspath(img_path)
+            if os.path.exists(candidate):
+                img_path = candidate
+
         if img_path and os.path.isabs(img_path) and os.path.exists(img_path):
             try:
                 os.remove(img_path)
@@ -59,7 +74,10 @@ class ToolConfirmScreen(BaseScreen):
         app = App.get_running_app()
         
         if hasattr(app, 'session'):
-            app.session.set_classification_correct(True)
+            # Preserve explicit manual-correction flag if user previously rejected prediction.
+            existing_flag = app.session.current_transaction.get('classification_correct') if app.session.current_transaction else None
+            if existing_flag is None:
+                app.session.set_classification_correct(True)
         
         # Check if this is a return transaction
         if app.session.transaction_type == "return":
@@ -82,7 +100,10 @@ class ToolConfirmScreen(BaseScreen):
         app = App.get_running_app()
         
         if hasattr(app, 'session'):
-            app.session.set_classification_correct(True)
+            # Preserve explicit manual-correction flag if user previously rejected prediction.
+            existing_flag = app.session.current_transaction.get('classification_correct') if app.session.current_transaction else None
+            if existing_flag is None:
+                app.session.set_classification_correct(True)
         
         # Check if this is a return transaction
         if app.session.transaction_type == "return":
@@ -116,10 +137,9 @@ class ToolConfirmScreen(BaseScreen):
             self.go_to('tool return selection screen')
         else:
             # For borrows, go to manual selection
-            self._delete_current_image()
             self.go_to('tool select screen')
 
     def go_back_to_capture(self):
         """Back button handler for confirm screen."""
         self._delete_current_image()
-        self.go_to('capture screen')
+        self.go_back('capture screen')

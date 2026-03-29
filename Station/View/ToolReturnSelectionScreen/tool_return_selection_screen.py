@@ -1,19 +1,19 @@
 from kivy.app import App
-from kivymd.uix.boxlayout import MDBoxLayout
-from kivymd.uix.selectioncontrol import MDCheckbox
 from View.baseScreen import BaseScreen
 import threading
-from kivy.clock import mainthread, Clock
-from kivy.properties import DictProperty, BooleanProperty, StringProperty
+from kivy.clock import mainthread
+from kivy.properties import DictProperty, BooleanProperty, StringProperty, ListProperty
 from kivy.uix.recycleview.views import RecycleDataViewBehavior
 from kivy.uix.behaviors import ButtonBehavior
+from kivy.uix.boxlayout import BoxLayout
 
-class ReturnToolItem(RecycleDataViewBehavior, ButtonBehavior, MDBoxLayout):
-    """Custom list item for RecycleView with a checkbox."""
+class ReturnToolItem(RecycleDataViewBehavior, ButtonBehavior, BoxLayout):
+    """Custom list item for RecycleView with row-tap selection."""
     tool_data = DictProperty()
     is_active = BooleanProperty(False)
     text = StringProperty()
     secondary_text = StringProperty()
+    bg_color = ListProperty([1, 1, 1, 1])
     
     def refresh_view_attrs(self, rv, index, data):
         """ Catch and handle the view changes """
@@ -21,17 +21,13 @@ class ReturnToolItem(RecycleDataViewBehavior, ButtonBehavior, MDBoxLayout):
         return super().refresh_view_attrs(rv, index, data)
 
     def on_release(self):
-        """Triggered by ButtonBehavior when the layout is clicked."""
+        """Triggered by ButtonBehavior when the row is tapped."""
         self.toggle_active()
 
     def toggle_active(self):
         """Toggle checkbox state on row tap."""
         new_state = not self.is_active
         self.set_active_state(new_state)
-
-    def on_checkbox_hit(self, active_state):
-        """Called by the MDCheckbox directly from UI action."""
-        self.set_active_state(active_state)
 
     def set_active_state(self, is_active):
         self.is_active = is_active
@@ -45,7 +41,8 @@ class ToolReturnSelectionScreen(BaseScreen):
 
     def __init__(self, **kwargs):
         super().__init__(**kwargs)
-        self._selected_tools = {} # dict of transaction_id -> tool_data
+        self._selected_tx_id = None
+        self._selected_tool_data = None
     
     def on_enter(self):
         """
@@ -62,7 +59,8 @@ class ToolReturnSelectionScreen(BaseScreen):
             predicted_tool = app.session.identified_tool_data.get('prediction', None)
         
         # Clear existing selection
-        self._selected_tools = {}
+        self._selected_tx_id = None
+        self._selected_tool_data = None
         
         # Show loading state
         self.ids.title_label.text = "Loading tools..."
@@ -125,9 +123,10 @@ class ToolReturnSelectionScreen(BaseScreen):
                 
                 rv_data.append({
                     "text": tool_name,
-                    "secondary_text": f"Borrowed: {borrow_date} • Due: {due_date}",
+                    "secondary_text": f"Borrowed: {borrow_date} - Due: {due_date}",
                     "tool_data": tool,
-                    "is_active": False
+                    "is_active": False,
+                    "bg_color": [1, 1, 1, 1]
                 })
             
             self.ids.tool_recycle_view.data = rv_data
@@ -181,7 +180,7 @@ class ToolReturnSelectionScreen(BaseScreen):
             ]
     
     def on_checkbox_change(self, tool_data, is_active, rv_index=None):
-        """Update selected tools and enable continue button if at least one tool is selected."""
+        """Single-select behavior: only one transaction can be active at a time."""
         if not tool_data:
             return
             
@@ -189,33 +188,40 @@ class ToolReturnSelectionScreen(BaseScreen):
         if not tx_id:
             return
 
-        if is_active:
-            self._selected_tools[tx_id] = tool_data
-        elif tx_id in self._selected_tools:
-            del self._selected_tools[tx_id]
-            
-        # Update UI in list
         rv = self.ids.tool_recycle_view
-        
-        # We only really need to update the backing data model to persist visual state as we scroll
-        if rv_index is not None and rv_index >= 0 and rv_index < len(rv.data):
-            rv.data[rv_index]['is_active'] = is_active
+
+        if is_active:
+            # Select only one item: deactivate all rows first.
+            for i, item in enumerate(rv.data):
+                row_active = item.get('tool_data', {}).get('transaction_id') == tx_id
+                rv.data[i]['is_active'] = row_active
+                rv.data[i]['bg_color'] = [0.86, 0.93, 1, 1] if row_active else [1, 1, 1, 1]
+            self._selected_tx_id = tx_id
+            self._selected_tool_data = tool_data
         else:
-            # Fallback if index wasn't saved yet
+            # Allow unselecting the currently selected row.
+            if self._selected_tx_id == tx_id:
+                self._selected_tx_id = None
+                self._selected_tool_data = None
             for i, item in enumerate(rv.data):
                 if item.get('tool_data', {}).get('transaction_id') == tx_id:
-                    rv.data[i]['is_active'] = is_active
+                    rv.data[i]['is_active'] = False
+                    rv.data[i]['bg_color'] = [1, 1, 1, 1]
                     break
-        
-        self.ids.continue_btn.disabled = len(self._selected_tools) == 0
+            
+        rv.refresh_from_data()
+        self.ids.continue_btn.disabled = self._selected_tx_id is None
     
     def confirm_selection(self):
         """
-        Collect selected tools, store them in session, then navigate to confirmation.
+        Collect selected tool, store it in session, then navigate to confirmation.
         """
         app = App.get_running_app()
         
-        # Collect selected tool IDs directly from our tracking list
+        if not self._selected_tool_data or not self._selected_tx_id:
+            print("[UI] No tool selected.")
+            return
+
         selected_tools = []
 
         # Return capture metadata comes from the current scanned image in this session.
@@ -227,28 +233,25 @@ class ToolReturnSelectionScreen(BaseScreen):
         if captured_img_name:
             img_ext = (captured_img_name.rsplit('.', 1)[-1] and f".{captured_img_name.rsplit('.', 1)[-1]}") if '.' in captured_img_name else '.jpg'
         
-        for index, (tx_id, d) in enumerate(self._selected_tools.items()):
-            tool_name = d.get('tool_name', "Unknown Tool")
-            tx_payload = {
-                'transaction_id': tx_id,
-                'tool_id': d.get('tool_id', None),
-                'tool_name': tool_name
-            }
+        tx_id = self._selected_tx_id
+        d = self._selected_tool_data
+        tool_name = d.get('tool_name', "Unknown Tool")
+        tx_payload = {
+            'transaction_id': tx_id,
+            'tool_id': d.get('tool_id', None),
+            'tool_name': tool_name
+        }
 
-            # Only attach one captured image to one returned transaction.
-            if index == 0 and temp_img_filename:
-                safe_tool = tool_name.replace(' ', '')
-                tx_payload['temp_img_filename'] = temp_img_filename
-                tx_payload['return_img_filename'] = f"{safe_tool}_{tx_id}_RETURN{img_ext}"
-                tx_payload['classification_correct'] = classification_correct
+        # Attach captured image metadata to the selected return transaction.
+        if temp_img_filename:
+            safe_tool = tool_name.replace(' ', '')
+            tx_payload['temp_img_filename'] = temp_img_filename
+            tx_payload['return_img_filename'] = f"{safe_tool}_{tx_id}_RETURN{img_ext}"
+            tx_payload['classification_correct'] = classification_correct
 
-            selected_tools.append(tx_payload)
-        
-        if not selected_tools:
-            print("[UI] No tools selected.")
-            return
+        selected_tools.append(tx_payload)
 
-        print(f"[UI] Selected {len(selected_tools)} tools for return")
+        print("[UI] Selected 1 tool for return")
         
         # Disable button during processing
         self.ids.continue_btn.disabled = True
@@ -277,12 +280,13 @@ class ToolReturnSelectionScreen(BaseScreen):
             # Navigate to return confirmation screen
             self.go_to('return confirmation screen')
         else:
-            print(f"[ERROR] Failed to return tools: {result.get('error', 'Unknown error')}")
-            # Ensure the button is re-enabled to allow trying again
+            error_msg = result.get('error', 'Unknown error')
+            print(f"[ERROR] Failed to return tools: {error_msg}")
+
+            # Keep user on this screen and allow retry.
             self.ids.continue_btn.disabled = False
-            # Fallback for now if API fails (e.g. testing without backend)
-            app.session.transactions = selected_tools
-            self.go_to('return confirmation screen')
+            self.ids.empty_message.opacity = 1
+            self.ids.empty_message.text = f"Return failed. Please try again.\n{error_msg}"
     
     def go_back(self):
         """Return to tool confirmation screen."""

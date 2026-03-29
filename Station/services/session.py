@@ -31,7 +31,7 @@ class SessionManager(EventDispatcher):
     
     def reset(self):
         """Clear data for the next user."""
-        print("[SESSION] Resetting settion state...")
+        print("[SESSION] Resetting session state...")
         self.transaction_type = "" # Default to no type selected
         self.user_data = None
         self.user_id = None

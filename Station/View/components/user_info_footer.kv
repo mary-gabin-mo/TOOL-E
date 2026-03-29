@@ -2,47 +2,52 @@
 
 <UserInfoFooter>:
     orientation: 'horizontal'
-    padding: "18dp"
+    padding: "40dp", "10dp"
     spacing: "24dp"
     size_hint_y: None
     height: "120dp"
-    md_bg_color: 0.95, 0.95, 0.95, 1  # Light gray background
+    canvas.before:
+        Color:
+            rgba: 0.95, 0.95, 0.95, 1  # Light gray background
+        Rectangle:
+            pos: self.pos
+            size: self.size
     
     # Left: User Info
-    MDBoxLayout:
+    BoxLayout:
         orientation: 'vertical'
-        spacing: "5dp"
+        spacing: "-5dp"
         size_hint_x: 0.7
         
-        MDLabel:
+        Label:
             text: root.user_name
-            font_style: "H6"
+            font_size: "26sp"
             bold: True
-            theme_text_color: "Primary"
+            color: 0.2, 0.2, 0.2, 1
+            halign: "left"
+            valign: "middle"
+            text_size: self.size
             size_hint_y: None
-            height: "40dp"
+            height: "45dp"
             
-        MDLabel:
-            text: f"{int(root.user_ucid):08d}" if root.user_ucid != 0 else "--" + " | " + root.user_email
-            font_style: "Subtitle1"
-            theme_text_color: "Secondary"
+        Label:
+            text: (f"{int(root.user_ucid):08d}" if root.user_ucid != 0 else "--") + " | " + root.user_email
+            font_size: "26sp"
+            color: 0.4, 0.4, 0.4, 1
+            halign: "left"
+            valign: "middle"
+            text_size: self.size
             size_hint_y: None
-            height: "34dp"
+            height: "45dp"
     
     # Right: Transaction Type Badge
-    MDLabel:
+    Label:
         text: root.transaction_type
-        font_style: "Subtitle1"
+        font_size: "26sp"
         bold: True
-        theme_text_color: "Custom"
-        text_color: 1, 1, 1, 1  # White text
+        color: root.transaction_color
         size_hint_x: 0.3
         padding: "18dp"
-        halign: "center"
-        canvas.before:
-            Color:
-                rgba: root.transaction_color
-            RoundedRectangle:
-                size: self.size
-                pos: self.pos
-                radius: [5]
+        halign: "right"
+        valign: "middle"
+        text_size: self.size

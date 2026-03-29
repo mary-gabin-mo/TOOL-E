@@ -44,33 +44,32 @@ class TransactionConfirmScreen(BaseScreen):
         """Reset state when entering screen."""
         self.return_date = None
         self.purpose = None
-        self.ids.course_code_box.height = 0
         self.ids.course_code_box.opacity = 0
+        self.ids.course_code_box.disabled = True
         self.ids.course_code_input.text = ''
-        self.ids.team_name_box.height = 0
         self.ids.team_name_box.opacity = 0
+        self.ids.team_name_box.disabled = True
         self.ids.team_name_input.text = ''
         
         app = App.get_running_app()
         transaction_type = getattr(app.session, 'transaction_type', 'borrow')
-        
+                
         # For returns, we don't need a return date - skip directly to finish
         if transaction_type == "return":
-            self.ids.date_box.opacity = 0  # Hide date selector
-            self.ids.date_box.size_hint_y = 0
-            self.ids.confirm_finish_btn.disabled = False
-            self.ids.confirm_finish_btn.text = "CONFIRM RETURN"
-        else:
-            # For borrows, show date selector
-            self.ids.date_box.opacity = 1
-            self.ids.date_box.size_hint_y = None
-            self.ids.confirm_finish_btn.disabled = True
-            self.ids.confirm_finish_btn.text = "CONFIRM CHECKOUT"
-            
-            # Reset the red border box visuals
-            self.ids.date_box.line_color = (1, 0, 0, 1)  # Red border
-            self.ids.date_label.text = "Tap to select Return Date"
-            self.ids.date_label.color = (0.5, 0.5, 0.5, 1)
+            print("[UI] Guard: return flow cannot use TransactionConfirmScreen. Redirecting.")
+            self.go_to('tool return selection screen')
+            return
+        
+        # For borrows, show date selector
+        self.ids.date_box.opacity = 1
+        self.ids.date_box.size_hint_y = None
+        self.ids.confirm_finish_btn.disabled = True
+        self.ids.confirm_finish_btn.text = "CONFIRM CHECKOUT"
+        
+        # Reset the red border box visuals
+        self.ids.date_box.line_color = (1, 0, 0, 1)  # Red border
+        self.ids.date_label.text = "Tap to select Return Date"
+        self.ids.date_label.color = (0.5, 0.5, 0.5, 1)
         
         # Load tool info from session
         transactions = getattr(app.session, 'transactions', [])
@@ -109,7 +108,6 @@ class TransactionConfirmScreen(BaseScreen):
         
     def select_purpose(self, selected_purpose):
         self.purpose = selected_purpose
-        from kivy.metrics import dp
 
         all_btns = [
             (self.ids.btn_academic, "Academic Course"),
@@ -119,28 +117,28 @@ class TransactionConfirmScreen(BaseScreen):
         ]
         for btn, label in all_btns:
             if label == selected_purpose:
-                btn.background_color = (0.2, 0.6, 0.8, 1)  # Blue
+                btn.base_color = (0.2, 0.6, 0.8, 1)  # Blue
                 btn.color = (1, 1, 1, 1)
             else:
-                btn.background_color = (0.9, 0.9, 0.9, 1)  # Grey
+                btn.base_color = (0.9, 0.9, 0.9, 1)  # Grey
                 btn.color = (0, 0, 0, 1)
 
         # Show/hide course code input
         if selected_purpose == "Academic Course":
-            self.ids.course_code_box.height = dp(50)
             self.ids.course_code_box.opacity = 1
+            self.ids.course_code_box.disabled = False
         else:
-            self.ids.course_code_box.height = 0
             self.ids.course_code_box.opacity = 0
+            self.ids.course_code_box.disabled = True
             self.ids.course_code_input.text = ''
 
         # Show/hide team name input
         if selected_purpose == "Team":
-            self.ids.team_name_box.height = dp(50)
             self.ids.team_name_box.opacity = 1
+            self.ids.team_name_box.disabled = False
         else:
-            self.ids.team_name_box.height = 0
             self.ids.team_name_box.opacity = 0
+            self.ids.team_name_box.disabled = True
             self.ids.team_name_input.text = ''
 
         self.check_can_finish()
@@ -165,18 +163,18 @@ class TransactionConfirmScreen(BaseScreen):
 
     def finish_transaction(self):
         app = App.get_running_app()
-        
-        # For returns, use current date/time; for borrows, use selected return date
+
         if app.session.transaction_type == "return":
-            formatted_date = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
-            print(f"Return Transaction Confirmed at: {formatted_date}")
+            print("[UI] Guard: return flow cannot submit via TransactionConfirmScreen. Redirecting.")
+            self.go_to('tool return selection screen')
+            return
+        
+        print(f"Checkout Transaction Confirmed! Return Date: {self.return_date}")
+        # Format Date for Backend (YYYY-MM-DD HH:MM:SS)
+        if isinstance(self.return_date, date) and not isinstance(self.return_date, datetime):
+            formatted_date = f"{self.return_date.strftime('%Y-%m-%d')} 23:59:59"
         else:
-            print(f"Checkout Transaction Confirmed! Return Date: {self.return_date}")
-            # Format Date for Backend (YYYY-MM-DD HH:MM:SS)
-            if isinstance(self.return_date, date) and not isinstance(self.return_date, datetime):
-                formatted_date = f"{self.return_date.strftime('%Y-%m-%d')} 23:59:59"
-            else:
-                formatted_date = self.return_date.strftime("%Y-%m-%d %H:%M:%S")
+            formatted_date = self.return_date.strftime("%Y-%m-%d %H:%M:%S")
 
         # Safe User ID retrieval
         user_id = getattr(app.session, 'user_id', '')
@@ -242,15 +240,11 @@ class TransactionConfirmScreen(BaseScreen):
     def _handle_submission_result(self, response):
         app = App.get_running_app()
         self.ids.confirm_finish_btn.disabled = False
-        self.ids.confirm_finish_btn.text = "Confirm & Finish"
-             
+        self.ids.confirm_finish_btn.text = "CONFIRM CHECKOUT"
+
         if response.get('success'):
-             print("Transaction Success")
-             # Navigate to appropriate confirmation screen based on transaction type
-             if app.session.transaction_type == "return":
-                 self.go_to('return confirmation screen')
-             else:
-                 self.go_to('checkout confirmation screen')
+            print("Transaction Success")
+            self.go_to('checkout confirmation screen')
         else:
-             print(f"Transaction Failed: {response.get('error')}")
-             # You might want to add a UI popup here to alert the user
+            print(f"Transaction Failed: {response.get('error')}")
+            # You might want to add a UI popup here to alert the user

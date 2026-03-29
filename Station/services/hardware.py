@@ -1,5 +1,7 @@
 import platform
 import traceback
+import subprocess
+from kivy.app import App
 from kivy.event import EventDispatcher
 from smartcard.System import readers
 from smartcard.util import toHexString
@@ -10,7 +12,9 @@ from kivy.core.window import Window
 from config import (
     PIN_LOAD_CELL_DAT, PIN_LOAD_CELL_CLK,
     PIN_LED_GREEN, PIN_LED_RED, PIN_LED_YELLOW,
-    LOAD_CELL_THRESHOLD
+    LOAD_CELL_THRESHOLD,
+    CARD_READER_POWER_ON_CMD,
+    CARD_READER_POWER_OFF_CMD,
 )
 
 # Check system type
@@ -28,12 +32,15 @@ class HardwareManager(EventDispatcher):
     def __init__(self, **kwargs):
         super().__init__(*kwargs)
         self.is_pi = IS_PI
+        self._pcsc_poll_event = None
         
         # Load Cell State
         self.lgpio_handle = None
         self.stable_reads = 0
         self.offset = 382000  # From your calibration script
-        self.STABLE_READS_REQUIRED = 3
+        # OPTIMIZATION: Adjusted stable reads for lower polling frequency
+        # At 5Hz (0.2s), 2 reads = ~0.4s debounce (was 3 reads @ 10Hz = ~0.3s)
+        self.STABLE_READS_REQUIRED = 2
         self.poll_counter = 0  # For periodic debug output
         
         if self.is_pi:
@@ -74,9 +81,10 @@ class HardwareManager(EventDispatcher):
             print("[HARDWARE] LEDs configured. Yellow LED set to ON (idle).")
 
             # 4. Start polling the load cell 
-            # Run 10 times a second (0.1s interval)
-            print("[HARDWARE] Starting load cell polling (0.1s interval)...")
-            Clock.schedule_interval(self._poll_load_cell, 0.1)
+            # OPTIMIZATION: Reduce polling frequency from 10Hz (0.1s) to 5Hz (0.2s)
+            # This keeps responsiveness while cutting CPU usage in half
+            print("[HARDWARE] Starting load cell polling (0.2s interval - optimized)...")
+            Clock.schedule_interval(self._poll_load_cell, 0.2)
             print("[HARDWARE] Load cell polling scheduled successfully!")
 
         except ImportError:
@@ -92,9 +100,48 @@ class HardwareManager(EventDispatcher):
         barcode = "#barcode_test#" ### Replace with the card reader input
         self.dispatch('on_card_scanned', barcode)
         
-        # # Start checking for smart cards every .5 second
-        print("[HARDWARE] Starting PC/SC Reader Polling...")
-        Clock.schedule_interval(self._check_pcsc_reader, 0.5)
+        # Card reader polling is controlled by screen lifecycle.
+
+    def start_card_reader_polling(self):
+        """Start PC/SC card polling loop if not already running."""
+        self._set_card_reader_power(True)
+        if self._pcsc_poll_event is None:
+            print("[HARDWARE] Starting PC/SC Reader Polling...")
+            self._pcsc_poll_event = Clock.schedule_interval(self._check_pcsc_reader, 0.5)
+
+    def stop_card_reader_polling(self):
+        """Stop PC/SC card polling loop if running."""
+        if self._pcsc_poll_event is not None:
+            self._pcsc_poll_event.cancel()
+            self._pcsc_poll_event = None
+            print("[HARDWARE] Stopped PC/SC Reader Polling.")
+        self._set_card_reader_power(False)
+
+    def _set_card_reader_power(self, enabled):
+        """
+        Optional USB power control for the card reader device.
+        Set CARD_READER_POWER_ON_CMD / CARD_READER_POWER_OFF_CMD in config/.env.
+        """
+        cmd = CARD_READER_POWER_ON_CMD if enabled else CARD_READER_POWER_OFF_CMD
+        if not cmd:
+            return
+
+        try:
+            result = subprocess.run(
+                cmd,
+                shell=True,
+                capture_output=True,
+                text=True,
+                timeout=3,
+            )
+            if result.returncode != 0:
+                stderr = (result.stderr or "").strip()
+                print(f"[HARDWARE] Card reader power command failed ({result.returncode}): {stderr}")
+            else:
+                state = "ON" if enabled else "OFF"
+                print(f"[HARDWARE] Card reader USB power set {state}.")
+        except Exception as e:
+            print(f"[HARDWARE] Card reader power command error: {e}")
         
     def _read_hx711_raw(self):
         """
@@ -172,6 +219,13 @@ class HardwareManager(EventDispatcher):
             self.stable_reads = -50 # Simple "debounce" delay
         
     def _check_pcsc_reader(self, dt):
+        # Hard safety guard: only read cards while welcome screen is active.
+        app = App.get_running_app()
+        if not app or not getattr(app, 'manager_screens', None):
+            return
+        if app.manager_screens.current != 'welcome screen':
+            return
+
         try:
             # Get list of available readers
             r_list = readers()
@@ -208,6 +262,7 @@ class HardwareManager(EventDispatcher):
             
     def cleanup(self):
         """Release GPIO resources on app exit."""
+        self.stop_card_reader_polling()
         if self.lgpio_handle is not None:
             import lgpio
             lgpio.gpiochip_close(self.lgpio_handle)

@@ -2,7 +2,10 @@ import requests
 import os
 import json
 from datetime import datetime
+import time
 from kivy.event import EventDispatcher
+from requests.adapters import HTTPAdapter
+from requests.packages.urllib3.util.retry import Retry
 
 # Import settings from the config file
 from config import (
@@ -16,7 +19,31 @@ from config import (
 class APIClient(EventDispatcher):
     """
     Handles all HTTP requests to the FastAPI Backend.
+    OPTIMIZATION: Uses connection pooling and retry strategy for better performance.
     """
+    
+    def __init__(self):
+        super().__init__()
+        # OPTIMIZATION: Create a session with connection pooling
+        # This reuses TCP connections and reduces overhead
+        self.session = requests.Session()
+        
+        # OPTIMIZATION: Add retry strategy for transient network failures
+        retry_strategy = Retry(
+            total=2,  # Retry max 2 times for failed requests
+            backoff_factor=0.5,  # Wait 0.5s, 1s between retries
+            status_forcelist=[429, 500, 502, 503, 504],
+            allowed_methods=["GET", "POST"]
+        )
+        
+        adapter = HTTPAdapter(max_retries=retry_strategy, pool_connections=2, pool_maxsize=2)
+        self.session.mount("http://", adapter)
+        self.session.mount("https://", adapter)
+
+        # Cache tool payload (including stock image blobs) to avoid repeated downloads.
+        self._tools_cache_data = None
+        self._tools_cache_at = 0.0
+        self._tools_cache_ttl_sec = 300
     
     def validate_user(self, id):
         """
@@ -41,7 +68,8 @@ class APIClient(EventDispatcher):
             payload = {"barcode": barcode, "UCID": None} # Distinguish whether it's barcode or UCID in the server with regex
             
         try:
-            response = requests.post(
+            # OPTIMIZATION: Use pooled session instead of raw requests
+            response = self.session.post(
                 API_VALIDATE_USER,
                 json=payload,
                 timeout=NETWORK_TIMEOUT
@@ -74,25 +102,40 @@ class APIClient(EventDispatcher):
             print(f"[API] Error: {e}")
             return {'success': False, 'error': f"System Error: {e}"}
         
-    def get_tools(self):
+    def get_tools(self, force_refresh=False):
         """
         Get all tools from the database.
         
         Returns:
             list: List of tool dictionaries
         """
+        now = time.time()
+        if not force_refresh and self._tools_cache_data is not None:
+            if now - self._tools_cache_at < self._tools_cache_ttl_sec:
+                return self._tools_cache_data
+
         print("[API] Fetching all tools...")
         try:
-            response = requests.get(
+            # OPTIMIZATION: Use pooled session
+            response = self.session.get(
                 API_GET_TOOLS,
                 timeout=NETWORK_TIMEOUT
             )
             response.raise_for_status()
-            return response.json()
+            data = response.json()
+            self._tools_cache_data = data
+            self._tools_cache_at = now
+            return data
             
         except Exception as e:
             print(f"[API] Error fetching tools: {e}")
+            if self._tools_cache_data is not None:
+                return self._tools_cache_data
             return []
+
+    def invalidate_tools_cache(self):
+        self._tools_cache_data = None
+        self._tools_cache_at = 0.0
 
     def upload_tool_image(self, image_path):
         """
@@ -118,7 +161,8 @@ class APIClient(EventDispatcher):
                 # Value is a tuple: (filename, file_object, content_type)
                 files = {'file': (filename, img_file, 'image/jpeg')}
                 
-                response = requests.post(
+                # OPTIMIZATION: Use pooled session
+                response = self.session.post(
                     API_IDENTIFY_TOOL,
                     files=files,
                     timeout=10.0 # Give images some more time than simple JSON
@@ -150,7 +194,8 @@ class APIClient(EventDispatcher):
         print(f"[API] Submitting Transaction: {transaction_data}")
         
         try: 
-            response = requests.post(
+            # OPTIMIZATION: Use pooled session
+            response = self.session.post(
                 f"{API_TRANSACTION}/kiosk",
                 json=transaction_data,
                 timeout=NETWORK_TIMEOUT
@@ -209,7 +254,8 @@ class APIClient(EventDispatcher):
             try:
                 # Update the transaction
                 # API_TRANSACTION endpoint is base_url/transactions
-                response = requests.put(
+                # OPTIMIZATION: Use pooled session
+                response = self.session.put(
                     f"{API_TRANSACTION}/{tx_id}",
                     json=payload,
                     timeout=NETWORK_TIMEOUT

@@ -1,8 +1,8 @@
-from kivymd.uix.boxlayout import MDBoxLayout
+from kivy.uix.boxlayout import BoxLayout
 from kivy.properties import StringProperty, ListProperty, NumericProperty, BooleanProperty
 from kivy.app import App
 
-class UserInfoFooter(MDBoxLayout):
+class UserInfoFooter(BoxLayout):
     """
     Footer component that displays current user info and transaction type.
     Automatically updates when session data changes.
@@ -12,7 +12,7 @@ class UserInfoFooter(MDBoxLayout):
     user_ucid = NumericProperty(0)
     user_email = StringProperty("--")
     transaction_type = StringProperty("-----")
-    transaction_color = ListProperty([0.5, 0.5, 0.5, 1])  # Grey when no user
+    transaction_color = ListProperty([0.5, 0.5, 0.5, 1])  # Transaction label text color
     is_user_logged_in = BooleanProperty(False)
     
     def __init__(self, **kwargs):

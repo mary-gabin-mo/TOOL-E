@@ -21,7 +21,6 @@
             spacing: "20dp"
             size_hint_y: 0.25
 
-            # -- Logo Area Placeholder --
             Widget:
                 size_hint_y: 0.2
 
@@ -58,13 +57,6 @@
                 opacity: 0
 
                 Label:
-                    id: loading_spinner
-                    text: "..."
-                    font_size: "40sp"
-                    halign: "center"
-                    color: 0.2, 0.6, 0.8, 1
-
-                Label:
                     id: loading_label
                     text: "Initializing..."
                     halign: "center"
@@ -84,14 +76,18 @@
                 text: "DEV - BACK\n(Action Selection\nScreen)"
                 font_size: "16sp"
                 size_hint: .2, 1        
-                background_color: 0.4, 0.4, 0.4, 1  # Grey
+                base_color: 0.4, 0.4, 0.4, 1  # Grey
+                down_color: 
+                color: 1, 1, 1, 1
                 on_release: root.go_back('action selection screen')
 
             AppButton:
                 text: "DEV - Capture"
                 font_size: "16sp"
                 size_hint: .2, 1        
-                background_color: 0.4, 0.4, 0.4, 1  # Grey
+                base_color: 0.4, 0.4, 0.4, 1  # Grey
+                down_color: 
+                color: 1, 1, 1, 1
                 on_release: root.capture_btn()
 
             # -- DEV BUTTON --
@@ -99,7 +95,9 @@
                 text: "DEV - NEXT\n(Tool Confirm\nScreen)"
                 font_size: "16sp"
                 size_hint: .2, 1        
-                background_color: 0.4, 0.4, 0.4, 1  # Grey
+                base_color: 0.4, 0.4, 0.4, 1  # Grey
+                down_color: 
+                color: 1, 1, 1, 1
                 on_release: root.go_to('tool confirm screen')
 
         # -- Spacer for the footer--
@@ -111,11 +109,14 @@
         AppButton:
             text: "Cancel"
             font_size: "32sp"
-            size_hint: 1, 0.12
+            size_hint: 1, 0.08
             pos_hint: {"center_x": .5}
-            background_color: 0.9, 0.17, 0.25, 1  # Red
+            base_color: 0.9, 0.17, 0.25, 1  # Red
+            down_color: 0.75, 0.12, 0.2, 1
+            color: 1, 1, 1, 1
             on_release: root.cancel_transaction()
 
         # -- Spacer for the footer--
         Widget:
-            size_hint_y: 0.1
+            size_hint_y: None
+            height: "84dp"
