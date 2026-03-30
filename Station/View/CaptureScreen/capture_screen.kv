@@ -73,15 +73,18 @@
             height: "44dp"
 
         # -- Cancel Button --
+        
+
         AppButton:
-            text: "Cancel"
+            id: manual_capture_btn
+            text: "Manual Capture"
             font_size: "36sp"
-            size_hint: 1, 0.08
+            size_hint: 0.975, 0.12
             pos_hint: {"center_x": .5}
-            base_color: 0.9, 0.17, 0.25, 1  # Red
-            down_color: 0.75, 0.12, 0.2, 1
+            base_color: 0.2, 0.5, 0.85, 1
+            down_color: 0.15, 0.4, 0.72, 1
             color: 1, 1, 1, 1
-            on_release: root.cancel_transaction()
+            on_release: root.capture_btn()
 
         BoxLayout:
             orientation: 'horizontal'
@@ -91,38 +94,21 @@
             padding: '8dp', '0dp', '8dp', '0dp'
 
             AppButton:
-                id: manual_capture_btn
-                text: "Manual Capture"
+                text: "Cancel"
                 font_size: "26sp"
-                size_hint: .28, 1
-                base_color: 0.2, 0.5, 0.85, 1
-                down_color: 0.15, 0.4, 0.72, 1
+                size_hint: .28, 0.8
+                base_color: 0.9, 0.17, 0.25, 1  # Red
+                down_color: 0.75, 0.12, 0.2, 1
                 color: 1, 1, 1, 1
-                on_release: root.capture_btn()
+                on_release: root.cancel_transaction()
 
             AppButton:
-                text: "DEV BACK"
-                font_size: "20sp"
-                size_hint: .24, 1
+                text: "BACK"
+                font_size: "26sp"
+                size_hint: .28, 0.8
                 base_color: 0.4, 0.4, 0.4, 1
                 color: 1, 1, 1, 1
                 on_release: root.go_back('action selection screen')
-
-            AppButton:
-                text: "DEV CAPTURE"
-                font_size: "20sp"
-                size_hint: .24, 1
-                base_color: 0.4, 0.4, 0.4, 1
-                color: 1, 1, 1, 1
-                on_release: root.capture_btn()
-
-            AppButton:
-                text: "DEV NEXT"
-                font_size: "20sp"
-                size_hint: .24, 1
-                base_color: 0.4, 0.4, 0.4, 1
-                color: 1, 1, 1, 1
-                on_release: root.go_to('tool confirm screen')
 
         # -- Spacer for the footer--
         Widget:
