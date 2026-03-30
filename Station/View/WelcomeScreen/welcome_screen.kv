@@ -64,7 +64,7 @@
                 Label:
                     text: "Checkout / Return Tools Here"
                     halign: "center"
-                    font_size: "30sp"
+                    font_size: "34sp"
                     bold: True
                     color: 0, 0, 0, 1
                     size_hint_y: None
@@ -120,29 +120,21 @@
             height: "118dp"
             spacing: "18dp"
 
-            # -- DEV BUTTON --
             AppButton:
-                text: "DEV - ERROR PAGE)"
-                font_size: "30sp"
+                text: "DEV: CHECKOUT CONFIRM"
+                font_size: "24sp"
                 size_hint: 1, 1
-                pos_hint: {"center_x": .5}
-                background_color: 0.4, 0.4, 0.4, 1  # Grey
-                on_release: root.go_to('user error screen')
-
-            # # -- DEV BUTTON --
-            # AppButton:
-            #     text: "DEV - SCAN CARD \n(server OFFLINE)"
-            #     font_size: "24sp"
-            #     size_hint: 1, 1
-            #     pos_hint: {"center_x": .5}
-            #     background_color: 0.4, 0.4, 0.4, 1  # Grey
-            #     on_release: root.go_to('action selection screen')
+                background_normal: ''
+                base_color: 0.35, 0.35, 0.35, 1
+                down_color: 0.25, 0.25, 0.25, 1
+                color: 1, 1, 1, 1
+                on_release: root.open_checkout_confirm_test()
 
         # -- Manual Entry Button --
         WelcomeActionButton:
             text: "MANUAL UCID ENTRY"
-            font_size: "30sp"
-            size_hint: .65, None
+            font_size: "28sp"
+            size_hint: .5, None
             height: "80dp"
             pos_hint: {"center_x": .5}
             on_release: root.go_to('manual entry screen')

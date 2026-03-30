@@ -4,6 +4,7 @@ from kivy.clock import Clock, mainthread
 from kivy.metrics import dp
 from View.baseScreen import BaseScreen
 import threading
+from datetime import datetime
 
 class WelcomeScreen(BaseScreen):
     
@@ -43,6 +44,24 @@ class WelcomeScreen(BaseScreen):
         """
         app = App.get_running_app()
         app.stop()
+
+    def open_checkout_confirm_test(self):
+        """DEV helper: navigate to checkout confirmation screen with sample data."""
+        app = App.get_running_app()
+
+        # Seed minimal sample data if not already present.
+        if not getattr(app.session, 'transactions', []):
+            app.session.transactions = [
+                {
+                    'transaction_id': 'DEV-1',
+                    'tool_name': 'Sample Tool',
+                }
+            ]
+
+        if not getattr(app.session, 'return_date', ''):
+            app.session.return_date = datetime.now().strftime('%Y-%m-%d 23:59:59')
+
+        self.go_to('checkout confirmation screen')
            
     @mainthread
     def set_loading_state(self, is_loading):

@@ -1,5 +1,6 @@
 from View.baseScreen import BaseScreen
 from kivy.uix.label import Label
+from datetime import datetime
 
 class CheckoutConfirmationScreen(BaseScreen):
     
@@ -13,10 +14,20 @@ class CheckoutConfirmationScreen(BaseScreen):
         return_date = getattr(app.session, 'return_date', None)
         
         if return_date:
-            date_str = return_date.strftime('%B %d, %Y')
-            self.ids.date_display.text = f"Check confirmed for this date:\n{date_str}"
+            if isinstance(return_date, datetime):
+                date_str = return_date.strftime('%b %d, %Y')
+            elif isinstance(return_date, str):
+                try:
+                    parsed = datetime.strptime(return_date, "%Y-%m-%d %H:%M:%S")
+                    date_str = parsed.strftime('%b %d, %Y')
+                except ValueError:
+                    date_str = return_date
+            else:
+                date_str = str(return_date)
+
+            self.ids.date_display.text = f"Please return them by:\n{date_str}"
         else:
-            self.ids.date_display.text = "Check confirmed!"
+            self.ids.date_display.text = "Checkout confirmed!"
             
         # Add summary of items
         transactions = getattr(app.session, 'transactions', [])

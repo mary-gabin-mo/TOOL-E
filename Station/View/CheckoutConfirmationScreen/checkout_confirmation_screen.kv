@@ -9,7 +9,7 @@
     BoxLayout:
         orientation: 'vertical'
         padding: "50dp"
-        spacing: "40dp"
+        spacing: "10dp"
         pos_hint: {"center_x": .5, "center_y": .5}
 
         # --- Logo Area Placeholder ---
@@ -28,22 +28,12 @@
 
         # --- Summary List ---
         ScrollView:
-            size_hint_y: 0.3
+            size_hint_y: 0.25
             BoxLayout:
                 id: summary_list_container
                 orientation: 'vertical'
                 size_hint_y: None
                 height: self.minimum_height
-
-        # --- Date Display ---
-        Label:
-            id: date_display
-            text: "Check confirmed for this date:"
-            halign: "center"
-            font_size: "20sp"
-            color: 0.5, 0.5, 0.5, 1
-            size_hint_y: None
-            height: "80dp"
 
         # --- Success Checkmark ---
         Label:
@@ -53,40 +43,43 @@
             font_size: "80sp"
             font_name: 'DejaVuSans'
             size_hint_y: None
-            height: "80dp"
+            height: "18f0dp"
+        
+        # --- Date Display ---
+        Label:
+            id: date_display
+            text: "Check confirmed for this date:"
+            halign: "center"
+            font_size: "30sp"
+            color: 0.5, 0.5, 0.5, 1
+            size_hint_y: None
+            height: "90dp"
 
         # --- Continue Button (Keep User Logged In) ---
         AppButton:
-            text: "RETURN TO SELECTION"
+            text: "BORROW/RETURN MORE TOOLS"
             font_size: "32sp"
             size_hint: 0.8, None
             height: "80dp"
+            color: 1, 1, 1, 1
             pos_hint: {"center_x": .5}
             background_normal: ''
             base_color: 0.2, 0.6, 0.8, 1  # Blue
+            down_color: 0.15, 0.65, 0.15, 1
             on_release: root.continue_with_user()
 
         # --- Return Button ---
         AppButton:
-            text: "RETURN TO START"
+            text: "RETURN HOME"
             font_size: "32sp"
             size_hint: 0.8, None
             height: "80dp"
+            color: 1, 1, 1, 1
             pos_hint: {"center_x": .5}
             background_normal: ''
             base_color: 0.9, 0.17, 0.25, 1  # Red
+            down_color: 0.75, 0.12, 0.2, 1
             on_release: root.return_to_menu()
-
-        # --- Cancel Button ---
-        AppButton:
-            text: "CANCEL"
-            font_size: "30sp"
-            size_hint: 0.8, None
-            height: "80dp"
-            pos_hint: {"center_x": .5}
-            background_normal: ''
-            base_color: 0.6, 0.6, 0.6, 1  # Grey
-            on_release: root.cancel_transaction()
 
         # --- Spacer ---
         Widget:

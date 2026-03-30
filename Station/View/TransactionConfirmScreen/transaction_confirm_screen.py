@@ -248,6 +248,9 @@ class TransactionConfirmScreen(BaseScreen):
             "purpose": purpose_str,
             "transactions": tx_list
         }
+
+        # Persist selected date so checkout confirmation can display it.
+        app.session.return_date = formatted_date
         
         print(f"[UI] Submitting Transaction via APIClient...")
         
@@ -265,6 +268,20 @@ class TransactionConfirmScreen(BaseScreen):
         except Exception as e:
             response = {'success': False, 'error': str(e)}
         self._handle_submission_result(response)
+
+    def _cleanup_local_images(self):
+        """Delete local captured images only after successful submission."""
+        app = App.get_running_app()
+        for tx in getattr(app.session, 'transactions', []):
+            img_path = tx.get('local_img_path')
+            if not img_path:
+                continue
+            try:
+                if os.path.exists(img_path):
+                    os.remove(img_path)
+                    print(f"[UI] Deleted image file after confirmation: {img_path}")
+            except Exception as e:
+                print(f"[UI] Warning: could not delete image {img_path}: {e}")
         
     @mainthread
     def _handle_submission_result(self, response):
@@ -274,6 +291,7 @@ class TransactionConfirmScreen(BaseScreen):
 
         if response.get('success'):
             print("Transaction Success")
+            self._cleanup_local_images()
             self.go_to('checkout confirmation screen')
         else:
             print(f"Transaction Failed: {response.get('error')}")

@@ -249,14 +249,14 @@
             padding: '10dp'
 
             AppButton:
-                text: "CANCEL"
+                text: "BACK"
                 font_size: "26sp"
                 size_hint_x: 0.4
                 background_normal: ''
                 base_color: 0.6, 0.6, 0.6, 1
                 down_color: 0.5, 0.5, 0.5, 1
                 color: 1, 1, 1, 1
-                on_release: root.cancel_transaction()
+                on_release: root.go_back('tool confirm screen')
 
             AppButton:
                 id: confirm_finish_btn
