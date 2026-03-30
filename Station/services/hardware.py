@@ -73,31 +73,39 @@ class HardwareManager(EventDispatcher):
     # --- REAL HARDWARE (Raspberry Pi) ---
     def _setup_real_hardware(self):
         print("[HARDWARE] Initializing Real Pi Hardware (LGPIO)...")
+        claimed_pins = []
         
         try:
             import lgpio
+
+            def _claim_input(pin, label):
+                try:
+                    lgpio.gpio_claim_input(self.lgpio_handle, pin)
+                    claimed_pins.append(pin)
+                except Exception as claim_err:
+                    raise RuntimeError(f"GPIO busy on {label} (BCM {pin})") from claim_err
+
+            def _claim_output(pin, label, initial=0):
+                try:
+                    lgpio.gpio_claim_output(self.lgpio_handle, pin, initial)
+                    claimed_pins.append(pin)
+                except Exception as claim_err:
+                    raise RuntimeError(f"GPIO busy on {label} (BCM {pin})") from claim_err
             
             # 1. Open GPIO Chip (usually 0 on Pi 5)
             self.lgpio_handle = lgpio.gpiochip_open(0)
-            claimed_pins = []
             
             # 2. Setup Load Cell Pins
-            lgpio.gpio_claim_input(self.lgpio_handle, PIN_LOAD_CELL_DAT)
-            claimed_pins.append(PIN_LOAD_CELL_DAT)
-            lgpio.gpio_claim_output(self.lgpio_handle, PIN_LOAD_CELL_CLK, 0)
-            claimed_pins.append(PIN_LOAD_CELL_CLK)
+            _claim_input(PIN_LOAD_CELL_DAT, "PIN_LOAD_CELL_DAT")
+            _claim_output(PIN_LOAD_CELL_CLK, "PIN_LOAD_CELL_CLK", 0)
             
             # 3. Setup LEDs (Claiming them for output)
-            lgpio.gpio_claim_output(self.lgpio_handle, PIN_LED_GREEN, 0)
-            claimed_pins.append(PIN_LED_GREEN)
-            lgpio.gpio_claim_output(self.lgpio_handle, PIN_LED_RED, 0)
-            claimed_pins.append(PIN_LED_RED)
-            lgpio.gpio_claim_output(self.lgpio_handle, PIN_LED_YELLOW, 0)
-            claimed_pins.append(PIN_LED_YELLOW)
+            _claim_output(PIN_LED_GREEN, "PIN_LED_GREEN", 0)
+            _claim_output(PIN_LED_RED, "PIN_LED_RED", 0)
+            _claim_output(PIN_LED_YELLOW, "PIN_LED_YELLOW", 0)
             
             # 3b. Setup Buzzer (Claiming it for output)
-            lgpio.gpio_claim_output(self.lgpio_handle, PIN_BUZZER, 0)
-            claimed_pins.append(PIN_BUZZER)
+            _claim_output(PIN_BUZZER, "PIN_BUZZER", 0)
 
             self.set_led_state('idle')
             print("[HARDWARE] LEDs configured. Idle LED state applied.")
@@ -116,6 +124,7 @@ class HardwareManager(EventDispatcher):
             print(f"[ERROR] GPIO Setup failed: {e}")
             if "busy" in str(e).lower():
                 print("[ERROR] One or more GPIO lines are already in use by another process.")
+                print(f"[ERROR] Successfully claimed before failure: {claimed_pins}")
                 print("[HINT] Check who owns /dev/gpiochip0 and stop that process before restarting kiosk.")
             print("[ERROR] Full traceback:")
             traceback.print_exc()
