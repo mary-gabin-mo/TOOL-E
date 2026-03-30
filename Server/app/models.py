@@ -99,3 +99,19 @@ class KioskTransactionRequest(BaseModel):
     return_date: Optional[str] = None
     purpose: Optional[str] = None
     transactions: list[KioskToolItem]
+
+
+# --- Dashboard Term Models ---
+class TermItem(BaseModel):
+    id: str
+    name: str
+    start: str
+    end: str
+
+
+class TermListResponse(BaseModel):
+    terms: list[TermItem]
+
+
+class TermListPayload(BaseModel):
+    terms: list[TermItem]

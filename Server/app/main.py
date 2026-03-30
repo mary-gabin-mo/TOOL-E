@@ -1,6 +1,6 @@
 from fastapi import FastAPI, Request
 from fastapi.middleware.cors import CORSMiddleware
-from app.routers import auth, tools, transactions, ml, analytics
+from app.routers import auth, tools, transactions, ml, analytics, terms
 from app.services import ml_service, image_service
 
 app = FastAPI(title="TOOL-E Backend Server (Modular)")
@@ -41,6 +41,7 @@ app.include_router(tools.router)
 app.include_router(transactions.router)
 app.include_router(ml.router)
 app.include_router(analytics.router)
+app.include_router(terms.router)
 
 @app.get("/")
 def read_root():

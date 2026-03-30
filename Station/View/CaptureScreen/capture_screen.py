@@ -22,6 +22,7 @@ IS_RASPBERRY_PI = platform.machine() in ("aarch64", "armv7l")
 
 
 class CaptureScreen(BaseScreen):
+
     capture = None  # For OpenCV (laptop)
     picam2 = None   # For Picamera2 (Pi)
     update_event = None

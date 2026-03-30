@@ -1,84 +1,76 @@
 <ManualToolEntryScreen>:
-    canvas.before:
-        Color:
-            rgba: 1, 1, 1, 1
-        Rectangle:
-            pos: self.pos
-            size: self.size
+    FloatLayout:
+        BoxLayout:
+            orientation: 'vertical'
+            size_hint: 0.92, 0.68
+            pos_hint: {"center_x": 0.5, "top": 0.8}
+            spacing: "20dp"
 
-    BoxLayout:
-        orientation: 'vertical'
-        padding: "40dp"
-        spacing: "30dp"
-        pos_hint: {"center_x": .5, "center_y": .5}
+            Label:
+                text: "Enter Tool Name Manually"
+                halign: "center"
+                valign: "middle"
+                text_size: self.size
+                font_size: "44sp"
+                color: 0.2, 0.2, 0.2, 1
+                bold: True
+                size_hint_y: None
+                height: self.texture_size[1]
 
-        # Logo Area Placeholder
-        Widget:
-            size_hint_y: 0.2
+            Label:
+                text: "Please type the name of the tool you are borrowing/returning:"
+                halign: "center"
+                valign: "middle"
+                text_size: self.size
+                color: 0.4, 0.4, 0.4, 1
+                size_hint_y: None
+                height: self.texture_size[1]
 
-        Label:
-            text: "Enter Tool Name Manually"
-            halign: "center"
-            valign: "middle"
-            text_size: self.size
-            font_size: "44sp"
-            color: 0.2, 0.2, 0.2, 1
-            bold: True
-            size_hint_y: None
-            height: self.texture_size[1]
+            AnchorLayout:
+                size_hint_y: None
+                height: "92dp"
+                anchor_x: "center"
+                anchor_y: "center"
 
-        Label:
-            text: "Please type the name of the tool you are borrowing/returning:"
-            halign: "center"
-            valign: "middle"
-            text_size: self.size
-            color: 0.4, 0.4, 0.4, 1
-            size_hint_y: None
-            height: self.texture_size[1]
+                TextInput:
+                    id: manual_tool_input
+                    hint_text: "Tool Name"
+                    size_hint_x: 0.68
+                    size_hint_y: None
+                    height: "64dp"
+                    font_size: "22sp"
+                    multiline: False
+                    foreground_color: 0, 0, 0, 1
+                    background_color: 1, 1, 1, 1
+                    cursor_color: 0, 0, 0, 1
+                    padding: "12dp", "12dp"
+                    on_text_validate: root.confirm_tool_name()
 
-        AnchorLayout:
-            size_hint_y: 0.3
-            anchor_x: "center"
-            anchor_y: "center"
-
-            TextInput:
-                id: manual_tool_input
-                hint_text: "Tool Name"
-                size_hint_x: 0.7
-                font_size: "24sp"
-                multiline: False
-                foreground_color: 0, 0, 0, 1
-                background_color: 1, 1, 1, 1
-                cursor_color: 0, 0, 0, 1
-                padding: "12dp", "12dp"
-                on_text_validate: root.confirm_tool_name()
+            Widget:
 
         BoxLayout:
             orientation: 'horizontal'
             spacing: "20dp"
-            size_hint_y: None
-            height: "60dp"
-            pos_hint: {"center_x": 0.5}
+            size_hint: 0.9, None
+            height: "74dp"
+            pos_hint: {"center_x": 0.5, "y": 0.16}
 
             AppButton:
                 text: "Back"
-                font_size: "18sp"
+                font_size: "24sp"
                 size_hint_x: 0.5
-                base_color: 0.5, 0.5, 0.5, 1
-                down_color: 0.4, 0.4, 0.4, 1
+                base_color: 0.7, 0.7, 0.7, 1
+                down_color: 0.6, 0.6, 0.6, 1
                 color: 1, 1, 1, 1
                 on_release: root.go_back()
 
             AppButton:
                 id: confirm_button
-                text: "Confirm"
-                font_size: "20sp"
+                text: "Submit"
+                font_size: "24sp"
                 size_hint_x: 0.5
-                base_color: 0.2, 0.6, 0.8, 1
-                down_color: 0.16, 0.5, 0.68, 1
+                base_color: 0.2, 0.7, 0.2, 1
+                down_color: 0.15, 0.6, 0.15, 1
                 color: 1, 1, 1, 1
                 disabled: True
                 on_release: root.confirm_tool_name()
-
-        Widget:
-            size_hint_y: 0.3
