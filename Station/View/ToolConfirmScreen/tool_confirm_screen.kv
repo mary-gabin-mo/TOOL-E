@@ -52,11 +52,8 @@
                     source: "assets/images/logo_white.png"
                     allow_stretch: True
                     keep_ratio: True
-                    size_hint_x: 1
-                    size_hint_y: None
-                    height: self.parent.height - dp(76)
-                    x: self.parent.x
-                    y: self.parent.y + dp(76)
+                    size_hint: 1, 1
+                    pos_hint: {"x": 0, "y": 0}
                     canvas.before:
                         PushMatrix
                         Rotate:
@@ -79,7 +76,7 @@
                         valign: "middle"
                         text_size: self.size
                         font_size: "24sp"
-                        color: 0.92, 0.92, 0.92, 1
+                        color: 0.5, 0.5, 0.5, 1
                         size_hint_y: None
                         height: "28dp"
 
@@ -91,7 +88,7 @@
                         text_size: self.size
                         font_size: "48sp"
                         bold: True
-                        color: 1, 1, 1, 1
+                        color: 0, 0, 0, 1
                         size_hint_y: None
                         height: "54dp"
 
@@ -102,7 +99,7 @@
                         valign: "middle"
                         text_size: self.size
                         font_size: "28sp"
-                        color: 0.62, 0.93, 0.62, 1
+                        color: 0.2, 0.7, 0.2, 1
                         size_hint_y: None
                         height: "24dp"
 
