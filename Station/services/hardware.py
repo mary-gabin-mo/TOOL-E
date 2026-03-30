@@ -46,7 +46,7 @@ class HardwareManager(EventDispatcher):
         # Load Cell State
         self.lgpio_handle = None
         self.stable_reads = 0
-        self.offset = 476500  # From your calibration script
+        self.offset = 380000  # From your calibration script
         self._tare_in_progress = False
         self._last_auto_tare_ts = time.monotonic()
         self._idle_empty_since = None
@@ -259,7 +259,7 @@ class HardwareManager(EventDispatcher):
 
         # Guard: tare only while the platform appears empty.
         empty_margin = max(5.0, LOAD_CELL_THRESHOLD * 0.25)
-        if current_weight > empty_margin:
+        if abs(current_weight) > empty_margin:
             self._idle_empty_since = None
             return
 
@@ -278,6 +278,10 @@ class HardwareManager(EventDispatcher):
         self._tare_in_progress = True
         self._last_auto_tare_ts = now
         self._idle_empty_since = None
+        print(
+            f"[HARDWARE] Auto-tare starting (idle quiet={AUTO_TARE_QUIET_IDLE_SEC}s, "
+            f"interval={AUTO_TARE_INTERVAL_SEC}s, samples={AUTO_TARE_SAMPLES})"
+        )
         threading.Thread(target=self._run_auto_tare, daemon=True).start()
 
     def _run_auto_tare(self):
