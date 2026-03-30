@@ -12,6 +12,7 @@ from kivy.core.window import Window
 from config import (
     PIN_LOAD_CELL_DAT, PIN_LOAD_CELL_CLK,
     PIN_LED_GREEN, PIN_LED_RED, PIN_LED_YELLOW,
+    PIN_BUZZER,
     LOAD_CELL_THRESHOLD,
     CARD_READER_POWER_ON_CMD,
     CARD_READER_POWER_OFF_CMD,
@@ -76,6 +77,9 @@ class HardwareManager(EventDispatcher):
             lgpio.gpio_claim_output(self.lgpio_handle, PIN_LED_GREEN, 0)
             lgpio.gpio_claim_output(self.lgpio_handle, PIN_LED_RED, 0)
             lgpio.gpio_claim_output(self.lgpio_handle, PIN_LED_YELLOW, 0)
+            
+            # 3b. Setup Buzzer (Claiming it for output)
+            lgpio.gpio_claim_output(self.lgpio_handle, PIN_BUZZER, 0)
 
             self.set_led_state('idle')
             print("[HARDWARE] LEDs configured. Idle LED state applied.")
@@ -279,6 +283,7 @@ class HardwareManager(EventDispatcher):
         lgpio.gpio_write(self.lgpio_handle, PIN_LED_GREEN, 1)
         lgpio.gpio_write(self.lgpio_handle, PIN_LED_YELLOW, 1)
         lgpio.gpio_write(self.lgpio_handle, PIN_LED_RED, 1)
+        lgpio.gpio_write(self.lgpio_handle, PIN_BUZZER, 1)
 
     def set_led_state(self, state):
         """
@@ -309,6 +314,31 @@ class HardwareManager(EventDispatcher):
         # Active-low LED wiring: 0 = on, 1 = off
         lgpio.gpio_write(self.lgpio_handle, target_pin, 0)
         self._led_state = state
+
+        # Buzz buzzer when alert state is triggered
+        if state == 'alert':
+            self.buzz()
+
+    def buzz(self):
+        """Trigger a buzzer beep pattern (600ms tone)."""
+        if not self.is_pi or self.lgpio_handle is None:
+            return
+
+        import lgpio
+        import time
+        import threading
+
+        def _buzz_thread():
+            try:
+                # Active-low buzzer: 0 = on, 1 = off
+                lgpio.gpio_write(self.lgpio_handle, PIN_BUZZER, 0)
+                time.sleep(0.6)
+                lgpio.gpio_write(self.lgpio_handle, PIN_BUZZER, 1)
+            except Exception as e:
+                print(f"[HARDWARE] Buzzer error: {e}")
+
+        # Run in background thread so we don't block the main thread
+        threading.Thread(target=_buzz_thread, daemon=True).start()
     
     # --- MOCK HARDWARE (Mac/Windows) ---
     def _setup_mock_hardware(self):

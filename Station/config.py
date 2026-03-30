@@ -28,6 +28,7 @@ PIN_LOAD_CELL_CLK = 6
 PIN_LED_GREEN     = 17
 PIN_LED_RED       = 27
 PIN_LED_YELLOW    = 22
+PIN_BUZZER        = 23
 
 # Load Cell Calibration
 LOAD_CELL_THRESHOLD = 20.0  # Minimum weight (grams) to trigger "Tool Detected"
