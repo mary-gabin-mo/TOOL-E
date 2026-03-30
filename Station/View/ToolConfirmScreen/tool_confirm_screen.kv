@@ -14,7 +14,7 @@
 
         # -- Logo Area Placeholder --
         Widget:
-            size_hint_y: 0.08
+            size_hint_y: 0.13
 
         # -- Header --
         Label:
@@ -43,43 +43,48 @@
                     size: self.size
                     radius: [20, 20, 20, 20]
 
-            # 1. Captured Image
-            Image:
-                id: tool_image
-                source: "assets/images/logo_white.png"
-                allow_stretch: True
-                keep_ratio: True
+            # 1. Captured Image + Overlayed Prediction Info
+            RelativeLayout:
                 size_hint_y: 1
-                canvas.before:
-                    PushMatrix
-                    Rotate:
-                        angle: 180
-                        origin: self.center
-                canvas.after:
-                    PopMatrix
 
-            # 2. Prediction Info
-            AnchorLayout:
-                size_hint_y: None
-                height: "98dp"
-                anchor_x: "center"
-                anchor_y: "bottom"
+                Image:
+                    id: tool_image
+                    source: "assets/images/logo_white.png"
+                    allow_stretch: True
+                    keep_ratio: True
+                    size_hint: 1, 1
+                    pos_hint: {"x": 0, "y": 0}
+                    canvas.before:
+                        PushMatrix
+                        Rotate:
+                            angle: 180
+                            origin: self.center
+                    canvas.after:
+                        PopMatrix
 
                 BoxLayout:
                     orientation: "vertical"
-                    size_hint_y: None
-                    height: "90dp"
-                    spacing: "4dp"
+                    size_hint: 1, None
+                    height: "126dp"
+                    pos_hint: {"x": 0, "y": 0}
+                    padding: "12dp", "10dp"
+                    spacing: "8dp"
+                    canvas.before:
+                        Color:
+                            rgba: 0, 0, 0, 0.42
+                        Rectangle:
+                            pos: self.pos
+                            size: self.size
 
                     Label:
                         text: "Is this correct?"
                         halign: "center"
                         valign: "middle"
                         text_size: self.size
-                        font_size: "22sp"
-                        color: 0.5, 0.5, 0.5, 1
+                        font_size: "24sp"
+                        color: 0.92, 0.92, 0.92, 1
                         size_hint_y: None
-                        height: "24dp"
+                        height: "28dp"
 
                     Label:
                         id: tool_name_label
@@ -87,11 +92,11 @@
                         halign: "center"
                         valign: "middle"
                         text_size: self.size
-                        font_size: "50sp"
+                        font_size: "48sp"
                         bold: True
-                        color: 0, 0, 0, 1
+                        color: 1, 1, 1, 1
                         size_hint_y: None
-                        height: "42dp"
+                        height: "54dp"
 
                     Label:
                         id: confidence_label
@@ -100,9 +105,9 @@
                         valign: "middle"
                         text_size: self.size
                         font_size: "28sp"
-                        color: 0.2, 0.7, 0.2, 1  # Green
+                        color: 0.62, 0.93, 0.62, 1
                         size_hint_y: None
-                        height: "20dp"
+                        height: "24dp"
 
         Widget:
             size_hint_y: None
