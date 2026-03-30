@@ -15,11 +15,11 @@ class ToolConfirmScreen(BaseScreen):
             app.hardware.set_led_state('transaction')
         
         # 1. Get the Image Path from the current transaction
-        # Default to a placeholder if missing
-        img_path = "assets/images/logo_white.png"
+        # Keep empty when missing; do not show a placeholder image.
+        img_path = ""
         if hasattr(app, 'session') and app.session.current_transaction:
             # Display the local full path on the screen (not the server's uuid name)
-            img_path = app.session.current_transaction.get('local_img_path', app.session.current_transaction.get('img_filename', img_path))
+            img_path = app.session.current_transaction.get('local_img_path', app.session.current_transaction.get('img_filename', ''))
         
         self.ids.tool_image.source = img_path
         self.ids.tool_image.reload() # Force reload if file changed
