@@ -10,7 +10,7 @@ import calendar
 class CalendarPopup(ModalView):
     def __init__(self, callback, **kwargs):
         super().__init__(**kwargs)
-        self.size_hint = (0.9, 0.7)  # Take up 90% width, 70% height
+        self.size_hint = (0.9, 0.55)  # Take up 90% width, 55% height
         self.callback = callback  # Function to call when date is confirmed
         self.background_color = (0, 0, 0, 0.5)  # Dimmed background
         self.auto_dismiss = True
