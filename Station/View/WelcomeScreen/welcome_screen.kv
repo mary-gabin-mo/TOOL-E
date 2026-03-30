@@ -150,3 +150,12 @@
         # -- Spacer --
         Widget:
             size_hint_y: 0.04
+    
+    # -- Quit Button --
+    AppButton:
+        text: "QUIT"
+        font_size: "15sp"
+        size_hint: None, None
+        size: "70dp", "35dp"
+        pos_hint: {"right": 0.985, "top": 0.12} # bottom right
+        on_release: root.exit_program()

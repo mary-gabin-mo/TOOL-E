@@ -36,6 +36,13 @@ class WelcomeScreen(BaseScreen):
             app.hardware.unbind(on_card_scanned=self.handle_card_scan)
             if hasattr(app.hardware, 'stop_card_reader_polling'):
                 app.hardware.stop_card_reader_polling()
+    
+    def exit_program(self):
+        """
+        Exit the program.
+        """
+        app = App.get_running_app()
+        app.stop()
            
     @mainthread
     def set_loading_state(self, is_loading):
