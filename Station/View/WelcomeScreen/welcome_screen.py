@@ -20,6 +20,8 @@ class WelcomeScreen(BaseScreen):
         
         # Start listening to hardware
         if hasattr(app, 'hardware'):
+            if hasattr(app.hardware, 'set_led_state'):
+                app.hardware.set_led_state('idle')
             if hasattr(app.hardware, 'start_card_reader_polling'):
                 app.hardware.start_card_reader_polling()
             # Bind the 'on_card_scanned' event to our function

@@ -12,6 +12,8 @@ class ActionSelectionScreen(BaseScreen):
         Does NOT clear user_data (user stays logged in).
         """
         app = App.get_running_app()
+        if hasattr(app, 'hardware') and hasattr(app.hardware, 'set_led_state'):
+            app.hardware.set_led_state('transaction')
         if hasattr(app, 'session'):
             app.session.transactions = []
             app.session.current_transaction = {}

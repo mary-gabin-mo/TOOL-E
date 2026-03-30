@@ -33,6 +33,7 @@ class HardwareManager(EventDispatcher):
         super().__init__(*kwargs)
         self.is_pi = IS_PI
         self._pcsc_poll_event = None
+        self._led_state = None
         
         # Load Cell State
         self.lgpio_handle = None
@@ -75,10 +76,9 @@ class HardwareManager(EventDispatcher):
             lgpio.gpio_claim_output(self.lgpio_handle, PIN_LED_GREEN, 0)
             lgpio.gpio_claim_output(self.lgpio_handle, PIN_LED_RED, 0)
             lgpio.gpio_claim_output(self.lgpio_handle, PIN_LED_YELLOW, 0)
-            
-            # Set Yellow LED to idle (low for now, can add LED control later)
-            lgpio.gpio_write(self.lgpio_handle, PIN_LED_YELLOW, 1)
-            print("[HARDWARE] LEDs configured. Yellow LED set to ON (idle).")
+
+            self.set_led_state('idle')
+            print("[HARDWARE] LEDs configured. Idle LED state applied.")
 
             # 4. Start polling the load cell 
             # OPTIMIZATION: Reduce polling frequency from 10Hz (0.1s) to 5Hz (0.2s)
@@ -265,9 +265,50 @@ class HardwareManager(EventDispatcher):
         self.stop_card_reader_polling()
         if self.lgpio_handle is not None:
             import lgpio
+            self._set_all_leds_off()
             lgpio.gpiochip_close(self.lgpio_handle)
             self.lgpio_handle = None
             print("[HARDWARE] GPIO handle closed.")
+
+    def _set_all_leds_off(self):
+        """Turn all LEDs off (active-low wiring)."""
+        if not self.is_pi or self.lgpio_handle is None:
+            return
+
+        import lgpio
+        lgpio.gpio_write(self.lgpio_handle, PIN_LED_GREEN, 1)
+        lgpio.gpio_write(self.lgpio_handle, PIN_LED_YELLOW, 1)
+        lgpio.gpio_write(self.lgpio_handle, PIN_LED_RED, 1)
+
+    def set_led_state(self, state):
+        """
+        Set kiosk status LED state.
+        Supported states:
+        - idle: green
+        - transaction: yellow
+        - alert: red
+        """
+        if not self.is_pi or self.lgpio_handle is None:
+            self._led_state = state
+            return
+
+        state = (state or '').strip().lower()
+        pin_map = {
+            'idle': PIN_LED_GREEN,
+            'transaction': PIN_LED_YELLOW,
+            'alert': PIN_LED_RED,
+        }
+
+        target_pin = pin_map.get(state)
+        if target_pin is None:
+            print(f"[HARDWARE] Unknown LED state requested: {state}")
+            return
+
+        import lgpio
+        self._set_all_leds_off()
+        # Active-low LED wiring: 0 = on, 1 = off
+        lgpio.gpio_write(self.lgpio_handle, target_pin, 0)
+        self._led_state = state
     
     # --- MOCK HARDWARE (Mac/Windows) ---
     def _setup_mock_hardware(self):

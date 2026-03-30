@@ -52,6 +52,8 @@ class TransactionConfirmScreen(BaseScreen):
         self.ids.team_name_input.text = ''
         
         app = App.get_running_app()
+        if hasattr(app, 'hardware') and hasattr(app.hardware, 'set_led_state'):
+            app.hardware.set_led_state('transaction')
         transaction_type = getattr(app.session, 'transaction_type', 'borrow')
                 
         # For returns, we don't need a return date - skip directly to finish

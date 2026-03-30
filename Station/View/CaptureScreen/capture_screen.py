@@ -47,6 +47,8 @@ class CaptureScreen(BaseScreen):
         # 2. Bind hardware events
         app = App.get_running_app()
         if hasattr(app, 'hardware'):
+            if hasattr(app.hardware, 'set_led_state'):
+                app.hardware.set_led_state('transaction')
             print("[DEBUG] Binding on_load_cell_detect")
             app.hardware.bind(on_load_cell_detect=self.handle_load_cell_trigger)
 
@@ -327,6 +329,8 @@ class CaptureScreen(BaseScreen):
 
             if str(prediction).upper() == 'UNKNOWN' or float(score) < 0.60:
                 print(f"[UI] Low confidence ({score}) or UNKNOWN ({prediction}). Bypassing confirm screen.")
+                if hasattr(app, 'hardware') and hasattr(app.hardware, 'set_led_state'):
+                    app.hardware.set_led_state('alert')
                 if is_return_flow:
                     app.session.tool_was_confirmed = False
                     app.session.set_classification_correct(False)
