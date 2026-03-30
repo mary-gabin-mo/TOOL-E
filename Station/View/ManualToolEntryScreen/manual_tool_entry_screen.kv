@@ -3,13 +3,13 @@
 
     MDBoxLayout:
         orientation: 'vertical'
-        padding: "40dp"
-        spacing: "30dp"
-        pos_hint: {"center_x": .5, "center_y": .5}
+        padding: "40dp", "30dp", "40dp", "140dp"
+        spacing: "20dp"
+        pos_hint: {"center_x": .5}
 
         # Logo Area Placeholder
         Widget:
-            size_hint_y: 0.2
+            size_hint_y: 0.15
 
         MDLabel:
             text: "Enter Tool Name Manually"
@@ -27,7 +27,8 @@
             height: self.texture_size[1]
 
         AnchorLayout:
-            size_hint_y: 0.3
+            size_hint_y: None
+            height: "88dp"
             anchor_x: "center"
             anchor_y: "center"
 
@@ -36,32 +37,42 @@
                 hint_text: "Tool Name"
                 mode: "rectangle"
                 size_hint_x: 0.7
-                font_size: "24sp"
+                size_hint_y: None
+                height: "64dp"
+                font_size: "22sp"
                 multiline: False
                 on_text_validate: root.confirm_tool_name()
+
+        Widget:
+            size_hint_y: 1
 
         MDBoxLayout:
             orientation: 'horizontal'
             spacing: "20dp"
             size_hint_y: None
-            height: "60dp"
+            height: "72dp"
             pos_hint: {"center_x": 0.5}
 
-            MDRaisedButton:
+            AppButton:
                 text: "Back"
-                font_size: "18sp"
+                font_size: "24sp"
                 size_hint_x: 0.5
-                md_bg_color: 0.5, 0.5, 0.5, 1
+                base_color: 0.7, 0.7, 0.7, 1
+                down_color: 0.6, 0.6, 0.6, 1
+                color: 1, 1, 1, 1
                 on_release: root.go_back()
 
-            MDRaisedButton:
+            AppButton:
                 id: confirm_button
-                text: "Confirm"
-                font_size: "20sp"
+                text: "Submit"
+                font_size: "24sp"
                 size_hint_x: 0.5
-                md_bg_color: 0.2, 0.6, 0.8, 1
+                base_color: 0.2, 0.7, 0.2, 1
+                down_color: 0.15, 0.6, 0.15, 1
+                color: 1, 1, 1, 1
                 disabled: True
                 on_release: root.confirm_tool_name()
 
         Widget:
-            size_hint_y: 0.3
+            size_hint_y: None
+            height: "20dp"

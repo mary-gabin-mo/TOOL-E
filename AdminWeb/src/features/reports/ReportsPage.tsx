@@ -1,8 +1,15 @@
-import React, { useState } from 'react';
+import React, { useEffect, useMemo, useState } from 'react';
 import { Download, Loader2, Calendar } from 'lucide-react';
 import { useQuery } from '@tanstack/react-query';
 import clsx from 'clsx';
 import { api } from '../../lib/axios';
+
+interface TermItem {
+  id: string;
+  name: string;
+  start: string;
+  end: string;
+}
 
 interface Transaction {
   transaction_id: number;
@@ -36,12 +43,36 @@ const StatusBadge = ({ status }: { status: string }) => {
 };
 
 export const ReportsPage = () => {
+  const [selectedTermId, setSelectedTermId] = useState('custom');
+
   // Date state
   const [startDate, setStartDate] = useState('');
   const [endDate, setEndDate] = useState('');
   
   // Trigger for refetching
   const [enabled, setEnabled] = useState(false);
+
+  const termsQuery = useQuery({
+    queryKey: ['terms'],
+    queryFn: async () => {
+      const response = await api.get('/terms');
+      return (response.data.terms ?? []) as TermItem[];
+    }
+  });
+
+  const termOptions = useMemo(() => termsQuery.data ?? [], [termsQuery.data]);
+
+  useEffect(() => {
+    if (selectedTermId === 'custom') return;
+    const selectedTerm = termOptions.find((term) => term.id === selectedTermId);
+    if (!selectedTerm) {
+      setSelectedTermId('custom');
+      return;
+    }
+
+    setStartDate(selectedTerm.start);
+    setEndDate(selectedTerm.end);
+  }, [selectedTermId, termOptions]);
 
   // Fetch Data
   const { data, isLoading, isError, refetch } = useQuery({
@@ -84,7 +115,10 @@ export const ReportsPage = () => {
     const encodedUri = encodeURI(csvContent);
     const link = document.createElement("a");
     link.setAttribute("href", encodedUri);
-    link.setAttribute("download", `report_${startDate || 'all'}_to_${endDate || 'all'}.csv`);
+    const rangeTag = selectedTermId !== 'custom'
+      ? selectedTermId
+      : `${startDate || 'all'}_to_${endDate || 'all'}`;
+    link.setAttribute("download", `report_${rangeTag}.csv`);
     document.body.appendChild(link);
     link.click();
     document.body.removeChild(link);
@@ -98,7 +132,32 @@ export const ReportsPage = () => {
 
       {/* Filter Card */}
       <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-6">
-        <div className="flex flex-col sm:flex-row items-end gap-6">
+        <div className="flex flex-col gap-6">
+          <div className="w-full">
+            <label className="block text-sm font-medium text-gray-700 mb-1">
+              Term
+            </label>
+            <div className="relative">
+              <Calendar className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400" />
+              <select
+                value={selectedTermId}
+                onChange={(e) => setSelectedTermId(e.target.value)}
+                className="w-full pl-10 pr-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent text-gray-600 bg-white"
+              >
+                <option value="custom">Custom Date Range</option>
+                {termOptions.map((term) => (
+                  <option key={term.id} value={term.id}>
+                    {term.name}
+                  </option>
+                ))}
+              </select>
+            </div>
+            {termsQuery.isError && (
+              <p className="text-xs text-red-500 mt-1">Failed to load terms. You can still use custom dates.</p>
+            )}
+          </div>
+
+          <div className="flex flex-col sm:flex-row items-end gap-6">
           <div className="flex-1 w-full">
             <label className="block text-sm font-medium text-gray-700 mb-1">
               Start Date
@@ -108,7 +167,10 @@ export const ReportsPage = () => {
               <input
                 type="date"
                 value={startDate}
-                onChange={(e) => setStartDate(e.target.value)}
+                onChange={(e) => {
+                  setStartDate(e.target.value);
+                  setSelectedTermId('custom');
+                }}
                 className="w-full pl-10 pr-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent text-gray-600"
               />
             </div>
@@ -122,7 +184,10 @@ export const ReportsPage = () => {
               <input
                 type="date"
                 value={endDate}
-                onChange={(e) => setEndDate(e.target.value)}
+                onChange={(e) => {
+                  setEndDate(e.target.value);
+                  setSelectedTermId('custom');
+                }}
                 className="w-full pl-10 pr-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent text-gray-600"
               />
             </div>
@@ -148,6 +213,7 @@ export const ReportsPage = () => {
                 Export CSV
               </button>
             )}
+          </div>
           </div>
         </div>
       </div>
