@@ -43,7 +43,7 @@ class CalendarPopup(ModalView):
         self._style_date_btn(btn_prev, (0.85, 0.85, 0.85, 1))
         header.add_widget(btn_prev)
 
-        self.month_label = Label(text="", halign='center', font_size='20sp', color=(0, 0, 0, 1))
+        self.month_label = Label(text="", halign='center', font_size='28sp', color=(0, 0, 0, 1))
         header.add_widget(self.month_label)
 
         btn_next = Button(text='>', size_hint_x=None, width='48dp',
@@ -60,14 +60,14 @@ class CalendarPopup(ModalView):
         layout.add_widget(days_header)
 
         # 3. Calendar Grid
-        self.grid = GridLayout(cols=7, spacing='5dp', row_force_default=True, row_default_height=120)
+        self.grid = GridLayout(cols=7, spacing='5dp', row_force_default=True, row_default_height=85)
         layout.add_widget(self.grid)
 
         # 4. Footer (Confirm Button)
         self.confirm_btn = Button(
             text="CONFIRM",
             size_hint=(0.33, None),
-            height='200dp',
+            height='100dp',
             pos_hint={'center_x': 0.5},
             disabled=True,
             background_normal='',
