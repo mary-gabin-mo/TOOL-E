@@ -1,8 +1,6 @@
 import platform
 import traceback
 import subprocess
-import threading
-import time
 from kivy.app import App
 from kivy.event import EventDispatcher
 from smartcard.System import readers
@@ -16,11 +14,6 @@ from config import (
     PIN_LED_GREEN, PIN_LED_RED, PIN_LED_YELLOW,
     PIN_BUZZER,
     LOAD_CELL_THRESHOLD,
-    AUTO_TARE_ENABLED,
-    AUTO_TARE_INTERVAL_SEC,
-    AUTO_TARE_QUIET_IDLE_SEC,
-    AUTO_TARE_SAMPLES,
-    AUTO_TARE_SAMPLE_DELAY_SEC,
     CARD_READER_POWER_ON_CMD,
     CARD_READER_POWER_OFF_CMD,
 )
@@ -46,11 +39,7 @@ class HardwareManager(EventDispatcher):
         # Load Cell State
         self.lgpio_handle = None
         self.stable_reads = 0
-        self.offset = 380000  # From your calibration script
-        self._tare_in_progress = False
-        self._last_auto_tare_ts = time.monotonic()
-        self._idle_empty_since = None
-        self._load_cell_lock = threading.Lock()
+        self.offset = 382000  # From your calibration script
         # OPTIMIZATION: Adjusted stable reads for lower polling frequency
         # At 5Hz (0.2s), 2 reads = ~0.4s debounce (was 3 reads @ 10Hz = ~0.3s)
         self.STABLE_READS_REQUIRED = 2
@@ -73,39 +62,24 @@ class HardwareManager(EventDispatcher):
     # --- REAL HARDWARE (Raspberry Pi) ---
     def _setup_real_hardware(self):
         print("[HARDWARE] Initializing Real Pi Hardware (LGPIO)...")
-        claimed_pins = []
         
         try:
             import lgpio
-
-            def _claim_input(pin, label):
-                try:
-                    lgpio.gpio_claim_input(self.lgpio_handle, pin)
-                    claimed_pins.append(pin)
-                except Exception as claim_err:
-                    raise RuntimeError(f"GPIO busy on {label} (BCM {pin})") from claim_err
-
-            def _claim_output(pin, label, initial=0):
-                try:
-                    lgpio.gpio_claim_output(self.lgpio_handle, pin, initial)
-                    claimed_pins.append(pin)
-                except Exception as claim_err:
-                    raise RuntimeError(f"GPIO busy on {label} (BCM {pin})") from claim_err
             
             # 1. Open GPIO Chip (usually 0 on Pi 5)
             self.lgpio_handle = lgpio.gpiochip_open(0)
             
             # 2. Setup Load Cell Pins
-            _claim_input(PIN_LOAD_CELL_DAT, "PIN_LOAD_CELL_DAT")
-            _claim_output(PIN_LOAD_CELL_CLK, "PIN_LOAD_CELL_CLK", 0)
+            lgpio.gpio_claim_input(self.lgpio_handle, PIN_LOAD_CELL_DAT)
+            lgpio.gpio_claim_output(self.lgpio_handle, PIN_LOAD_CELL_CLK, 0)
             
             # 3. Setup LEDs (Claiming them for output)
-            _claim_output(PIN_LED_GREEN, "PIN_LED_GREEN", 0)
-            _claim_output(PIN_LED_RED, "PIN_LED_RED", 0)
-            _claim_output(PIN_LED_YELLOW, "PIN_LED_YELLOW", 0)
+            lgpio.gpio_claim_output(self.lgpio_handle, PIN_LED_GREEN, 0)
+            lgpio.gpio_claim_output(self.lgpio_handle, PIN_LED_RED, 0)
+            lgpio.gpio_claim_output(self.lgpio_handle, PIN_LED_YELLOW, 0)
             
             # 3b. Setup Buzzer (Claiming it for output)
-            _claim_output(PIN_BUZZER, "PIN_BUZZER", 0)
+            lgpio.gpio_claim_output(self.lgpio_handle, PIN_BUZZER, 0)
 
             self.set_led_state('idle')
             print("[HARDWARE] LEDs configured. Idle LED state applied.")
@@ -122,13 +96,7 @@ class HardwareManager(EventDispatcher):
             self.lgpio_handle = None
         except Exception as e:
             print(f"[ERROR] GPIO Setup failed: {e}")
-            if "busy" in str(e).lower():
-                print("[ERROR] One or more GPIO lines are already in use by another process.")
-                print(f"[ERROR] Successfully claimed before failure: {claimed_pins}")
-                print("[HINT] Check who owns /dev/gpiochip0 and stop that process before restarting kiosk.")
-            print("[ERROR] Full traceback:")
-            traceback.print_exc()
-            self._close_gpiochip_handle()
+            print(f"[ERROR] Full traceback: ", exc_info=True)
             self.lgpio_handle = None
         
         # implement GPIO setup...
@@ -137,17 +105,6 @@ class HardwareManager(EventDispatcher):
         self.dispatch('on_card_scanned', barcode)
         
         # Card reader polling is controlled by screen lifecycle.
-
-    def _close_gpiochip_handle(self):
-        """Best-effort release for partially initialized lgpio handles."""
-        if self.lgpio_handle is None:
-            return
-        try:
-            import lgpio
-            lgpio.gpiochip_close(self.lgpio_handle)
-            print("[HARDWARE] Closed gpiochip handle after setup failure.")
-        except Exception:
-            pass
 
     def start_card_reader_polling(self):
         """Start PC/SC card polling loop if not already running."""
@@ -235,19 +192,17 @@ class HardwareManager(EventDispatcher):
                 print("[HARDWARE] Waiting for lgpio handle...")
             return
 
-        if self._tare_in_progress:
-            return
-
-        with self._load_cell_lock:
-            raw_val = self._read_hx711_raw()
+        raw_val = self._read_hx711_raw()
         if raw_val is None:
             if self.poll_counter % 50 == 0:
                 print("[HARDWARE] Load cell sensor not responding")
             return # Sensor not ready
 
         current_weight = raw_val - self.offset
-
-        self._maybe_schedule_auto_tare(current_weight)
+        
+        # # Print status every 10 polls (1 second)
+        # if self.poll_counter % 10 == 0:
+        #     print(f"[LOADCELL] Raw: {raw_val}, Weight: {current_weight:.1f}g, Threshold: {LOAD_CELL_THRESHOLD}g, Stable: {self.stable_reads}/{self.STABLE_READS_REQUIRED}")
 
         # Check Threshold
         if current_weight > LOAD_CELL_THRESHOLD:
@@ -266,70 +221,6 @@ class HardwareManager(EventDispatcher):
             # Reset stable reads so we don't trigger 30 times a second while object sits there
             # Or you can add logic to wait for removal before triggering again.
             self.stable_reads = -50 # Simple "debounce" delay
-
-    def _maybe_schedule_auto_tare(self, current_weight):
-        """Start background tare only when kiosk is idle and plate appears empty."""
-        if not AUTO_TARE_ENABLED:
-            return
-        if self._tare_in_progress:
-            return
-        now = time.monotonic()
-
-        if self._led_state != 'idle':
-            self._idle_empty_since = None
-            return
-
-        # Guard: tare only while the platform appears empty.
-        empty_margin = max(5.0, LOAD_CELL_THRESHOLD * 0.25)
-        if current_weight > empty_margin:
-            self._idle_empty_since = None
-            return
-
-        if self._idle_empty_since is None:
-            self._idle_empty_since = now
-            return
-
-        quiet_elapsed = now - self._idle_empty_since
-        if quiet_elapsed < AUTO_TARE_QUIET_IDLE_SEC:
-            return
-
-        elapsed = now - self._last_auto_tare_ts
-        if elapsed < AUTO_TARE_INTERVAL_SEC:
-            return
-
-        self._tare_in_progress = True
-        self._last_auto_tare_ts = now
-        self._idle_empty_since = None
-        print(
-            f"[HARDWARE] Auto-tare starting (idle quiet={AUTO_TARE_QUIET_IDLE_SEC}s, "
-            f"interval={AUTO_TARE_INTERVAL_SEC}s, samples={AUTO_TARE_SAMPLES})"
-        )
-        threading.Thread(target=self._run_auto_tare, daemon=True).start()
-
-    def _run_auto_tare(self):
-        """Average raw samples and refresh offset without blocking UI polling."""
-        samples = max(1, int(AUTO_TARE_SAMPLES))
-        delay_s = max(0.0, float(AUTO_TARE_SAMPLE_DELAY_SEC))
-        readings = []
-
-        try:
-            for _ in range(samples):
-                with self._load_cell_lock:
-                    raw_val = self._read_hx711_raw()
-                if raw_val is not None:
-                    readings.append(raw_val)
-                time.sleep(delay_s)
-
-            if readings:
-                self.offset = sum(readings) / len(readings)
-                self.stable_reads = 0
-                print(f"[HARDWARE] Auto-tare complete. New offset: {self.offset:.1f} ({len(readings)} samples)")
-            else:
-                print("[HARDWARE] Auto-tare skipped: no valid HX711 readings")
-        except Exception as e:
-            print(f"[HARDWARE] Auto-tare error: {e}")
-        finally:
-            self._tare_in_progress = False
         
     def _check_pcsc_reader(self, dt):
         # Hard safety guard: only read cards while welcome screen is active.
@@ -423,8 +314,6 @@ class HardwareManager(EventDispatcher):
         # Active-low LED wiring: 0 = on, 1 = off
         lgpio.gpio_write(self.lgpio_handle, target_pin, 0)
         self._led_state = state
-        if state != 'idle':
-            self._idle_empty_since = None
 
         # Buzz buzzer when alert state is triggered
         if state == 'alert':
