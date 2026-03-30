@@ -320,7 +320,7 @@ class HardwareManager(EventDispatcher):
             self.buzz()
 
     def buzz(self):
-        """Trigger a buzzer beep pattern (600ms tone)."""
+        """Trigger a buzzer beep pattern (two short beeps)."""
         if not self.is_pi or self.lgpio_handle is None:
             return
 
@@ -331,9 +331,11 @@ class HardwareManager(EventDispatcher):
         def _buzz_thread():
             try:
                 # Active-low buzzer: 0 = on, 1 = off
-                lgpio.gpio_write(self.lgpio_handle, PIN_BUZZER, 0)
-                time.sleep(0.6)
-                lgpio.gpio_write(self.lgpio_handle, PIN_BUZZER, 1)
+                for _ in range(2):
+                    lgpio.gpio_write(self.lgpio_handle, PIN_BUZZER, 0)
+                    time.sleep(0.2)
+                    lgpio.gpio_write(self.lgpio_handle, PIN_BUZZER, 1)
+                    time.sleep(0.1)
             except Exception as e:
                 print(f"[HARDWARE] Buzzer error: {e}")
 
