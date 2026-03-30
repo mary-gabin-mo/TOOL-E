@@ -65,7 +65,7 @@ class ToolSelectionScreen(BaseScreen):
         # Show a loading placeholder
         tool_rv.data = [{
             "text": "Loading tools...",
-            "secondary_text": "Please wait",
+            "secondary_text": "",
             "tool_data": {},
             "bg_color": [1, 1, 1, 1],
             "preview_source": "",
@@ -88,7 +88,7 @@ class ToolSelectionScreen(BaseScreen):
         if not all_tools:
             tool_rv.data = [{
                 "text": "No API tools found",
-                "secondary_text": "Check server connection",
+                "secondary_text": "",
                 "tool_data": {},
                 "bg_color": [1, 1, 1, 1],
                 "preview_source": "",
@@ -103,7 +103,7 @@ class ToolSelectionScreen(BaseScreen):
                 preview_source = self._materialize_preview_image(tool_obj)
                 rv_data.append({
                     "text": f"{tool_obj['name']} (ID: {tool_obj['id']})",
-                    "secondary_text": f"Available: {tool_obj['available_quantity']}",
+                    "secondary_text": "",
                     "tool_data": tool_obj,
                     "bg_color": [1, 1, 1, 1],
                     "preview_source": preview_source,
@@ -115,7 +115,7 @@ class ToolSelectionScreen(BaseScreen):
             other_tool = {"id": 0, "name": "Other", "status": "Manual", "available_quantity": "-"}
             rv_data.append({
                 "text": "Other / Not Listed",
-                "secondary_text": "Select this if you can't find the tool",
+                "secondary_text": "",
                 "tool_data": other_tool,
                 "bg_color": [1, 1, 1, 1],
                 "preview_source": "",

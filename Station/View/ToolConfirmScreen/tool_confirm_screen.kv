@@ -32,7 +32,7 @@
         BoxLayout:
             orientation: "vertical"
             padding: "15dp"
-            spacing: "8dp"
+            spacing: "12dp"
             size_hint: 0.96, 0.68
             pos_hint: {"center_x": .5}
             canvas.before:
@@ -49,7 +49,7 @@
                 source: "assets/images/logo_white.png"
                 allow_stretch: True
                 keep_ratio: True
-                size_hint_y: 0.9
+                size_hint_y: 0.74
                 canvas.before:
                     PushMatrix
                     Rotate:
@@ -61,29 +61,42 @@
             # 2. Prediction Info
             BoxLayout:
                 orientation: "vertical"
-                size_hint_y: 0.1
-                spacing: "5dp"
+                size_hint_y: None
+                height: "170dp"
+                spacing: "10dp"
 
                 Label:
                     text: "Is this correct?"
                     halign: "center"
-                    font_size: "14sp"
+                    valign: "middle"
+                    text_size: self.size
+                    font_size: "22sp"
                     color: 0.5, 0.5, 0.5, 1
+                    size_hint_y: None
+                    height: "36dp"
 
                 Label:
                     id: tool_name_label
                     text: "Loading..."
                     halign: "center"
-                    font_size: "42sp"
+                    valign: "middle"
+                    text_size: self.size
+                    font_size: "50sp"
                     bold: True
                     color: 0, 0, 0, 1
+                    size_hint_y: None
+                    height: "72dp"
 
                 Label:
                     id: confidence_label
                     text: "--%"
                     halign: "center"
-                    font_size: "18sp"
+                    valign: "middle"
+                    text_size: self.size
+                    font_size: "28sp"
                     color: 0.2, 0.7, 0.2, 1  # Green
+                    size_hint_y: None
+                    height: "40dp"
 
         Widget:
             size_hint_y: None
@@ -102,7 +115,7 @@
             # NO Button (Left Side)
             AppButton:
                 text: "NO"
-                font_size: "24sp"
+                font_size: "30sp"
                 size_hint_x: 0.3
                 size_hint_y: 1
                 background_normal: ''
@@ -120,7 +133,7 @@
                 # Option 1: Scan More
                 AppButton:
                     text: "YES, SCAN MORE"
-                    font_size: "20sp"
+                    font_size: "26sp"
                     size_hint: 1, 0.5
                     background_normal: ''
                     base_color: 0.2, 0.6, 0.8, 1  # Blue
@@ -131,7 +144,7 @@
                 # Option 2: Finish
                 AppButton:
                     text: "YES, FINISH"
-                    font_size: "20sp"
+                    font_size: "26sp"
                     size_hint: 1, 0.5
                     background_normal: ''
                     base_color: 0.2, 0.7, 0.2, 1  # Green
@@ -146,7 +159,7 @@
         # -- Back Button --
         AppButton:
             text: "BACK"
-            font_size: "24sp"
+            font_size: "30sp"
             size_hint_x: 0.95
             size_hint_y: None
             height: "72dp"

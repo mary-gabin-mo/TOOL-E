@@ -112,7 +112,7 @@
             # Row 4
             NumpadButton:
                 text: "CLR"
-                font_size: "28sp"
+                font_size: "34sp"
                 on_press: root.clear_input()
 
             NumpadButton:
@@ -121,7 +121,7 @@
 
             NumpadButton:
                 text: "DEL"
-                font_size: "28sp"
+                font_size: "34sp"
                 on_press: root.delete_last()
 
         # --- CONTROL BUTTONS ---
@@ -135,7 +135,7 @@
 
             AppButton:
                 text: "CANCEL"
-                font_size: "28sp"
+                font_size: "34sp"
                 base_color: 0.9, 0.2, 0.2, 1  # Red
                 down_color: 0.75, 0.15, 0.15, 1
                 color: 1,1,1,1
@@ -143,7 +143,7 @@
 
             AppButton:
                 text: "ENTER"
-                font_size: "28sp"
+                font_size: "34sp"
                 # background_normal: ''
                 base_color: 0.2, 0.8, 0.2, 1  # Green
                 down_color: 0.15, 0.65, 0.15, 1
@@ -158,7 +158,7 @@
 # --- Custom Button Component ---
 # This prevents code duplication for the number keys
 <NumpadButton@AppButton>:
-    font_size: "36sp"
+    font_size: "40sp"
     size_hint: .5, 1
     color: 0, 0, 0, 1         # Black Text
     width: dp(60)
