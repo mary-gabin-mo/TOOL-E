@@ -15,6 +15,14 @@ class ManualEntryScreen(BaseScreen):
         self._debounce_delay = 0.35  # 350ms debounce for Pi touchscreen
         self._is_submitting = False
 
+    def _on_ucid_text_change(self, text):
+        """Handle text input changes and update button enabled state"""
+        # Limit to 8 digits
+        if len(text) > 8:
+            self.ids.ucid_input.text = text[:8]
+        # Enable ENTER button only when exactly 8 digits are entered
+        self.ids.enter_btn.disabled = len(self.ids.ucid_input.text) != 8
+
     def on_enter(self, *args):
         super().on_enter(*args)
         self._is_submitting = False
