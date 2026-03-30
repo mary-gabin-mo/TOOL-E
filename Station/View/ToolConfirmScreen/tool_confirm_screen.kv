@@ -31,7 +31,7 @@
         # -- Content Card --
         BoxLayout:
             orientation: "vertical"
-            padding: "15dp"
+            padding: "15dp", "6dp", "15dp", "10dp"
             spacing: "12dp"
             size_hint: 0.96, 0.68
             pos_hint: {"center_x": .5}
@@ -48,7 +48,7 @@
                 id: tool_image
                 source: "assets/images/logo_white.png"
                 allow_stretch: True
-                keep_ratio: False
+                keep_ratio: True
                 size_hint_y: 0.8
                 canvas.before:
                     PushMatrix
@@ -62,8 +62,12 @@
             BoxLayout:
                 orientation: "vertical"
                 size_hint_y: None
-                height: "170dp"
+                height: "154dp"
                 spacing: "10dp"
+
+                Widget:
+                    size_hint_y: None
+                    height: "10dp"
 
                 Label:
                     text: "Is this correct?"
