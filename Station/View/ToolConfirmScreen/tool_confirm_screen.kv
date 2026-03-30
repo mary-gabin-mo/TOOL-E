@@ -49,7 +49,7 @@
                 source: "assets/images/logo_white.png"
                 allow_stretch: True
                 keep_ratio: True
-                size_hint_y: 0.8
+                size_hint_y: 0.9
                 canvas.before:
                     PushMatrix
                     Rotate:
@@ -59,48 +59,50 @@
                     PopMatrix
 
             # 2. Prediction Info
-            BoxLayout:
-                orientation: "vertical"
+            AnchorLayout:
                 size_hint_y: None
-                height: "154dp"
-                spacing: "10dp"
+                height: "148dp"
+                anchor_x: "center"
+                anchor_y: "bottom"
 
-                Widget:
+                BoxLayout:
+                    orientation: "vertical"
                     size_hint_y: None
-                    height: "10dp"
+                    height: "138dp"
+                    spacing: "10dp"
 
-                Label:
-                    text: "Is this correct?"
-                    halign: "center"
-                    valign: "middle"
-                    text_size: self.size
-                    font_size: "22sp"
-                    color: 0.5, 0.5, 0.5, 1
-                    size_hint_y: None
-                    height: "36dp"
+                    Label:
+                        text: "Is this correct?"
+                        halign: "center"
+                        valign: "middle"
+                        text_size: self.size
+                        font_size: "22sp"
+                        color: 0.5, 0.5, 0.5, 1
+                        size_hint_y: None
+                        height: "34dp"
 
-                Label:
-                    id: tool_name_label
-                    text: "Loading..."
-                    halign: "center"
-                    valign: "middle"
-                    text_size: self.size
-                    font_size: "50sp"
-                    bold: True
-                    color: 0, 0, 0, 1
-                    size_hint_y: None
-                    height: "72dp"
+                    Label:
+                        id: tool_name_label
+                        text: "Loading..."
+                        halign: "center"
+                        valign: "middle"
+                        text_size: self.size
+                        font_size: "50sp"
+                        bold: True
+                        color: 0, 0, 0, 1
+                        size_hint_y: None
+                        height: "66dp"
 
-                Label:
-                    id: confidence_label
-                    text: "--%"
-                    halign: "center"
-                    valign: "middle"
-                    text_size: self.size
-                    font_size: "28sp"
-                    color: 0.2, 0.7, 0.2, 1  # Green
-                    size_hint_y: None
-                    height: "40dp"
+                    Label:
+                        id: confidence_label
+                        text: "--%"
+                        halign: "center"
+                        valign: "middle"
+                        text_size: self.size
+                        font_size: "28sp"
+                        color: 0.2, 0.7, 0.2, 1  # Green
+                        size_hint_y: None
+                        height: "34dp"
 
         Widget:
             size_hint_y: None
