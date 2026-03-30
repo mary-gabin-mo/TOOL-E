@@ -14,7 +14,7 @@
 
         # -- Logo Area Placeholder --
         Widget:
-            size_hint_y: 0.14
+            size_hint_y: 0.08
 
         # -- Header --
         Label:
@@ -33,7 +33,7 @@
             orientation: "vertical"
             padding: "15dp", "6dp", "15dp", "10dp"
             spacing: "12dp"
-            size_hint: 0.96, 0.68
+            size_hint: 0.96, 0.76
             pos_hint: {"center_x": .5}
             canvas.before:
                 Color:
@@ -49,7 +49,7 @@
                 source: "assets/images/logo_white.png"
                 allow_stretch: True
                 keep_ratio: True
-                size_hint_y: 0.9
+                size_hint_y: 1
                 canvas.before:
                     PushMatrix
                     Rotate:
@@ -61,15 +61,15 @@
             # 2. Prediction Info
             AnchorLayout:
                 size_hint_y: None
-                height: "148dp"
+                height: "98dp"
                 anchor_x: "center"
                 anchor_y: "bottom"
 
                 BoxLayout:
                     orientation: "vertical"
                     size_hint_y: None
-                    height: "138dp"
-                    spacing: "10dp"
+                    height: "90dp"
+                    spacing: "4dp"
 
                     Label:
                         text: "Is this correct?"
@@ -79,7 +79,7 @@
                         font_size: "22sp"
                         color: 0.5, 0.5, 0.5, 1
                         size_hint_y: None
-                        height: "34dp"
+                        height: "24dp"
 
                     Label:
                         id: tool_name_label
@@ -91,7 +91,7 @@
                         bold: True
                         color: 0, 0, 0, 1
                         size_hint_y: None
-                        height: "66dp"
+                        height: "42dp"
 
                     Label:
                         id: confidence_label
@@ -102,11 +102,11 @@
                         font_size: "28sp"
                         color: 0.2, 0.7, 0.2, 1  # Green
                         size_hint_y: None
-                        height: "34dp"
+                        height: "20dp"
 
         Widget:
             size_hint_y: None
-            height: "44dp"
+            height: "10dp"
 
         # -- Action Buttons --
         BoxLayout:
