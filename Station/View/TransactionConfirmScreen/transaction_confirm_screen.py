@@ -46,9 +46,13 @@ class TransactionConfirmScreen(BaseScreen):
         self.purpose = None
         self.ids.course_code_box.opacity = 0
         self.ids.course_code_box.disabled = True
+        self.ids.course_code_box.pos_hint = {'x': 10, 'y': 0}
+        self.ids.course_code_input.disabled = True
         self.ids.course_code_input.text = ''
         self.ids.team_name_box.opacity = 0
         self.ids.team_name_box.disabled = True
+        self.ids.team_name_box.pos_hint = {'x': 10, 'y': 0}
+        self.ids.team_name_input.disabled = True
         self.ids.team_name_input.text = ''
         
         app = App.get_running_app()
@@ -125,20 +129,28 @@ class TransactionConfirmScreen(BaseScreen):
 
         # Show/hide course code input
         if selected_purpose == "Academic Course":
+            self.ids.course_code_box.pos_hint = {'x': 0, 'y': 0}
             self.ids.course_code_box.opacity = 1
             self.ids.course_code_box.disabled = False
+            self.ids.course_code_input.disabled = False
         else:
+            self.ids.course_code_box.pos_hint = {'x': 10, 'y': 0}
             self.ids.course_code_box.opacity = 0
             self.ids.course_code_box.disabled = True
+            self.ids.course_code_input.disabled = True
             self.ids.course_code_input.text = ''
 
         # Show/hide team name input
         if selected_purpose == "Team":
+            self.ids.team_name_box.pos_hint = {'x': 0, 'y': 0}
             self.ids.team_name_box.opacity = 1
             self.ids.team_name_box.disabled = False
+            self.ids.team_name_input.disabled = False
         else:
+            self.ids.team_name_box.pos_hint = {'x': 10, 'y': 0}
             self.ids.team_name_box.opacity = 0
             self.ids.team_name_box.disabled = True
+            self.ids.team_name_input.disabled = True
             self.ids.team_name_input.text = ''
 
         self.check_can_finish()
