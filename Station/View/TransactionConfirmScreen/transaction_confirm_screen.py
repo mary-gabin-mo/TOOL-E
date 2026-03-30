@@ -86,13 +86,29 @@ class TransactionConfirmScreen(BaseScreen):
         
         if not transactions:
             # Fallback if list is empty (shouldn't happen in flow)
-            list_container.add_widget(KivyLabel(text="No tools scanned", size_hint_y=None, height='48dp', color=(0, 0, 0, 1)))
+            list_container.add_widget(
+                KivyLabel(
+                    text="No tools scanned",
+                    size_hint_y=None,
+                    height='56dp',
+                    font_size='28sp',
+                    color=(0, 0, 0, 1),
+                )
+            )
         else:
             # Populate list with all scanned tools
             for tx in transactions:
                 # Handle dictionary or simple string
                 tool_name = tx.get('tool_name', 'Unknown Tool')
-                list_container.add_widget(KivyLabel(text=tool_name, size_hint_y=None, height='48dp', color=(0, 0, 0, 1)))
+                list_container.add_widget(
+                    KivyLabel(
+                        text=tool_name,
+                        size_hint_y=None,
+                        height='56dp',
+                        font_size='28sp',
+                        color=(0, 0, 0, 1),
+                    )
+                )
         
     def open_calendar(self):
         """Open the custom popup"""

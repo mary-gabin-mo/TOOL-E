@@ -35,10 +35,12 @@
         Label:
             text: "Confirm Transaction"
             halign: "center"
-            font_size: "30sp"
+            valign: "middle"
+            text_size: self.size
+            font_size: "44sp"
             bold: True
             size_hint_y: None
-            height: '60dp'
+            height: '72dp'
             color: 0, 0, 0, 1
 
         # Central card
@@ -60,10 +62,12 @@
             Label:
                 text: "Items to Checkout"
                 halign: "center"
-                font_size: "20sp"
+                valign: "middle"
+                text_size: self.size
+                font_size: "30sp"
                 color: 0.5, 0.5, 0.5, 1
                 size_hint_y: None
-                height: "30dp"
+                height: "44dp"
 
             # 2. Scrollable List of Tools
             ScrollView:
@@ -89,10 +93,12 @@
                 Label:
                     text: "Purpose of Checkout"
                     halign: "center"
-                    font_size: "16sp"
+                    valign: "middle"
+                    text_size: self.size
+                    font_size: "28sp"
                     color: 0.5, 0.5, 0.5, 1
                     size_hint_y: None
-                    height: "24dp"
+                    height: "38dp"
 
                 BoxLayout:
                     orientation: 'horizontal'
