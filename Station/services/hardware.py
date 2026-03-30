@@ -79,18 +79,25 @@ class HardwareManager(EventDispatcher):
             
             # 1. Open GPIO Chip (usually 0 on Pi 5)
             self.lgpio_handle = lgpio.gpiochip_open(0)
+            claimed_pins = []
             
             # 2. Setup Load Cell Pins
             lgpio.gpio_claim_input(self.lgpio_handle, PIN_LOAD_CELL_DAT)
+            claimed_pins.append(PIN_LOAD_CELL_DAT)
             lgpio.gpio_claim_output(self.lgpio_handle, PIN_LOAD_CELL_CLK, 0)
+            claimed_pins.append(PIN_LOAD_CELL_CLK)
             
             # 3. Setup LEDs (Claiming them for output)
             lgpio.gpio_claim_output(self.lgpio_handle, PIN_LED_GREEN, 0)
+            claimed_pins.append(PIN_LED_GREEN)
             lgpio.gpio_claim_output(self.lgpio_handle, PIN_LED_RED, 0)
+            claimed_pins.append(PIN_LED_RED)
             lgpio.gpio_claim_output(self.lgpio_handle, PIN_LED_YELLOW, 0)
+            claimed_pins.append(PIN_LED_YELLOW)
             
             # 3b. Setup Buzzer (Claiming it for output)
             lgpio.gpio_claim_output(self.lgpio_handle, PIN_BUZZER, 0)
+            claimed_pins.append(PIN_BUZZER)
 
             self.set_led_state('idle')
             print("[HARDWARE] LEDs configured. Idle LED state applied.")
@@ -107,8 +114,12 @@ class HardwareManager(EventDispatcher):
             self.lgpio_handle = None
         except Exception as e:
             print(f"[ERROR] GPIO Setup failed: {e}")
+            if "busy" in str(e).lower():
+                print("[ERROR] One or more GPIO lines are already in use by another process.")
+                print("[HINT] Check who owns /dev/gpiochip0 and stop that process before restarting kiosk.")
             print("[ERROR] Full traceback:")
             traceback.print_exc()
+            self._close_gpiochip_handle()
             self.lgpio_handle = None
         
         # implement GPIO setup...
@@ -117,6 +128,17 @@ class HardwareManager(EventDispatcher):
         self.dispatch('on_card_scanned', barcode)
         
         # Card reader polling is controlled by screen lifecycle.
+
+    def _close_gpiochip_handle(self):
+        """Best-effort release for partially initialized lgpio handles."""
+        if self.lgpio_handle is None:
+            return
+        try:
+            import lgpio
+            lgpio.gpiochip_close(self.lgpio_handle)
+            print("[HARDWARE] Closed gpiochip handle after setup failure.")
+        except Exception:
+            pass
 
     def start_card_reader_polling(self):
         """Start PC/SC card polling loop if not already running."""
