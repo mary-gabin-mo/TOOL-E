@@ -50,12 +50,8 @@ class ToolSelectionScreen(BaseScreen):
             return
 
         if hasattr(app, 'hardware') and hasattr(app.hardware, 'set_led_state'):
-            tool_data = getattr(app.session, 'identified_tool_data', {}) if hasattr(app, 'session') else {}
-            prediction = str(tool_data.get('prediction', '')).upper()
-            score = tool_data.get('score', None)
-            is_unknown = prediction == 'UNKNOWN'
-            is_low_confidence = isinstance(score, (int, float)) and float(score) < 0.60
-            app.hardware.set_led_state('alert' if (is_unknown or is_low_confidence) else 'transaction')
+            # Manual selection mode should always signal alert state.
+            app.hardware.set_led_state('alert')
 
         self.selected_tool = None
         self._expanded_tool_id = None
@@ -137,13 +133,6 @@ class ToolSelectionScreen(BaseScreen):
             return
             
         print(f"[UI] User manually selected: {tool_data.get('name')} (ID: {tool_data.get('id')})")
-
-        app = App.get_running_app()
-        if hasattr(app, 'hardware') and hasattr(app.hardware, 'set_led_state'):
-            if tool_data.get('name') == 'Other':
-                app.hardware.set_led_state('alert')
-            else:
-                app.hardware.set_led_state('transaction')
         
         self.selected_tool = tool_data
         self.ids.next_button.disabled = False
