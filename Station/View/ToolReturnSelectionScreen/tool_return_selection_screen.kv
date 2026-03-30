@@ -1,24 +1,32 @@
 <ReturnToolItem>:
     orientation: "horizontal"
-    padding: '12dp', '8dp'
-    spacing: '2dp'
+    padding: '14dp', '10dp'
+    spacing: '8dp'
     size_hint_y: None
-    height: "72dp"
+    height: "84dp"
     canvas.before:
         Color:
             rgba: root.bg_color
-        Rectangle:
+        RoundedRectangle:
             pos: self.pos
             size: self.size
+            radius: [10, 10, 10, 10]
+    canvas.after:
+        Color:
+            rgba: 0.84, 0.84, 0.84, 1
+        Line:
+            width: 1.1
+            rounded_rectangle: (self.x, self.y, self.width, self.height, 10, 10, 10, 10, 100)
 
     BoxLayout:
         orientation: "vertical"
-        spacing: '2dp'
+        spacing: '4dp'
 
         Label:
             text: root.text
             color: 0, 0, 0, 1
-            font_size: '16sp'
+            font_size: '22sp'
+            bold: True
             halign: 'left'
             valign: 'middle'
             shorten: True
@@ -27,8 +35,8 @@
 
         Label:
             text: root.secondary_text
-            color: 0.5, 0.5, 0.5, 1
-            font_size: '13sp'
+            color: 0.36, 0.36, 0.36, 1
+            font_size: '16sp'
             halign: 'left'
             valign: 'middle'
             shorten: True
@@ -87,8 +95,12 @@
             RecycleView:
                 id: tool_recycle_view
                 viewclass: 'ReturnToolItem'
+                scroll_type: ['bars', 'content']
+                bar_width: '10dp'
+                bar_color: 0.55, 0.55, 0.55, 0.95
+                bar_inactive_color: 0.75, 0.75, 0.75, 0.55
                 RecycleBoxLayout:
-                    default_size: None, dp(72)
+                    default_size: None, dp(84)
                     default_size_hint: 1, None
                     size_hint_y: None
                     height: self.minimum_height
