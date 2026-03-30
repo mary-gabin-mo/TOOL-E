@@ -102,7 +102,7 @@ class ToolSelectionScreen(BaseScreen):
             for tool_obj in all_tools:
                 preview_source = self._materialize_preview_image(tool_obj)
                 rv_data.append({
-                    "text": f"{tool_obj['name']} (ID: {tool_obj['id']})",
+                    "text": f"{tool_obj['name']}",
                     "secondary_text": "",
                     "tool_data": tool_obj,
                     "bg_color": [1, 1, 1, 1],
