@@ -39,7 +39,7 @@ class HardwareManager(EventDispatcher):
         # Load Cell State
         self.lgpio_handle = None
         self.stable_reads = 0
-        self.offset = 382000  # From your calibration script
+        self.offset = 475000  # From your calibration script
         # OPTIMIZATION: Adjusted stable reads for lower polling frequency
         # At 5Hz (0.2s), 2 reads = ~0.4s debounce (was 3 reads @ 10Hz = ~0.3s)
         self.STABLE_READS_REQUIRED = 2
