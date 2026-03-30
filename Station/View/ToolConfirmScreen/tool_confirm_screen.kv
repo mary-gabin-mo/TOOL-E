@@ -14,7 +14,7 @@
 
         # -- Logo Area Placeholder --
         Widget:
-            size_hint_y: 0.14
+            size_hint_y: 0.13
 
         # -- Header --
         Label:
@@ -31,9 +31,9 @@
         # -- Content Card --
         BoxLayout:
             orientation: "vertical"
-            padding: "15dp"
+            padding: "15dp", "6dp", "15dp", "10dp"
             spacing: "12dp"
-            size_hint: 0.96, 0.68
+            size_hint: 0.96, 0.76
             pos_hint: {"center_x": .5}
             canvas.before:
                 Color:
@@ -43,64 +43,69 @@
                     size: self.size
                     radius: [20, 20, 20, 20]
 
-            # 1. Captured Image
-            Image:
-                id: tool_image
-                source: ""
-                allow_stretch: True
-                keep_ratio: False
-                size_hint_y: 0.8
-                canvas.before:
-                    PushMatrix
-                    Rotate:
-                        angle: 180
-                        origin: self.center
-                canvas.after:
-                    PopMatrix
+            # 1. Captured Image + Overlayed Prediction Info
+            RelativeLayout:
+                size_hint_y: 1
 
-            # 2. Prediction Info
-            BoxLayout:
-                orientation: "vertical"
-                size_hint_y: None
-                height: "170dp"
-                spacing: "10dp"
+                Image:
+                    id: tool_image
+                    source: ""
+                    allow_stretch: True
+                    keep_ratio: True
+                    size_hint: 1, 1
+                    pos_hint: {"x": 0, "y": 0.1}
+                    canvas.before:
+                        PushMatrix
+                        Rotate:
+                            angle: 180
+                            origin: self.center
+                    canvas.after:
+                        PopMatrix
 
-                Label:
-                    text: "Is this correct?"
-                    halign: "center"
-                    valign: "middle"
-                    text_size: self.size
-                    font_size: "22sp"
-                    color: 0.5, 0.5, 0.5, 1
-                    size_hint_y: None
-                    height: "36dp"
+                BoxLayout:
+                    orientation: "vertical"
+                    size_hint: 1, None
+                    height: "126dp"
+                    pos_hint: {"x": 0, "y": 0}
+                    padding: "12dp", "10dp"
+                    spacing: "8dp"
 
-                Label:
-                    id: tool_name_label
-                    text: "Loading..."
-                    halign: "center"
-                    valign: "middle"
-                    text_size: self.size
-                    font_size: "50sp"
-                    bold: True
-                    color: 0, 0, 0, 1
-                    size_hint_y: None
-                    height: "72dp"
+                    Label:
+                        text: "Is this correct?"
+                        halign: "center"
+                        valign: "middle"
+                        text_size: self.size
+                        font_size: "24sp"
+                        color: 0.5, 0.5, 0.5, 1
+                        size_hint_y: None
+                        height: "28dp"
 
-                Label:
-                    id: confidence_label
-                    text: "--%"
-                    halign: "center"
-                    valign: "middle"
-                    text_size: self.size
-                    font_size: "28sp"
-                    color: 0.2, 0.7, 0.2, 1  # Green
-                    size_hint_y: None
-                    height: "40dp"
+                    Label:
+                        id: tool_name_label
+                        text: "Loading..."
+                        halign: "center"
+                        valign: "middle"
+                        text_size: self.size
+                        font_size: "48sp"
+                        bold: True
+                        color: 0, 0, 0, 1
+                        size_hint_y: None
+                        height: "54dp"
+
+                    Label:
+                        id: confidence_label
+                        text: "--%"
+                        halign: "center"
+                        valign: "middle"
+                        text_size: self.size
+                        font_size: "28sp"
+                        color: 0.2, 0.7, 0.2, 1
+                        size_hint_y: None
+                        height: "24dp"
 
         Widget:
             size_hint_y: None
-            height: "44dp"
+            height: "10dp"
 
         # -- Action Buttons --
         BoxLayout:
