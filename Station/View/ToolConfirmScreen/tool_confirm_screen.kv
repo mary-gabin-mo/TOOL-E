@@ -52,8 +52,11 @@
                     source: "assets/images/logo_white.png"
                     allow_stretch: True
                     keep_ratio: True
-                    size_hint: 1, 1
-                    pos_hint: {"x": 0, "y": 0}
+                    size_hint_x: 1
+                    size_hint_y: None
+                    height: self.parent.height - dp(76)
+                    x: self.parent.x
+                    y: self.parent.y + dp(76)
                     canvas.before:
                         PushMatrix
                         Rotate:
@@ -69,12 +72,6 @@
                     pos_hint: {"x": 0, "y": 0}
                     padding: "12dp", "10dp"
                     spacing: "8dp"
-                    canvas.before:
-                        Color:
-                            rgba: 0, 0, 0, 0.42
-                        Rectangle:
-                            pos: self.pos
-                            size: self.size
 
                     Label:
                         text: "Is this correct?"
