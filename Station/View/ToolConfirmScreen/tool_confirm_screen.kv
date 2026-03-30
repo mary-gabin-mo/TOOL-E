@@ -20,10 +20,13 @@
         Label:
             text: "Confirm Tool"
             halign: "center"
-            font_size: "36sp"
+            valign: "middle"
+            text_size: self.size
+            font_size: "44sp"
             bold: True
             color: 0, 0, 0, 1
-            size_hint_y: 0.08
+            size_hint_y: None
+            height: "72dp"
 
         # -- Content Card --
         BoxLayout:
@@ -90,7 +93,9 @@
         BoxLayout:
             orientation: 'horizontal'
             spacing: "15dp"
-            size_hint: 0.95, 0.2  # Increased height for stacked buttons
+            size_hint_x: 0.95
+            size_hint_y: None
+            height: "168dp"
             pos_hint: {"center_x": .5}
             padding: "8dp"
 
@@ -135,13 +140,16 @@
                     on_release: root.confirm_finish()
 
         Widget:
-            size_hint_y: 0.02
+            size_hint_y: None
+            height: "8dp"
 
         # -- Back Button --
         AppButton:
             text: "BACK"
             font_size: "24sp"
-            size_hint: 0.95, 0.1
+            size_hint_x: 0.95
+            size_hint_y: None
+            height: "72dp"
             pos_hint: {"center_x": .5}
             background_normal: ''
             # base_color: 0.6, 0.6, 0.6, 1  # Grey
@@ -150,4 +158,5 @@
             on_release: root.go_back_to_capture()
 
         Widget:
-            size_hint_y: 0.04
+            size_hint_y: None
+            height: "84dp"
