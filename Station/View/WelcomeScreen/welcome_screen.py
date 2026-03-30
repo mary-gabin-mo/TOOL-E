@@ -7,7 +7,7 @@ import threading
 
 class WelcomeScreen(BaseScreen):
     
-    def on_enter(self):
+    def on_enter(self, *args):
         """
         Reset state when entering screen.
         """
@@ -20,16 +20,22 @@ class WelcomeScreen(BaseScreen):
         
         # Start listening to hardware
         if hasattr(app, 'hardware'):
+            if hasattr(app.hardware, 'set_led_state'):
+                app.hardware.set_led_state('idle')
+            if hasattr(app.hardware, 'start_card_reader_polling'):
+                app.hardware.start_card_reader_polling()
             # Bind the 'on_card_scanned' event to our function
             app.hardware.bind(on_card_scanned=self.handle_card_scan)
         
-    def on_leave(self):
+    def on_leave(self, *args):
         """
         Stop listening so this logic doesn't get triggered on other screens.
         """
         app = App.get_running_app()
         if hasattr(app, 'hardware'):
             app.hardware.unbind(on_card_scanned=self.handle_card_scan)
+            if hasattr(app.hardware, 'stop_card_reader_polling'):
+                app.hardware.stop_card_reader_polling()
            
     @mainthread
     def set_loading_state(self, is_loading):
@@ -68,7 +74,11 @@ class WelcomeScreen(BaseScreen):
     def _validate_user_async(self, barcode):
         """BACKGROUND TASK: Runs in a separate thread"""
         app = App.get_running_app()
-        result = app.api_client.validate_user(barcode)
+        try:
+            result = app.api_client.validate_user(barcode)
+        except Exception as e:
+            print(f"[UI] Validation thread failed: {e}")
+            result = {'success': False, 'error': 'Authorization failed. Please try again.'}
         
         # When done, pass results back to the main thread
         self._handle_validation_result(result)

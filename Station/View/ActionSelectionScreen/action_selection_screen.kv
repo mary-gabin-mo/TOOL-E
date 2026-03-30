@@ -1,7 +1,12 @@
 <ActionSelectionScreen>:
-    md_bg_color: 1, 1, 1, 1  # White background
+    canvas.before:
+        Color:
+            rgba: 1, 1, 1, 1  # White background
+        Rectangle:
+            pos: self.pos
+            size: self.size
 
-    MDBoxLayout:
+    BoxLayout:
         orientation: 'vertical'
         padding: "50dp"
         spacing: "15dp"
@@ -12,7 +17,7 @@
             size_hint_y: 0.65
 
         # # -- Title --
-        # MDLabel:
+        # Label:
         #     text: "TOOL-E Checkout"
         #     halign: "center"
         #     font_style: "H3"
@@ -20,17 +25,19 @@
         #     bold: True
         #     size_hint_y: 0.1
 
-        MDLabel:
+        Label:
             text: "Select Action Type"
             halign: "center"
-            font_style: "H3"
-            # theme_text_color: "Secondary"
+            valign: "middle"
+            text_size: self.size
+            font_size: "56sp"
+            color: 0.15, 0.15, 0.15, 1
             bold: True
             size_hint_y: None
             height: "80dp"
             padding_top: "10dp"
 
-        MDBoxLayout:
+        BoxLayout:
             orientation: 'horizontal'
             padding: "30dp", "15dp"
             spacing: "50dp"

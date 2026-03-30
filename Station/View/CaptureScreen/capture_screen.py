@@ -30,7 +30,8 @@ class CaptureScreen(BaseScreen):
 
     _pending_capture_event = None
     _is_capturing = False
-    _manual_capture_idle_event = None
+    _camera_init_timeout_event = None
+    _camera_ready_reported = False
 
     def on_enter(self):
         """
@@ -40,11 +41,13 @@ class CaptureScreen(BaseScreen):
         print("[DEBUG] CaptureScreen: on_enter called")
 
         self._is_capturing = False
-        self._hide_manual_capture_button()
-        self._cancel_manual_capture_idle_timer()
+        self._camera_ready_reported = False
         if self._pending_capture_event:
             self._pending_capture_event.cancel()
             self._pending_capture_event = None
+        if self._camera_init_timeout_event:
+            self._camera_init_timeout_event.cancel()
+            self._camera_init_timeout_event = None
 
         # 1. Reset UI to "Initializing" state
         self.set_processing_mode(True, message="Initializing Camera...")
@@ -52,11 +55,23 @@ class CaptureScreen(BaseScreen):
         # 2. Bind hardware events
         app = App.get_running_app()
         if hasattr(app, 'hardware'):
+            if hasattr(app.hardware, 'set_led_state'):
+                app.hardware.set_led_state('transaction')
             print("[DEBUG] Binding on_load_cell_detect")
             app.hardware.bind(on_load_cell_detect=self.handle_load_cell_trigger)
 
         # 3. Start camera in background
+        # Guard against camera drivers hanging forever when hardware is missing.
+        self._camera_init_timeout_event = Clock.schedule_once(self._on_camera_init_timeout, 8)
         threading.Thread(target=self._init_camera_async, daemon=True).start()
+
+    @mainthread
+    def _on_camera_init_timeout(self, dt):
+        if self._camera_ready_reported:
+            return
+        print("[ERROR] Camera init timed out")
+        self._camera_ready_reported = True
+        self.set_processing_mode(True, message="Camera Error!\nCheck camera/power")
 
     def _init_camera_async(self):
         """Background init to prevent UI freeze."""
@@ -87,6 +102,14 @@ class CaptureScreen(BaseScreen):
     @mainthread
     def _on_camera_ready(self, success):
         """Called on Main Thread after camera init."""
+        if self._camera_ready_reported:
+            return
+
+        self._camera_ready_reported = True
+        if self._camera_init_timeout_event:
+            self._camera_init_timeout_event.cancel()
+            self._camera_init_timeout_event = None
+
         print(f"[DEBUG] Camera ready: success={success}")
         if success:
             self.set_processing_mode(False)
@@ -97,7 +120,7 @@ class CaptureScreen(BaseScreen):
             self._reset_manual_capture_idle_timer()
             print("[DEBUG] Feed scheduled")
         else:
-            self.ids.loading_label.text = "Camera Error!"
+            self.set_processing_mode(True, message="Camera Error!")
 
     def on_leave(self):
         """
@@ -116,8 +139,9 @@ class CaptureScreen(BaseScreen):
         if self._pending_capture_event:
             self._pending_capture_event.cancel()
             self._pending_capture_event = None
-
-        self._cancel_manual_capture_idle_timer()
+        if self._camera_init_timeout_event:
+            self._camera_init_timeout_event.cancel()
+            self._camera_init_timeout_event = None
 
         if self.picam2:
             try:
@@ -137,6 +161,7 @@ class CaptureScreen(BaseScreen):
             print("[DEBUG] Webcam released")
 
         self._is_capturing = False
+        self._camera_ready_reported = False
 
     @mainthread
     def set_processing_mode(self, is_processing, message="Processing..."):

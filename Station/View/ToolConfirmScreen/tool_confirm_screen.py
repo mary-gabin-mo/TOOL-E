@@ -11,6 +11,8 @@ class ToolConfirmScreen(BaseScreen):
         Populate the UI with data from the Session when the screen opens.
         """
         app = App.get_running_app()
+        if hasattr(app, 'hardware') and hasattr(app.hardware, 'set_led_state'):
+            app.hardware.set_led_state('transaction')
         
         # 1. Get the Image Path from the current transaction
         # Default to a placeholder if missing

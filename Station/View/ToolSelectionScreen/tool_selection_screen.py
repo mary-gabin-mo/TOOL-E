@@ -49,6 +49,10 @@ class ToolSelectionScreen(BaseScreen):
             self.go_to('tool return selection screen')
             return
 
+        if hasattr(app, 'hardware') and hasattr(app.hardware, 'set_led_state'):
+            # Manual selection mode should always signal alert state.
+            app.hardware.set_led_state('alert')
+
         self.selected_tool = None
         self._expanded_tool_id = None
         self.ids.next_button.disabled = True

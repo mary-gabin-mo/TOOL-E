@@ -34,6 +34,13 @@ if IS_RASPBERRY_PI:
     from kivy.lang import Builder
     Builder.load_string("""
 <VKeyboard>:
+    # Increase height of virtual keyboard. 
+    # height: dp(350)
+    
+    # Or use scale if you just want everything bigger
+    # scale: 1.5
+    
+    # Simple approach: Force a larger size hint
     size_hint_y: 0.27
 """)
 
@@ -69,7 +76,7 @@ else:
     Config.set('graphics', 'height', '1280')
     
     Window.top = 0
-    Window.left = 1000
+    Window.left = 1400
 
 Config.write()
 
