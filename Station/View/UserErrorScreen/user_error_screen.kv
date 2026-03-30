@@ -9,12 +9,12 @@
     BoxLayout:
         orientation: 'vertical'
         padding: "50dp"
-        spacing: "40dp"
+        spacing: "15dp"
         pos_hint: {"center_x": .5, "center_y": .5}
 
         # --- Spacer ---
         Widget:
-            size_hint_y: 0.07
+            size_hint_y: 0.25
 
         # --- Error Icon ---
         Label:
@@ -49,17 +49,19 @@
             color: 0.35, 0.35, 0.35, 1
             size_hint_y: 0.25
 
-        # --- Spacer ---
-        Widget:
-            size_hint_y: 0.2
-
         # --- Action Button ---
         AppButton:
-            text: "TRY AGAIN"
-            font_size: "34sp"
-            size_hint: 0.7, 0.18
+            text: "RETURN TO HOME PAGE"
+            font_size: "28sp"
+            size_hint_x: 0.7
+            size_hint_y: None
+            height: "70dp"
             pos_hint: {"center_x": .5}
             base_color: 0.2, 0.6, 0.8, 1  # Standard Blue
             down_color: 0.16, 0.5, 0.68, 1
             color: 1, 1, 1, 1
             on_release: root.go_to_main()
+
+        # --- Bottom Spacer (pushes button up) ---
+        Widget:
+            size_hint_y: 0.3
