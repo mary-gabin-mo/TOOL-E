@@ -46,7 +46,7 @@ class HardwareManager(EventDispatcher):
         # Load Cell State
         self.lgpio_handle = None
         self.stable_reads = 0
-        self.offset = 382000  # From your calibration script
+        self.offset = 476500  # From your calibration script
         self._tare_in_progress = False
         self._last_auto_tare_ts = time.monotonic()
         self._idle_empty_since = None
@@ -107,7 +107,8 @@ class HardwareManager(EventDispatcher):
             self.lgpio_handle = None
         except Exception as e:
             print(f"[ERROR] GPIO Setup failed: {e}")
-            print(f"[ERROR] Full traceback: ", exc_info=True)
+            print("[ERROR] Full traceback:")
+            traceback.print_exc()
             self.lgpio_handle = None
         
         # implement GPIO setup...
