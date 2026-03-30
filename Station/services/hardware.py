@@ -215,15 +215,20 @@ class HardwareManager(EventDispatcher):
             return # Sensor not ready
 
         current_weight = raw_val - self.offset
+        weight_delta = abs(current_weight)
         
-        # # Print status every 10 polls (1 second)
-        # if self.poll_counter % 10 == 0:
-        #     print(f"[LOADCELL] Raw: {raw_val}, Weight: {current_weight:.1f}g, Threshold: {LOAD_CELL_THRESHOLD}g, Stable: {self.stable_reads}/{self.STABLE_READS_REQUIRED}")
+        # Print status every 10 polls (~2 seconds at 0.2s interval)
+        if self.poll_counter % 10 == 0:
+            print(
+                f"[LOADCELL] Raw: {raw_val}, Delta: {current_weight:.1f}, |Delta|: {weight_delta:.1f}, "
+                f"Threshold: {LOAD_CELL_THRESHOLD}, Stable: {self.stable_reads}/{self.STABLE_READS_REQUIRED}, "
+                f"Offset: {self.offset:.1f}, LED: {self._led_state}"
+            )
 
         self._maybe_schedule_auto_tare(current_weight)
 
         # Check Threshold
-        if current_weight > LOAD_CELL_THRESHOLD:
+        if weight_delta > LOAD_CELL_THRESHOLD:
             self.stable_reads += 1
         else:
             self.stable_reads = 0
@@ -232,7 +237,7 @@ class HardwareManager(EventDispatcher):
         if self.stable_reads >= self.STABLE_READS_REQUIRED:
             print(f"\n{'='*60}")
             print(f"[HARDWARE] **OBJECT DETECTED!**")
-            print(f"[HARDWARE] Weight: {current_weight:.1f}g (raw: {raw_val})")
+            print(f"[HARDWARE] Delta: {current_weight:.1f} (|delta|={weight_delta:.1f}, raw={raw_val}, offset={self.offset:.1f})")
             print(f"[HARDWARE] Dispatching on_load_cell_detect event...")
             print(f"{'='*60}\n")
             self.dispatch('on_load_cell_detect', current_weight)
