@@ -74,7 +74,11 @@ class WelcomeScreen(BaseScreen):
     def _validate_user_async(self, barcode):
         """BACKGROUND TASK: Runs in a separate thread"""
         app = App.get_running_app()
-        result = app.api_client.validate_user(barcode)
+        try:
+            result = app.api_client.validate_user(barcode)
+        except Exception as e:
+            print(f"[UI] Validation thread failed: {e}")
+            result = {'success': False, 'error': 'Authorization failed. Please try again.'}
         
         # When done, pass results back to the main thread
         self._handle_validation_result(result)

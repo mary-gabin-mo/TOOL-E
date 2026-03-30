@@ -67,6 +67,7 @@ class APIClient(EventDispatcher):
             print(f"[API] Validating User: {barcode=}...")
             payload = {"barcode": barcode, "UCID": None} # Distinguish whether it's barcode or UCID in the server with regex
             
+        response = None
         try:
             # OPTIMIZATION: Use pooled session instead of raw requests
             response = self.session.post(
@@ -96,7 +97,7 @@ class APIClient(EventDispatcher):
             
         except requests.exceptions.RequestException as e:
             # Handle 404 (User not found) - when user not found in the db
-            if response and response.status_code == 404:
+            if response is not None and response.status_code == 404:
                 return {'success': False, 'error': "User not found in database."}
             
             print(f"[API] Error: {e}")
