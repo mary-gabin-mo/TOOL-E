@@ -357,8 +357,6 @@ class CaptureScreen(BaseScreen):
 
             if str(prediction).upper() == 'UNKNOWN' or float(score) < 0.60:
                 print(f"[UI] Low confidence ({score}) or UNKNOWN ({prediction}). Bypassing confirm screen.")
-                if hasattr(app, 'hardware') and hasattr(app.hardware, 'set_led_state'):
-                    app.hardware.set_led_state('alert')
                 if is_return_flow:
                     app.session.tool_was_confirmed = False
                     app.session.set_classification_correct(False)
