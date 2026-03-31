@@ -235,7 +235,7 @@ class CaptureScreen(BaseScreen):
         print(f"{'='*60}\n")
 
         print("[DEBUG] Waiting 1 seconds for object to settle...")
-        self._pending_capture_event = Clock.schedule_once(self._delayed_capture, 1)
+        self._pending_capture_event = Clock.schedule_once(self._delayed_capture, 0.5)
 
     def _delayed_capture(self, dt):
         self._pending_capture_event = None

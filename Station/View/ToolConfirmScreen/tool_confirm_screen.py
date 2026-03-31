@@ -49,13 +49,13 @@ class ToolConfirmScreen(BaseScreen):
         self.ids.tool_name_label.text = tool_name
         self.ids.confidence_label.text = score
 
-    def _delete_current_image(self):
-        """Delete the temporary captured image after user leaves confirmation."""
+    def _delete_current_image(self, tx_override=None):
+        """Delete the temporary captured image for the current or provided transaction."""
         app = App.get_running_app()
         if not hasattr(app, 'session'):
             return
 
-        tx = app.session.current_transaction
+        tx = tx_override if tx_override is not None else app.session.current_transaction
         if not tx and getattr(app.session, 'transactions', None):
             tx = app.session.transactions[-1]
         if not tx:
@@ -75,6 +75,21 @@ class ToolConfirmScreen(BaseScreen):
                 print(f"[UI] Deleted image file {img_path} after tool confirmation.")
             except Exception as e:
                 print(f"[UI] Warning: could not delete image {img_path}: {e}")
+
+    def _remove_last_confirmed_transaction(self):
+        """Remove and return the latest confirmed transaction from session."""
+        app = App.get_running_app()
+        if not hasattr(app, 'session'):
+            return None
+
+        tx_list = list(getattr(app.session, 'transactions', []))
+        if not tx_list:
+            return None
+
+        removed = dict(tx_list.pop())
+        app.session.transactions = tx_list
+        print(f"[SESSION] Removed last confirmed transaction: {removed.get('transaction_id')}")
+        return removed
 
     def confirm_scan_more(self):
         """
@@ -158,5 +173,15 @@ class ToolConfirmScreen(BaseScreen):
 
     def go_back_to_capture(self):
         """Back button handler for confirm screen."""
-        self._delete_current_image()
+        app = App.get_running_app()
+
+        removed_tx = None
+        if hasattr(app, 'session'):
+            # If there is no active pending tx, user is editing an already confirmed item.
+            # Remove that latest confirmed item before returning to capture.
+            if not app.session.current_transaction:
+                removed_tx = self._remove_last_confirmed_transaction()
+
+        # Delete the image associated with the removed or current transaction.
+        self._delete_current_image(tx_override=removed_tx)
         self.go_back('capture screen')

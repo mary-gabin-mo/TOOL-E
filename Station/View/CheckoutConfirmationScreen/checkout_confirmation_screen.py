@@ -1,5 +1,5 @@
 from View.baseScreen import BaseScreen
-from kivy.uix.label import Label
+from kivy.factory import Factory
 from datetime import datetime
 
 class CheckoutConfirmationScreen(BaseScreen):
@@ -25,7 +25,7 @@ class CheckoutConfirmationScreen(BaseScreen):
             else:
                 date_str = str(return_date)
 
-            self.ids.date_display.text = f"Please return them by:\n{date_str}"
+            self.ids.date_display.text = f"{date_str}"
         else:
             self.ids.date_display.text = "Checkout confirmed!"
             
@@ -37,18 +37,12 @@ class CheckoutConfirmationScreen(BaseScreen):
         
         if not transactions:
             list_container.add_widget(
-                Label(text="No tools tracked", size_hint_y=None, height="40dp", color=(0,0,0,1))
+                Factory.ReadonlyToolListItem(text="No tools tracked")
             )
         else:
             for idx, tx in enumerate(transactions, 1):
                 tool_name = tx.get('tool_name', 'Unknown Tool')
-                lbl = Label(
-                    text=f"{idx}. {tool_name}", 
-                    size_hint_y=None, 
-                    height="40dp", 
-                    color=(0,0,0,1),
-                    font_size="24sp"
-                )
+                lbl = Factory.ReadonlyToolListItem(text=f"{idx}. {tool_name}")
                 list_container.add_widget(lbl)
     
     def return_to_menu(self):
@@ -67,7 +61,7 @@ class CheckoutConfirmationScreen(BaseScreen):
         
         # Clear only transaction-specific data, keep user_data
         app.session.scanned_tools = []
-        app.session.return_date = None
+        app.session.return_date = ""
         app.session.transaction_type = "borrow"  # Reset to default
         
         # Navigate to action selection screen

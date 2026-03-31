@@ -51,7 +51,7 @@
 
         # --- Logo Area Placeholder ---
         Widget:
-            size_hint_y: 0.15
+            size_hint_y: 0.1
 
         # --- Title ---
         Label:
@@ -62,7 +62,7 @@
             font_size: "44sp"
             bold: True
             size_hint_y: None
-            height: '72dp'
+            height: '62dp'
             color: 0, 0, 0, 1
 
         # Central card
@@ -92,19 +92,38 @@
                 height: "44dp"
 
             # 2. Scrollable List of Tools
-            ScrollView:
-                size_hint_y: 1.0
-                height: "100dp"
-                bar_width: '10dp'
-                bar_color: 0.55, 0.55, 0.55, 0.95
-                bar_inactive_color: 0.75, 0.75, 0.75, 0.55
+            BoxLayout:
+                orientation: 'vertical'
+                size_hint: 1.0, 0.85
+                padding: '5dp'
+                canvas.before:
+                    Color:
+                        rgba: 1, 1, 1, 1
+                    RoundedRectangle:
+                        pos: self.pos
+                        size: self.size
+                        radius: [10, 10, 10, 10]
+                    Color:
+                        rgba: 0.4, 0.4, 0.4, 1
+                    Line:
+                        rounded_rectangle: (self.x, self.y, self.width, self.height, 10, 10, 10, 10, 100)
+                        width: 1.5
 
-                GridLayout:
-                    id: tool_list_container
-                    cols: 1
-                    size_hint_y: None
-                    height: self.minimum_height
-                    padding: [self.width * 0.1, 0, self.width * 0.1, 0]
+                ScrollView:
+                    bar_width: '10dp'
+                    bar_color: 0.55, 0.55, 0.55, 0.95
+                    bar_inactive_color: 0.75, 0.75, 0.75, 0.55
+
+                    GridLayout:
+                        id: tool_list_container
+                        cols: 1
+                        size_hint_y: None
+                        height: self.minimum_height
+                        # padding: [self.width * 0.1, 0, self.width * 0.1, 0]
+            
+            # --- Logo Area Placeholder ---
+            Widget:
+                size_hint_y: 0.01
 
             # Purpose Selection Box
             BoxLayout:
@@ -119,7 +138,7 @@
                     halign: "center"
                     valign: "middle"
                     text_size: self.size
-                    font_size: "28sp"
+                    font_size: "30sp"
                     color: 0.5, 0.5, 0.5, 1
                     size_hint_y: None
                     height: "38dp"
@@ -133,7 +152,7 @@
                     AppButton:
                         id: btn_academic
                         text: "Academic Course"
-                        font_size: "24sp"
+                        font_size: "28sp"
                         size_hint_x: 0.5
                         background_normal: ''
                         base_color: 0.9, 0.9, 0.9, 1
@@ -143,7 +162,7 @@
                     AppButton:
                         id: btn_personal
                         text: "Personal Project"
-                        font_size: "24sp"
+                        font_size: "28sp"
                         size_hint_x: 0.5
                         background_normal: ''
                         base_color: 0.9, 0.9, 0.9, 1
@@ -159,7 +178,7 @@
                     AppButton:
                         id: btn_team
                         text: "Team"
-                        font_size: "24sp"
+                        font_size: "28sp"
                         size_hint_x: 0.6
                         background_normal: ''
                         base_color: 0.9, 0.9, 0.9, 1
@@ -169,7 +188,7 @@
                     AppButton:
                         id: btn_research
                         text: "Research"
-                        font_size: "24sp"
+                        font_size: "28sp"
                         size_hint_x: 0.6
                         background_normal: ''
                         base_color: 0.9, 0.9, 0.9, 1
@@ -198,7 +217,7 @@
                         Label:
                             text: "Course Code:"
                             size_hint_x: 0.35
-                            font_size: "18sp"
+                            font_size: "32sp"
                             color: 0, 0, 0, 1
                             halign: "right"
                             valign: "middle"
@@ -207,7 +226,7 @@
                         CourseCodeInput:
                             id: course_code_input
                             hint_text: "e.g. ENEL500"
-                            font_size: "22sp"
+                            font_size: "35sp"
                             multiline: False
                             size_hint_x: 0.65
                             height: "48dp"
@@ -226,7 +245,7 @@
                         Label:
                             text: "Team Name:"
                             size_hint_x: 0.35
-                            font_size: "18sp"
+                            font_size: "32sp"
                             color: 0, 0, 0, 1
                             halign: "right"
                             valign: "middle"
@@ -235,7 +254,7 @@
                         TextInput:
                             id: team_name_input
                             hint_text: "Enter team name"
-                            font_size: "22sp"
+                            font_size: "35sp"
                             multiline: False
                             size_hint_x: 0.65
                             height: "48dp"
@@ -256,13 +275,13 @@
                     text: "Tap to select Return Date"
                     halign: "center"
                     valign: "center"
-                    font_size: "22sp"
+                    font_size: "32sp"
                     color: 0.8, 0.2, 0.2, 1  # Red text initially
 
-            # Keep only a tiny fixed gap before the action bar
-            Widget:
-                size_hint_y: None
-                height: "6dp"
+            # # Keep only a tiny fixed gap before the action bar
+            # Widget:
+            #     size_hint_y: None
+            #     height: "6dp"
 
         # --- BOTTOM ACTION BAR ---
         BoxLayout:
