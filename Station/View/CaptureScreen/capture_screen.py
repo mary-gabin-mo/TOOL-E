@@ -234,8 +234,8 @@ class CaptureScreen(BaseScreen):
         print(f"[LOADCELL DETECTED] Instance: {instance}")
         print(f"{'='*60}\n")
 
-        print("[DEBUG] Waiting 0.8 seconds for object to settle...")
-        self._pending_capture_event = Clock.schedule_once(self._delayed_capture, 0.8)
+        print("[DEBUG] Waiting 0.6 seconds for object to settle...")
+        self._pending_capture_event = Clock.schedule_once(self._delayed_capture, 0.6)
 
     def _delayed_capture(self, dt):
         self._pending_capture_event = None
