@@ -1,10 +1,12 @@
 import os
 from kivy.app import App
+from kivy.properties import StringProperty
 from View.baseScreen import BaseScreen
 
 class ToolConfirmScreen(BaseScreen):
-    
     predicted_name = None
+    # Mode controls layout variations. 'confirm' (default) or 'return'
+    mode = StringProperty('confirm')
 
     def on_enter(self):
         """
@@ -45,6 +47,12 @@ class ToolConfirmScreen(BaseScreen):
         self.predicted_name = tool_name
         self.ids.tool_name_label.text = tool_name
         self.ids.confidence_label.text = score
+        # Set layout mode based on transaction type (affects which buttons are shown)
+        try:
+            tx_type = app.session.transaction_type if hasattr(app, 'session') else None
+        except Exception:
+            tx_type = None
+        self.mode = 'return' if tx_type == 'return' else 'confirm'
 
     def _delete_current_image(self):
         """Delete the temporary captured image after user leaves confirmation."""

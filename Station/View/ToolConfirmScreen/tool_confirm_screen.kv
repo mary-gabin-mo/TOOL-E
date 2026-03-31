@@ -121,7 +121,8 @@
             AppButton:
                 text: "NO"
                 font_size: "30sp"
-                size_hint_x: 0.3
+                # Expand to half width when in return mode, otherwise keep original 30/70 split
+                size_hint_x: 0.3 if root.mode != 'return' else 0.5
                 size_hint_y: 1
                 background_normal: ''
                 base_color: 0.8, 0.2, 0.2, 1  # Red
@@ -132,25 +133,31 @@
             # YES Actions (Right Side - Stacked)
             BoxLayout:
                 orientation: 'vertical'
-                spacing: "15dp"
-                size_hint_x: 0.7
+                spacing: "15dp" if root.mode != 'return' else "0dp"
+                # Shrink to half width when in return mode, otherwise original 70%
+                size_hint_x: 0.7 if root.mode != 'return' else 0.5
 
-                # Option 1: Scan More
+                # Option 1: Scan More (hidden in return mode)
                 AppButton:
                     text: "YES, SCAN MORE"
                     font_size: "26sp"
                     size_hint: 1, 0.5
+                    # collapse when in return mode
+                    size_hint_y: 0.5 if root.mode != 'return' else 0
+                    disabled: root.mode == 'return'
+                    opacity: 1 if root.mode != 'return' else 0
                     background_normal: ''
                     base_color: 0.2, 0.6, 0.8, 1  # Blue
                     down_color: 0.15, 0.65, 0.15, 1
                     color: 1, 1, 1, 1
                     on_release: root.confirm_scan_more()
 
-                # Option 2: Finish
+                # Option 2: Finish (expand to full height in return mode)
                 AppButton:
-                    text: "YES, FINISH"
+                    text: "YES" if root.mode == 'return' else "YES, FINISH"
                     font_size: "26sp"
                     size_hint: 1, 0.5
+                    size_hint_y: 0.5 if root.mode != 'return' else 1
                     background_normal: ''
                     base_color: 0.2, 0.7, 0.2, 1  # Green
                     down_color: 0.15, 0.65, 0.15, 1
