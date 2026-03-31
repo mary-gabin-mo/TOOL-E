@@ -39,7 +39,7 @@ class HardwareManager(EventDispatcher):
         # Load Cell State
         self.lgpio_handle = None
         self.stable_reads = 0
-        self.offset = 499700  # From your calibration script
+        self.offset = 499750 # weight of the bed
         # OPTIMIZATION: Adjusted stable reads for lower polling frequency
         # At 5Hz (0.2s), 2 reads = ~0.4s debounce (was 3 reads @ 10Hz = ~0.3s)
         self.STABLE_READS_REQUIRED = 2
@@ -199,6 +199,7 @@ class HardwareManager(EventDispatcher):
             return # Sensor not ready
 
         current_weight = raw_val - self.offset
+        print(f"{current_weight=}")
         
         # # Print status every 10 polls (1 second)
         # if self.poll_counter % 10 == 0:
