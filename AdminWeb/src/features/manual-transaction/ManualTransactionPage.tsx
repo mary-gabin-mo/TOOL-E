@@ -1,4 +1,4 @@
-import React, { useMemo, useState } from 'react';
+import { useMemo, useState } from 'react';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { api } from '../../lib/axios';
 
@@ -34,7 +34,10 @@ export const ManualTransactionPage = () => {
   const [activeTab, setActiveTab] = useState<'checkout' | 'return'>('checkout');
   const [userId, setUserId] = useState('');
   const [selectedToolId, setSelectedToolId] = useState('');
+  const [manualToolName, setManualToolName] = useState('');
   const [purpose, setPurpose] = useState('');
+  const [courseCode, setCourseCode] = useState('');
+  const [teamName, setTeamName] = useState('');
   const [desiredReturnDate, setDesiredReturnDate] = useState('');
   const [formError, setFormError] = useState<string | null>(null);
 
@@ -43,6 +46,25 @@ export const ManualTransactionPage = () => {
   const [selectedTransactionId, setSelectedTransactionId] = useState<number | null>(null);
 
   const queryClient = useQueryClient();
+  const isOtherTool = selectedToolId === 'other';
+
+  const buildPurposePayload = () => {
+    const basePurpose = (() => {
+      if (purpose === 'Academic Course') {
+        return `Academic Course: ${courseCode}`;
+      }
+      if (purpose === 'Team') {
+        return `Team: ${teamName.trim()}`;
+      }
+      return purpose || null;
+    })();
+
+    if (isOtherTool && manualToolName.trim()) {
+      return `${basePurpose} | Tool: ${manualToolName.trim()}`;
+    }
+
+    return basePurpose;
+  };
 
   const { data: tools = [] } = useQuery<{ id: number; name: string }[]>({
     queryKey: ['tools'],
@@ -56,16 +78,19 @@ export const ManualTransactionPage = () => {
     mutationFn: async () => {
       await api.post('/transactions', {
         user_id: userId ? Number(userId) : null,
-        tool_id: selectedToolId ? Number(selectedToolId) : null,
+        tool_id: selectedToolId && !isOtherTool ? Number(selectedToolId) : null,
         desired_return_date: desiredReturnDate || null,
-        purpose: purpose || null,
+        purpose: buildPurposePayload(),
       });
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['transactions'] });
       setUserId('');
       setSelectedToolId('');
+      setManualToolName('');
       setPurpose('');
+      setCourseCode('');
+      setTeamName('');
       setDesiredReturnDate('');
       setFormError(null);
     },
@@ -152,9 +177,32 @@ export const ManualTransactionPage = () => {
                 return;
               }
 
+              if (isOtherTool && !manualToolName.trim()) {
+                setFormError("Please enter the manual tool name for 'Other'.");
+                return;
+              }
+
               if (!desiredReturnDate) {
                  setFormError("Please select a desired return date.");
                  return;
+              }
+
+              if (!purpose) {
+                setFormError("Please select a purpose.");
+                return;
+              }
+
+              if (purpose === 'Academic Course') {
+                const normalizedCode = courseCode.trim().toUpperCase();
+                if (!/^[A-Z]{4}\d{3}$/.test(normalizedCode)) {
+                  setFormError("Course code must be 4 letters followed by 3 numbers (e.g., ENGG123).");
+                  return;
+                }
+              }
+
+              if (purpose === 'Team' && !teamName.trim()) {
+                setFormError("Please enter a team name.");
+                return;
               }
 
               const [y, m, d] = desiredReturnDate.split('-').map(Number);
@@ -191,7 +239,13 @@ export const ManualTransactionPage = () => {
               <label className="block text-sm font-medium text-gray-700 mb-1">Tool</label>
               <select
                 value={selectedToolId}
-                onChange={(e) => setSelectedToolId(e.target.value)}
+                onChange={(e) => {
+                  const value = e.target.value;
+                  setSelectedToolId(value);
+                  if (value !== 'other') {
+                    setManualToolName('');
+                  }
+                }}
                 className="w-full px-3 py-2 border border-gray-300 rounded-md bg-white"
               >
                 <option value="">Select a tool...</option>
@@ -200,8 +254,22 @@ export const ManualTransactionPage = () => {
                     {tool.name} (#{tool.id})
                   </option>
                 ))}
+                <option value="other">Other (Manual Entry)</option>
               </select>
             </div>
+
+            {isOtherTool && (
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-1">Manual Tool Name</label>
+                <input
+                  type="text"
+                  placeholder="Enter tool name"
+                  value={manualToolName}
+                  onChange={(e) => setManualToolName(e.target.value)}
+                  className="w-full px-3 py-2 border border-gray-300 rounded-md"
+                />
+              </div>
+            )}
 
 
             <div>
@@ -216,12 +284,20 @@ export const ManualTransactionPage = () => {
 
             <div>
               <label className="block text-sm font-medium text-gray-700 mb-1">Purpose</label>
-              <div className="flex gap-3">
-                {['Academic Course', 'Personal Project'].map((option) => (
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                {['Academic Course', 'Personal Project', 'Team', 'Research'].map((option) => (
                   <button
                     key={option}
                     type="button"
-                    onClick={() => setPurpose(option)}
+                    onClick={() => {
+                      setPurpose(option);
+                      if (option !== 'Academic Course') {
+                        setCourseCode('');
+                      }
+                      if (option !== 'Team') {
+                        setTeamName('');
+                      }
+                    }}
                     className={`px-4 py-2 rounded-md text-sm font-medium border transition-colors ${
                       purpose === option
                         ? 'bg-blue-600 text-white border-blue-600'
@@ -233,6 +309,33 @@ export const ManualTransactionPage = () => {
                 ))}
               </div>
             </div>
+
+            {purpose === 'Academic Course' && (
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-1">Course Code</label>
+                <input
+                  type="text"
+                  placeholder="e.g., ENGG123"
+                  value={courseCode}
+                  onChange={(e) => setCourseCode(e.target.value.toUpperCase())}
+                  className="w-full px-3 py-2 border border-gray-300 rounded-md"
+                  maxLength={7}
+                />
+              </div>
+            )}
+
+            {purpose === 'Team' && (
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-1">Team Name</label>
+                <input
+                  type="text"
+                  placeholder="Enter team name"
+                  value={teamName}
+                  onChange={(e) => setTeamName(e.target.value)}
+                  className="w-full px-3 py-2 border border-gray-300 rounded-md"
+                />
+              </div>
+            )}
 
             <div className="pt-2 flex justify-end">
               <button

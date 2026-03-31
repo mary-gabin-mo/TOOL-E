@@ -10,10 +10,10 @@ export const LoginPage = () => {
   const [password, setPassword] = useState('');
 
   const navigate = useNavigate();
-  const { login: setAuth, token } = useAuthStore();
+  const { login: setAuth, isAuthenticated } = useAuthStore();
 
   // Redirect if already logged in
-  if (token) {
+  if (isAuthenticated()) {
     return <Navigate to="/dashboard" replace />;
   }
 

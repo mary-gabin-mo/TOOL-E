@@ -1,6 +1,6 @@
 import base64
 
-from fastapi import APIRouter, HTTPException
+from fastapi import APIRouter, File, HTTPException, UploadFile
 from sqlalchemy import text
 from app.models import ToolInput, ToolUpdate
 from app.database import engine_tools
@@ -115,3 +115,27 @@ async def update_tool(tool_id: int, tool: ToolUpdate):
         conn.commit()
     
     return {"success": True, "message": "Tool updated successfully"}
+
+
+@router.put("/tools/{tool_id}/stock-image")
+async def upload_tool_stock_image(tool_id: int, file: UploadFile = File(...)):
+    content_type = (file.content_type or "").lower()
+    if not content_type.startswith("image/"):
+        raise HTTPException(status_code=400, detail="Only image files are allowed")
+
+    image_bytes = await file.read()
+    if not image_bytes:
+        raise HTTPException(status_code=400, detail="Uploaded file is empty")
+
+    with engine_tools.connect() as conn:
+        check = conn.execute(text("SELECT tool_id FROM tools WHERE tool_id = :id"), {"id": tool_id}).fetchone()
+        if not check:
+            raise HTTPException(status_code=404, detail="Tool not found")
+
+        conn.execute(
+            text("UPDATE tools SET image = :image WHERE tool_id = :id"),
+            {"id": tool_id, "image": image_bytes},
+        )
+        conn.commit()
+
+    return {"success": True, "message": "Stock image updated successfully"}

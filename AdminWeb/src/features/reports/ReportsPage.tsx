@@ -1,4 +1,4 @@
-import React, { useEffect, useMemo, useState } from 'react';
+import { useEffect, useMemo, useState } from 'react';
 import { Download, Loader2, Calendar } from 'lucide-react';
 import { useQuery } from '@tanstack/react-query';
 import clsx from 'clsx';
@@ -75,7 +75,7 @@ export const ReportsPage = () => {
   }, [selectedTermId, termOptions]);
 
   // Fetch Data
-  const { data, isLoading, isError, refetch } = useQuery({
+  const { data, isLoading, isError } = useQuery({
     queryKey: ['reports', startDate, endDate],
     queryFn: async () => {
       const params: any = { limit: 1000 }; // Fetch up to 1000 records for the report
@@ -91,7 +91,6 @@ export const ReportsPage = () => {
   const handleGenerate = () => {
     if (!startDate || !endDate) return;
     setEnabled(true);
-    refetch();
   };
 
   const handleDownload = () => {
