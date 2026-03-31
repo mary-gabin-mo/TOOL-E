@@ -13,6 +13,28 @@
             rounded_rectangle: (self.x, self.y, self.width, self.height, 10, 10, 10, 10, 100)
             width: 2
 
+<ReadonlyToolListItem@Label>:
+    size_hint_y: None
+    height: '56dp'
+    color: 0, 0, 0, 1
+    halign: 'center'
+    valign: 'middle'
+    font_size: '26sp'
+    text_size: self.size
+    padding: '14dp', '0dp'
+    canvas.before:
+        Color:
+            rgba: 1, 1, 1, 1
+        Rectangle:
+            pos: self.pos
+            size: self.size
+    canvas.after:
+        Color:
+            rgba: 0.78, 0.78, 0.78, 1
+        Line:
+            width: 1
+            rectangle: (self.x, self.y, self.width, self.height)
+
 <TransactionConfirmScreen>:
     canvas.before:
         Color:
@@ -48,7 +70,7 @@
             orientation: 'vertical'
             padding: '15dp'
             spacing: '12dp'
-            size_hint: 1, .8  # Wider card so purpose buttons can be wider
+            size_hint: 1, .7  # Wider card so purpose buttons can be wider
             pos_hint: {"center_x": .5}
             canvas.before:
                 Color:
@@ -71,16 +93,18 @@
 
             # 2. Scrollable List of Tools
             ScrollView:
-                # size_hint_y: 1.0  # Expand list area and push controls lower
+                size_hint_y: 1.0
                 height: "100dp"
                 bar_width: '10dp'
+                bar_color: 0.55, 0.55, 0.55, 0.95
+                bar_inactive_color: 0.75, 0.75, 0.75, 0.55
 
                 GridLayout:
                     id: tool_list_container
                     cols: 1
                     size_hint_y: None
                     height: self.minimum_height
-                    padding: 0
+                    padding: [self.width * 0.1, 0, self.width * 0.1, 0]
 
             # Purpose Selection Box
             BoxLayout:

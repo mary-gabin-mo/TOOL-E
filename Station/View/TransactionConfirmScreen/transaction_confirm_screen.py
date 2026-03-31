@@ -7,6 +7,7 @@ from kivy.uix.label import Label as KivyLabel
 from kivy.uix.textinput import TextInput
 from kivy.uix.behaviors import ButtonBehavior
 from kivy.properties import ListProperty
+from kivy.factory import Factory
 from View.baseScreen import BaseScreen
 from widgets.calendar_popup import CalendarPopup
 from datetime import datetime, date
@@ -87,12 +88,8 @@ class TransactionConfirmScreen(BaseScreen):
         if not transactions:
             # Fallback if list is empty (shouldn't happen in flow)
             list_container.add_widget(
-                KivyLabel(
+                Factory.ReadonlyToolListItem(
                     text="No tools scanned",
-                    size_hint_y=None,
-                    height='56dp',
-                    font_size='28sp',
-                    color=(0, 0, 0, 1),
                 )
             )
         else:
@@ -101,12 +98,8 @@ class TransactionConfirmScreen(BaseScreen):
                 # Handle dictionary or simple string
                 tool_name = tx.get('tool_name', 'Unknown Tool')
                 list_container.add_widget(
-                    KivyLabel(
+                    Factory.ReadonlyToolListItem(
                         text=tool_name,
-                        size_hint_y=None,
-                        height='56dp',
-                        font_size='28sp',
-                        color=(0, 0, 0, 1),
                     )
                 )
         
