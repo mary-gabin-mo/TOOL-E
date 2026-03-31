@@ -12,7 +12,7 @@ class ManualEntryScreen(BaseScreen):
         super().__init__(**kwargs)
         # Aggressive debouncing for touchscreen - Pi is slow
         self._last_input_time = 0
-        self._debounce_delay = 0.35  # 350ms debounce for Pi touchscreen
+        self._debounce_delay = 0.15  # 350ms debounce for Pi touchscreen
         self._is_submitting = False
 
     def _on_ucid_text_change(self, text):
