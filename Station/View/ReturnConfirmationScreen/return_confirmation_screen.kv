@@ -51,37 +51,26 @@
             size_hint_y: 0.3
 
         # --- Continue Button (Keep User Logged In) ---
-        Button:
+        AppButton:
             text: "RETURN TO SELECTION"
             font_size: "32sp"
             size_hint: 0.8, None
             height: "100dp"
             pos_hint: {"center_x": .5}
-            background_normal: ''
-            background_color: 0.2, 0.6, 0.8, 1  # Blue
+            base_color: 0.2, 0.6, 0.8, 1  # Blue
+            color: 1, 1, 1, 1
             on_release: root.continue_with_user()
 
         # --- Return Button ---
-        Button:
+        AppButton:
             text: "RETURN TO START"
             font_size: "32sp"
             size_hint: 0.8, None
             height: "100dp"
             pos_hint: {"center_x": .5}
-            background_normal: ''
-            background_color: 0.9, 0.17, 0.25, 1  # Red
+            base_color: 0.9, 0.17, 0.25, 1  # Red
+            color: 1, 1, 1, 1
             on_release: root.return_to_menu()
-
-        # --- Cancel Button ---
-        Button:
-            text: "CANCEL"
-            font_size: "30sp"
-            size_hint: 0.8, None
-            height: "80dp"
-            pos_hint: {"center_x": .5}
-            background_normal: ''
-            background_color: 0.6, 0.6, 0.6, 1  # Grey
-            on_release: root.cancel_transaction()
 
         # --- Spacer ---
         Widget:
