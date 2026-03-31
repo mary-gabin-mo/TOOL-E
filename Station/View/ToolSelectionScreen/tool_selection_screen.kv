@@ -11,6 +11,12 @@
         Rectangle:
             pos: self.pos
             size: self.size
+    canvas.after:
+        Color:
+            rgba: 0.78, 0.78, 0.78, 1
+        Line:
+            width: 1
+            rectangle: (self.x, self.y, self.width, self.height)
 
     Label:
         text: root.text

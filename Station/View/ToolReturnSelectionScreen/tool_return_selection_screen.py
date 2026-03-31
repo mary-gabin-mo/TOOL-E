@@ -6,6 +6,7 @@ from kivy.properties import DictProperty, BooleanProperty, StringProperty, ListP
 from kivy.uix.recycleview.views import RecycleDataViewBehavior
 from kivy.uix.behaviors import ButtonBehavior
 from kivy.uix.boxlayout import BoxLayout
+from datetime import datetime
 
 class ReturnToolItem(RecycleDataViewBehavior, ButtonBehavior, BoxLayout):
     """Custom list item for RecycleView with row-tap selection."""
@@ -117,19 +118,41 @@ class ToolReturnSelectionScreen(BaseScreen):
             
             rv_data = []
             for tool in filtered_tools:
-                borrow_date = tool.get('borrow_date') or tool.get('checkout_timestamp') or 'N/A'
-                due_date = tool.get('due_date') or tool.get('desired_return_date') or 'N/A'
+                borrow_date = self._format_date_only(tool.get('borrow_date') or tool.get('checkout_timestamp'))
+                due_date = self._format_date_only(tool.get('due_date') or tool.get('desired_return_date'))
                 tool_name = tool.get('tool_name') or 'Unknown Tool'
                 
                 rv_data.append({
                     "text": tool_name,
-                    "secondary_text": f"Borrowed: {borrow_date} - Due: {due_date}",
+                    "secondary_text": f"Borrowed: {borrow_date}   |   Due: {due_date}",
                     "tool_data": tool,
                     "is_active": False,
                     "bg_color": [1, 1, 1, 1]
                 })
             
             self.ids.tool_recycle_view.data = rv_data
+
+    def _format_date_only(self, value):
+        """Normalize common API datetime/date formats to YYYY-MM-DD for list display."""
+        if not value:
+            return 'N/A'
+
+        text = str(value).strip()
+        if not text:
+            return 'N/A'
+
+        # Fast path for ISO-like values: keep only the date segment.
+        if len(text) >= 10 and text[4] == '-' and text[7] == '-':
+            return text[:10]
+
+        # Fallback for non-ISO strings that still parse with datetime.
+        for fmt in ('%Y/%m/%d %H:%M:%S', '%Y/%m/%d', '%m/%d/%Y %H:%M:%S', '%m/%d/%Y'):
+            try:
+                return datetime.strptime(text, fmt).strftime('%Y-%m-%d')
+            except ValueError:
+                continue
+
+        return text
     
     def _fetch_non_returned_tools(self):
         """
