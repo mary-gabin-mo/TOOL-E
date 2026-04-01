@@ -63,7 +63,7 @@ export const TransactionsPage = () => {
   const [isStatusDropdownOpen, setIsStatusDropdownOpen] = useState(false);
   const [selectedStatuses, setSelectedStatuses] = useState<string[]>([]);
   const dropdownRef = useRef<HTMLDivElement>(null);
-  const uniqueStatuses = ['Borrowed', 'Returned', 'Overdue'];
+  const uniqueStatuses = ['Borrowed', 'Returned', 'Consumed', 'Overdue'];
 
   const { data, isLoading, isError, error } = useQuery<TransactionsResponse>({
     queryKey: ['transactions', page, searchTerm, sortConfig, selectedStatuses],
@@ -200,7 +200,7 @@ export const TransactionsPage = () => {
               <th className="py-4 px-6 text-xs font-semibold text-gray-500 uppercase tracking-wider">
                 Date Returned
               </th>
-              <th className="py-4 px-6 text-xs font-semibold text-gray-500 uppercase tracking-wider">
+              <th className="py-4 px-6 text-xs font-semibold text-gray-500 uppercase tracking-wider min-w-[260px]">
                 Purpose
               </th>
               <th className="py-4 px-6 text-xs font-semibold text-gray-500 uppercase tracking-wider relative">
@@ -231,8 +231,8 @@ export const TransactionsPage = () => {
                   )}
                 </div>
               </th>
-              <th className="py-4 px-6 text-xs font-semibold text-gray-500 uppercase tracking-wider">
-                Classified Correct
+              <th className="py-4 px-4 text-xs font-semibold text-gray-500 uppercase tracking-wider w-[120px]">
+                Classified
               </th>
               <th className="py-4 px-6 text-xs font-semibold text-gray-500 uppercase tracking-wider">
                 {/* Actions column */}
@@ -298,13 +298,13 @@ export const TransactionsPage = () => {
                     <span className="text-gray-400">-</span>
                   )}
                 </td>
-                <td className="py-4 px-6 text-sm text-gray-500 max-w-[200px] truncate" title={tx.purpose || ''}>
+                 <td className="py-4 px-6 text-sm text-gray-500 max-w-[340px] whitespace-normal break-words" title={tx.purpose || ''}>
                    {tx.purpose || '-'}
                 </td>
                 <td className="py-4 px-6 text-sm">
                   <StatusBadge status={deriveStatus(tx)} />
                 </td>
-                <td className="py-4 px-6 text-sm">
+                <td className="py-4 px-4 text-sm">
                   {tx.classification_correct === true ? (
                     <span className="inline-flex items-center px-2 py-0.5 rounded text-xs font-medium bg-green-100 text-green-800">
                       Yes

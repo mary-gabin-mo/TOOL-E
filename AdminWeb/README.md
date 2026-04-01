@@ -1,6 +1,16 @@
+
 # AdminWeb
 
-AdminWeb is the staff/admin web interface for TOOL-E. It provides authenticated views for inventory management, transaction monitoring, manual fallback transactions, analytics, reports export, and ML tool-identification debugging.
+AdminWeb is the administrative web interface for TOOL-E, providing staff with authenticated access to inventory management, transaction monitoring, manual fallback workflows, analytics, reporting, and ML tool-identification debugging.
+
+## Features
+
+- **Inventory Management**: Add, search, and manage tool catalog.
+- **Transaction Monitoring**: View, filter, and manage borrow/return records.
+- **Manual Transactions**: Fallback checkout/return for edge cases.
+- **Analytics Dashboard**: Live stats, period analytics, and top tools chart.
+- **Reports**: Date-range transaction export (CSV).
+- **ML Debug**: Upload images to test tool-identification model.
 
 ## Tech Stack
 
@@ -14,159 +24,93 @@ AdminWeb is the staff/admin web interface for TOOL-E. It provides authenticated 
 - Recharts
 - Lucide React
 
-## Prerequisites
+## Getting Started
 
-- Node.js 20+ (recommended)
-- npm 10+ (recommended)
-- Running backend API from the Server folder
+### Prerequisites
 
-## Environment Variables
+- Node.js 20+
+- npm 10+
+- Running backend API (see ../Server)
 
-Create an .env file inside AdminWeb with:
+### Setup
 
-VITE_API_BASE_URL=<API_ADDRESS>
-
-Notes:
-- Most API calls use VITE_API_BASE_URL through the shared axios instance.
-
-## Run Locally
-
-1. Install dependencies:
-
+1. Clone the repo and navigate to `AdminWeb`.
+2. Create a `.env` file with:
+   ```
+   VITE_API_BASE_URL=<API_ADDRESS>
+   VITE_AUTH_TOKEN_TTL_SECONDS=<DESIRED_TOKEN_EXPIRY_TIME_IN_SECONDS> (default: 8 hours)
+   ```
+3. Install dependencies:
+   ```
    npm install
-
-2. Start dev server:
-
+   ```
+4. Start the development server:
+   ```
    npm run dev
+   ```
+5. Open the URL printed by Vite (default: http://localhost:5173).
 
-3. Open the URL printed by Vite (usually http://localhost:5173).
+### Scripts
 
-## Build and Preview
+- `npm run dev` — Start development server
+- `npm run build` — Build for production (includes type-check)
+- `npm run preview` — Preview production build locally
+- `npm run lint` — Lint codebase
 
-- Production build:
+## Project Structure
 
-  npm run build
+- `src/App.tsx` — App routes and navigation
+- `src/components/layout/DashboardLayout.tsx` — Auth-protected layout, sidebar, sync, user info
+- `src/lib/axios.ts` — Axios client with API base URL and auth token
+- `src/lib/react-query.ts` — React Query client config
+- `src/lib/authStore.ts` — Zustand auth store (persisted)
+- `src/features/` — Feature pages:
+  - `auth/` — Login
+  - `dashboard/` — Analytics dashboard
+  - `inventory/` — Tool catalog
+  - `transactions/` — Borrow/return records
+  - `manual-transaction/` — Manual checkout/return
+  - `reports/` — Reports and export
+  - `debug/` — ML tool-identification
 
-- Preview production build locally:
+## Routing
 
-  npm run preview
+- `/login` — Login page (redirects if authenticated)
+- `/dashboard` — Main dashboard (protected)
+- `/inventory` — Inventory management (protected)
+- `/transactions` — Transactions log (protected)
+- `/manual-transaction` — Manual checkout/return (protected)
+- `/reports` — Reports and export (protected)
+- `/debug-ml` — ML debug (protected)
 
-- Lint:
+Unauthenticated users are always redirected to `/login`.
 
-  npm run lint
+## Authentication & Data
 
-## App Structure
+- Auth state is persisted in browser storage (Zustand)
+- All API requests use the token (via axios interceptor)
+- "Sync Data" in sidebar refetches all active queries
 
-- src/App.tsx
-  - Defines routing for login and protected dashboard routes.
-- src/components/layout/DashboardLayout.tsx
-  - Auth-protected layout with sidebar navigation, sync button, user info, and logout.
-- src/lib/axios.ts
-  - Shared axios client configured with VITE_API_BASE_URL.
-- src/lib/react-query.ts
-  - Shared QueryClient configuration (5-minute stale time, retry once).
-- src/lib/authStore.ts
-  - Zustand auth store persisted to localStorage under auth-storage.
+## Development Notes
 
-## Routes
+- Tailwind config: see `tailwind.config.js`
+- Vite config: see `vite.config.ts` (network access enabled)
+- TypeScript strict mode enabled
+- Linting: ESLint with React/TypeScript plugins
 
-- /login
-- /dashboard
-- /inventory
-- /transactions
-- /manual-transaction
-- /reports
-- /debug-ml
+## Limitations / TODO
 
-Unauthenticated users are redirected to /login.
+- **Role-based permissions are not yet implemented:**
+   - All authenticated users have the same level of access in AdminWeb. There is currently no distinction between admin, staff, or other roles.
 
-## Feature Pages
+- **Manual transactions on the website cannot fully replicate kiosk transactions:**
+   - The kiosk captures and uploads images of tools for both ML identification and record-keeping. These images are stored on the server drive.
+   - Manual transactions performed via the AdminWeb interface do **not** capture or upload tool images.
+   - As a result, tool images will only be accessible from the website if:
+      - The server is deployed and has access to persistent storage, **or**
+      - The school or admin decides to upload images to the database (e.g., images taken during ML processing at the kiosk).
+   - If neither of these conditions is met, tool images will not be accessible from the website for those transactions.
 
-### Login
+# License
 
-- File: src/features/auth/LoginPage.tsx
-- Purpose: authenticate admin/staff users.
-- API:
-  - POST /api/auth/login
-- Behavior:
-  - Saves token and user to persisted auth store.
-  - Redirects successful login to /dashboard.
-
-### Dashboard
-
-- File: src/features/dashboard/DashboardPage.tsx
-- Purpose: high-level metrics and period analytics.
-- API:
-  - GET /analytics/dashboard?period=<value>
-- Behavior:
-  - Shows live stats (total tools, borrowed, overdue).
-  - Shows period stats and top borrowed tools chart.
-  - Includes term selector and a term settings modal UI.
-
-### Inventory
-
-- File: src/features/inventory/InventoryPage.tsx
-- Purpose: manage tool catalog.
-- API:
-  - GET /tools
-  - POST /tools
-- Behavior:
-  - Search and sort tools.
-  - Add new tools via modal with field validation.
-  - Displays quantity and training-related metadata.
-
-### Transactions
-
-- File: src/features/transactions/TransactionsPage.tsx
-- Purpose: monitor all borrow/return records.
-- API:
-  - GET /transactions (with pagination/filter/sort query params)
-  - DELETE /transactions/:id
-- Behavior:
-  - Search, filter by status, sort by dates.
-  - Displays computed status (Borrowed/Returned/Overdue).
-  - Supports delete with confirmation.
-
-### Manual Transaction
-
-- File: src/features/manual-transaction/ManualTransactionPage.tsx
-- Purpose: fallback checkout/return workflow.
-- API:
-  - POST /transactions (checkout)
-  - GET /tools
-  - GET /transactions?user_id=<id>&limit=50
-  - PUT /transactions/:id (return)
-- Behavior:
-  - Two tabs: Checkout and Return.
-  - Validates UCID, required fields, and date constraints.
-
-### Reports
-
-- File: src/features/reports/ReportsPage.tsx
-- Purpose: date-range reporting and export.
-- API:
-  - GET /transactions?limit=1000&start_date=<ISO>&end_date=<ISO>
-- Behavior:
-  - Filters by date range.
-  - Generates CSV export for transactions.
-
-### ML Debug
-
-- File: src/features/debug/MLDebugPage.tsx
-- Purpose: test tool-identification model output.
-- API:
-  - POST /identify_tool (multipart/form-data image upload)
-- Behavior:
-  - Upload image and inspect prediction/confidence.
-  - Shows structured success/error output.
-
-## Auth and Data Notes
-
-- Protected pages are wrapped in DashboardLayout and require a token.
-- Auth state is persisted in browser storage.
-- Sync Data in the sidebar invalidates all React Query caches and refetches active data.
-
-## Known Assumptions
-
-- Role-based access control is not yet implemented in AdminWeb.
-- Dashboard term-management UI currently appears local/mocked and is not yet persisted through a dedicated API.
+See [../LICENSE](../LICENSE)

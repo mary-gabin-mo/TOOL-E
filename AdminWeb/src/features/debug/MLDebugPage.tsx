@@ -35,7 +35,6 @@ export const MLDebugPage: React.FC = () => {
             });
             setPrediction(response.data);
         } catch (err: any) {
-            console.error(err);
             setError(err.response?.data?.detail || err.message || 'An error occurred during prediction.');
         } finally {
             setLoading(false);

@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import { useState } from 'react';
 import { NavLink, Outlet, useNavigate, Navigate } from 'react-router-dom';
 import { LayoutDashboard, Package, ArrowRightLeft, PenTool, FileBarChart, Terminal, LogOut, User, RefreshCw } from 'lucide-react';
 import { useQueryClient } from '@tanstack/react-query';
@@ -7,9 +7,9 @@ import { useAuthStore } from '../../lib/authStore';
 
 export const DashboardLayout = () => {
   const navigate = useNavigate();
-  const { user, token, logout } = useAuthStore();
+  const { user, logout, isAuthenticated } = useAuthStore();
   
-  if (!token) {
+  if (!isAuthenticated()) {
     return <Navigate to="/login" replace />;
   }
 

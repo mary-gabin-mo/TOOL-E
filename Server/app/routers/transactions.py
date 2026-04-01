@@ -265,13 +265,29 @@ def _process_single_transaction(conn, transaction: TransactionInput):
 @router.delete("/transactions/{transaction_id}")
 async def delete_transaction(transaction_id: str):
     with engine_tools.connect() as conn:
-        check = conn.execute(
-            text("SELECT transaction_id FROM transactions WHERE transaction_id = :id"),
+        # Fetch transaction details
+        tx = conn.execute(
+            text("SELECT transaction_id, tool_id, quantity, return_timestamp FROM transactions WHERE transaction_id = :id"),
             {"id": transaction_id},
         ).fetchone()
-        if not check:
+        if not tx:
             raise HTTPException(status_code=404, detail="Transaction not found")
 
+        # Only restore quantity if not returned
+        if tx.return_timestamp is None:
+            # Fetch tool type
+            tool = conn.execute(
+                text("SELECT tool_type FROM tools WHERE tool_id = :tool_id"),
+                {"tool_id": tx.tool_id},
+            ).fetchone()
+            if tool and tool.tool_type == "Borrowable":
+                # Increase available_quantity by transaction quantity
+                conn.execute(
+                    text("UPDATE tools SET available_quantity = available_quantity + :qty WHERE tool_id = :tool_id"),
+                    {"qty": tx.quantity, "tool_id": tx.tool_id},
+                )
+
+        # Delete the transaction
         conn.execute(
             text("DELETE FROM transactions WHERE transaction_id = :id"),
             {"id": transaction_id},

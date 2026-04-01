@@ -1,10 +1,12 @@
 import os
 from kivy.app import App
+from kivy.properties import StringProperty
 from View.baseScreen import BaseScreen
 
 class ToolConfirmScreen(BaseScreen):
-    
     predicted_name = None
+    # Mode controls layout variations. 'confirm' (default) or 'return'
+    mode = StringProperty('confirm')
 
     def on_enter(self):
         """
@@ -48,6 +50,12 @@ class ToolConfirmScreen(BaseScreen):
         self.predicted_name = tool_name
         self.ids.tool_name_label.text = tool_name
         self.ids.confidence_label.text = score
+        # Set layout mode based on transaction type (affects which buttons are shown)
+        try:
+            tx_type = app.session.transaction_type if hasattr(app, 'session') else None
+        except Exception:
+            tx_type = None
+        self.mode = 'return' if tx_type == 'return' else 'confirm'
 
     def _delete_current_image(self, tx_override=None):
         """Delete the temporary captured image for the current or provided transaction."""
@@ -107,8 +115,7 @@ class ToolConfirmScreen(BaseScreen):
         if app.session.transaction_type == "return":
             # Mark tool as confirmed
             app.session.tool_was_confirmed = True
-            self._delete_current_image()
-            # Go to tool return selection screen
+            # Keep the captured image for the return selection flow
             self.go_to('tool return selection screen')
         else:
             # For borrows, confirm and scan more
@@ -136,8 +143,7 @@ class ToolConfirmScreen(BaseScreen):
         if app.session.transaction_type == "return":
             # Mark tool as confirmed
             app.session.tool_was_confirmed = True
-            self._delete_current_image()
-            # Go to tool return selection screen
+            # Keep the captured image so return selection can attach it
             self.go_to('tool return selection screen')
         else:
             # For borrows, confirm and finish.
@@ -162,8 +168,7 @@ class ToolConfirmScreen(BaseScreen):
         if app.session.transaction_type == "return":
             # Mark tool as NOT confirmed (will show all unreturned tools)
             app.session.tool_was_confirmed = False
-            self._delete_current_image()
-            # Go to tool return selection screen
+            # Keep the captured image for return selection/attachment
             self.go_to('tool return selection screen')
         else:
             # For borrows, go to manual selection
