@@ -28,7 +28,7 @@
 
         # --- Title ---
         Label:
-            text: "Return Confirmed!"
+            text: "Return Confirmed"
             halign: "center"
             font_size: "36sp"
             bold: True
@@ -39,9 +39,9 @@
         # --- Message Display ---
         Label:
             id: message_display
-            text: "Return confirmed!"
+            text: "Successfully returned tool"
             halign: "center"
-            font_size: "20sp"
+            font_size: "40sp"
             color: 0.5, 0.5, 0.5, 1
             size_hint_y: None
             height: "100dp"
@@ -50,14 +50,27 @@
         Widget:
             size_hint_y: 0.3
 
+        # --- Return More Tools (Scan Again) ---
+        AppButton:
+            text: "RETURN MORE TOOLS"
+            font_size: "32sp"
+            size_hint: 0.8, None
+            height: "80dp"
+            pos_hint: {"center_x": .5}
+            base_color: 0.2, 0.7, 0.35, 1  # Green
+            down_color: 0.15, 0.55, 0.25, 1  # Darker Green
+            color: 1, 1, 1, 1
+            on_release: root.return_more_tools()
+
         # --- Continue Button (Keep User Logged In) ---
         AppButton:
             text: "RETURN TO SELECTION"
             font_size: "32sp"
             size_hint: 0.8, None
-            height: "100dp"
+            height: "80dp"
             pos_hint: {"center_x": .5}
             base_color: 0.2, 0.6, 0.8, 1  # Blue
+            down_color: 0.15, 0.45, 0.65, 1  # Darker Blue
             color: 1, 1, 1, 1
             on_release: root.continue_with_user()
 
@@ -66,9 +79,10 @@
             text: "RETURN TO START"
             font_size: "32sp"
             size_hint: 0.8, None
-            height: "100dp"
+            height: "80dp"
             pos_hint: {"center_x": .5}
             base_color: 0.9, 0.17, 0.25, 1  # Red
+            down_color: 0.75, 0.12, 0.2, 1  # Darker Red
             color: 1, 1, 1, 1
             on_release: root.return_to_menu()
 

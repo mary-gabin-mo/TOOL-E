@@ -7,13 +7,12 @@ class ReturnConfirmationScreen(BaseScreen):
         from kivy.app import App
         app = App.get_running_app()
         
-        # Display confirmation message
-        # Optionally show number of tools returned
-        num_tools = len(getattr(app.session, 'transactions', []))
+        # Display confirmation message with the returned tool name
+        transactions = getattr(app.session, 'transactions', [])
         
-        if num_tools > 0:
-            tool_text = "tool" if num_tools == 1 else "tools"
-            self.ids.message_display.text = f"Successfully returned {num_tools} {tool_text}!"
+        if transactions:
+            tool_name = transactions[0].get('tool_name', 'Unknown Tool')
+            self.ids.message_display.text = f"Successfully returned {tool_name}!"
         else:
             self.ids.message_display.text = "Return confirmed!"
     
@@ -25,6 +24,20 @@ class ReturnConfirmationScreen(BaseScreen):
         
         # Navigate to welcome screen (homepage)
         self.go_to('welcome screen')
+
+    def return_more_tools(self):
+        """Start another return flow by scanning more tools."""
+        from kivy.app import App
+        app = App.get_running_app()
+
+        # Keep the user logged in, clear only transaction-scoped state.
+        app.session.transactions = []
+        app.session.current_transaction = {}
+        app.session.tool_was_confirmed = False
+        app.session.set_transaction_type("return")
+
+        # Go directly back to scan/capture for another return.
+        self.go_to('capture screen')
     
     def continue_with_user(self):
         """Navigate to action selection screen while keeping user logged in."""
