@@ -1,3 +1,25 @@
+<ReadonlyToolListItem@Label>:
+    size_hint_y: None
+    height: '56dp'
+    color: 0, 0, 0, 1
+    halign: 'center'
+    valign: 'middle'
+    font_size: '26sp'
+    text_size: self.size
+    padding: '14dp', '0dp'
+    canvas.before:
+        Color:
+            rgba: 1, 1, 1, 1
+        Rectangle:
+            pos: self.pos
+            size: self.size
+    canvas.after:
+        Color:
+            rgba: 0.78, 0.78, 0.78, 1
+        Line:
+            width: 1
+            rectangle: (self.x, self.y, self.width, self.height)
+
 <CheckoutConfirmationScreen>:
     canvas.before:
         Color:
@@ -9,86 +31,126 @@
     BoxLayout:
         orientation: 'vertical'
         padding: "50dp"
-        spacing: "40dp"
+        spacing: "10dp"
         pos_hint: {"center_x": .5, "center_y": .5}
 
         # --- Logo Area Placeholder ---
         Widget:
-            size_hint_y: 0.1
+            size_hint_y: 0.02
 
-        # --- Title ---
-        Label:
-            text: "Checkout Confirmed!"
-            halign: "center"
-            font_size: "36sp"
-            bold: True
-            color: 0, 0, 0, 1
+        # --- Title + Checkmark ---
+        BoxLayout:
+            orientation: 'horizontal'
+            size_hint_x: None
             size_hint_y: None
+            width: self.minimum_width
             height: "80dp"
+            spacing: "12dp"
+            pos_hint: {"center_x": .5}
+
+            Label:
+                text: "✓"
+                size_hint_x: None
+                width: "56dp"
+                halign: "center"
+                color: 0.2, 0.8, 0.2, 1
+                font_size: "52sp"
+                font_name: 'DejaVuSans'
+
+            Label:
+                text: "Checkout Confirmed!"
+                size_hint_x: None
+                width: self.texture_size[0] + dp(8)
+                halign: "center"
+                font_size: "36sp"
+                bold: True
+                color: 0, 0, 0, 1
 
         # --- Summary List ---
-        ScrollView:
-            size_hint_y: 0.3
-            BoxLayout:
-                id: summary_list_container
-                orientation: 'vertical'
+        BoxLayout:
+            orientation: 'vertical'
+            size_hint: 0.7, None
+            height: "220dp"
+            pos_hint: {"center_x": .5}
+            padding: '5dp'
+            canvas.before:
+                Color:
+                    rgba: 1, 1, 1, 1
+                RoundedRectangle:
+                    pos: self.pos
+                    size: self.size
+                    radius: [10, 10, 10, 10]
+                Color:
+                    rgba: 0.4, 0.4, 0.4, 1
+                Line:
+                    rounded_rectangle: (self.x, self.y, self.width, self.height, 10, 10, 10, 10, 100)
+                    width: 1.5
+
+            ScrollView:
+                bar_width: '10dp'
+                bar_color: 0.55, 0.55, 0.55, 0.95
+                bar_inactive_color: 0.75, 0.75, 0.75, 0.55
+
+                GridLayout:
+                    id: summary_list_container
+                    cols: 1
+                    size_hint_y: None
+                    height: self.minimum_height
+
+        # --- Date grouped tightly ---
+        BoxLayout:
+            orientation: 'vertical'
+            size_hint_y: None
+            height: self.minimum_height
+            spacing: "2dp"
+
+            # --- Date Display ---
+            Label:
+                text: "Please return them by:"
+                halign: "center"
+                font_size: "30sp"
+                color: 0.5, 0.5, 0.5, 1
                 size_hint_y: None
-                height: self.minimum_height
-
-        # --- Date Display ---
-        Label:
-            id: date_display
-            text: "Check confirmed for this date:"
-            halign: "center"
-            font_size: "20sp"
-            color: 0.5, 0.5, 0.5, 1
-            size_hint_y: None
-            height: "80dp"
-
-        # --- Success Checkmark ---
-        Label:
-            text: "✓"
-            halign: "center"
-            color: 0.2, 0.8, 0.2, 1  # Green
-            font_size: "80sp"
-            font_name: 'DejaVuSans'
-            size_hint_y: None
-            height: "80dp"
+                height: "200dp"
+                
+            Label:
+                id: date_display
+                text: "(date)"
+                halign: "center"
+                valign: "top"
+                text_size: self.size
+                font_size: "40sp"
+                color: 0, 0, 0, 1
+                size_hint_y: None
+                height: "200dp"
 
         # --- Continue Button (Keep User Logged In) ---
         AppButton:
-            text: "RETURN TO SELECTION"
+            text: "BORROW/RETURN MORE TOOLS"
             font_size: "32sp"
             size_hint: 0.8, None
             height: "80dp"
+            color: 1, 1, 1, 1
             pos_hint: {"center_x": .5}
             background_normal: ''
             base_color: 0.2, 0.6, 0.8, 1  # Blue
+            down_color: 0.15, 0.65, 0.15, 1
             on_release: root.continue_with_user()
 
         # --- Return Button ---
         AppButton:
-            text: "RETURN TO START"
+            text: "RETURN HOME"
             font_size: "32sp"
             size_hint: 0.8, None
             height: "80dp"
+            color: 1, 1, 1, 1
             pos_hint: {"center_x": .5}
             background_normal: ''
             base_color: 0.9, 0.17, 0.25, 1  # Red
+            down_color: 0.75, 0.12, 0.2, 1
             on_release: root.return_to_menu()
-
-        # --- Cancel Button ---
-        AppButton:
-            text: "CANCEL"
-            font_size: "30sp"
-            size_hint: 0.8, None
-            height: "80dp"
-            pos_hint: {"center_x": .5}
-            background_normal: ''
-            base_color: 0.6, 0.6, 0.6, 1  # Grey
-            on_release: root.cancel_transaction()
 
         # --- Spacer ---
         Widget:
             size_hint_y: None
-            height: "44dp"
+            height: "84dp"

@@ -16,15 +16,8 @@
         Widget:
             size_hint_y: 0.13
 
-        # -- Header --
-        Label:
-            text: "Confirm Tool"
-            halign: "center"
-            valign: "middle"
-            text_size: self.size
-            font_size: "44sp"
-            bold: True
-            color: 0, 0, 0, 1
+        # -- Header Spacer --
+        Widget:
             size_hint_y: None
             height: "72dp"
 
@@ -49,7 +42,7 @@
 
                 Image:
                     id: tool_image
-                    source: "assets/images/logo_white.png"
+                    source: ""
                     allow_stretch: True
                     keep_ratio: True
                     size_hint: 1, 1
@@ -171,15 +164,14 @@
         # -- Back Button --
         AppButton:
             text: "BACK"
-            font_size: "30sp"
+            font_size: "32sp"
             size_hint_x: 0.95
             size_hint_y: None
             height: "72dp"
             pos_hint: {"center_x": .5}
             background_normal: ''
-            # base_color: 0.6, 0.6, 0.6, 1  # Grey
-            # down_color: 0.5, 0.5, 0.5, 1
-            # color: 1, 1, 1, 1
+            base_color: 0.4, 0.4, 0.4, 1
+            color: 1, 1, 1, 1
             on_release: root.go_back_to_capture()
 
         Widget:

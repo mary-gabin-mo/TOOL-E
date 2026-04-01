@@ -21,7 +21,7 @@ API_GET_TOOLS     = f"{BASE_URL}/tools"
 NETWORK_TIMEOUT = 5.0
 
 
-# --- HARDWARE SETTINGS --- ##### NEED #####
+# --- HARDWARE SETTINGS ---
 # GPIO Pins (BCM Numbering)
 PIN_LOAD_CELL_DAT = 5
 PIN_LOAD_CELL_CLK = 6
@@ -31,7 +31,7 @@ PIN_LED_YELLOW    = 22
 PIN_BUZZER        = 23
 
 # Load Cell Calibration
-LOAD_CELL_THRESHOLD = 20.0  # Minimum weight (grams) to trigger "Tool Detected"
+LOAD_CELL_THRESHOLD = 2000.0  # Minimum weight (raw number) to trigger "Tool Detected"
 LOAD_CELL_DEBOUNCE  = 2.0   # Seconds weight must be stable
 AUTO_TARE_ENABLED = os.getenv("AUTO_TARE_ENABLED", "true").strip().lower() in ("1", "true", "yes", "on")
 AUTO_TARE_INTERVAL_SEC = float(os.getenv("AUTO_TARE_INTERVAL_SEC", "300"))

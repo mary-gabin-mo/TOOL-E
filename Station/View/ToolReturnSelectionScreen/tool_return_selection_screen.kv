@@ -1,7 +1,8 @@
 <ReturnToolItem>:
     orientation: "horizontal"
+    height: root.row_height
     padding: '14dp', '10dp'
-    spacing: '8dp'
+    spacing: '6dp'
     size_hint_y: None
     height: "84dp"
     canvas.before:
@@ -122,25 +123,26 @@
             orientation: 'horizontal'
             spacing: "20dp"
             size_hint_y: None
-            height: '80dp'
+            height: '150dp'
             pos_hint: {"center_x": .5}
-            padding: '10dp'
+            padding: '15dp'
 
-            Button:
-                text: "Back"
-                font_size: "28sp"
+            AppButton:
+                text: "BACK"
+                font_size: "32sp"
                 size_hint: 0.4, 1
-                background_normal: ''
-                background_color: 0.7, 0.7, 0.7, 1  # Grey
+                # background_normal: ''
+                base_color: 0.4, 0.4, 0.4, 1  # Back button Grey
+                color: 1, 1, 1, 1
                 on_release: root.go_back()
 
-            Button:
+            AppButton:
                 id: continue_btn
-                text: "Confirm Return"
-                font_size: "28sp"
+                text: "CONFIRM RETURN"
+                font_size: "32sp"
                 size_hint: 0.6, 1
-                background_normal: ''
-                background_color: 0.2, 0.7, 0.2, 1  # Green
+                base_color: 0.2, 0.7, 0.2, 1  # Green
+                color: 1, 1, 1, 1
                 disabled: True
                 on_release: root.confirm_selection()
 

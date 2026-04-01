@@ -58,6 +58,14 @@ class ToolReturnSelectionScreen(BaseScreen):
         
         if hasattr(app.session, 'identified_tool_data') and app.session.identified_tool_data:
             predicted_tool = app.session.identified_tool_data.get('prediction', None)
+
+        # If recognition failed or was rejected, we show all tools.
+        # Trigger alert state (red LED + beep) only for that path.
+        if hasattr(app, 'hardware') and hasattr(app.hardware, 'set_led_state'):
+            if tool_was_confirmed and predicted_tool:
+                app.hardware.set_led_state('transaction')
+            else:
+                app.hardware.set_led_state('alert')
         
         # Clear existing selection
         self._selected_tx_id = None
@@ -75,6 +83,12 @@ class ToolReturnSelectionScreen(BaseScreen):
             target=self._fetch_non_returned_tools_thread, 
             args=(tool_was_confirmed, predicted_tool)
         ).start()
+
+    def on_leave(self):
+        """Reset LED to normal transaction state when leaving this screen."""
+        app = App.get_running_app()
+        if hasattr(app, 'hardware') and hasattr(app.hardware, 'set_led_state'):
+            app.hardware.set_led_state('transaction')
 
     def _fetch_non_returned_tools_thread(self, tool_was_confirmed, predicted_tool):
         app = App.get_running_app()
@@ -278,7 +292,6 @@ class ToolReturnSelectionScreen(BaseScreen):
         
         # Disable button during processing
         self.ids.continue_btn.disabled = True
-        self.ids.continue_btn.text = "Processing..."
         
         threading.Thread(target=self._return_tools_thread, args=(selected_tools,)).start()
         
@@ -294,7 +307,7 @@ class ToolReturnSelectionScreen(BaseScreen):
     @mainthread
     def _handle_return_result(self, result, selected_tools):
         app = App.get_running_app()
-        self.ids.continue_btn.text = "Confirm Return"
+        # self.ids.continue_btn.text = "Confirm Return"
         
         if result.get('success') or result.get('count', 0) > 0:
             # Store processed transactions in session so confirmation screen can show them

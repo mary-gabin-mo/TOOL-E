@@ -1,5 +1,6 @@
 from View.baseScreen import BaseScreen
-from kivy.uix.label import Label
+from kivy.factory import Factory
+from datetime import datetime
 
 class CheckoutConfirmationScreen(BaseScreen):
     
@@ -13,10 +14,20 @@ class CheckoutConfirmationScreen(BaseScreen):
         return_date = getattr(app.session, 'return_date', None)
         
         if return_date:
-            date_str = return_date.strftime('%B %d, %Y')
-            self.ids.date_display.text = f"Check confirmed for this date:\n{date_str}"
+            if isinstance(return_date, datetime):
+                date_str = return_date.strftime('%b %d, %Y')
+            elif isinstance(return_date, str):
+                try:
+                    parsed = datetime.strptime(return_date, "%Y-%m-%d %H:%M:%S")
+                    date_str = parsed.strftime('%b %d, %Y')
+                except ValueError:
+                    date_str = return_date
+            else:
+                date_str = str(return_date)
+
+            self.ids.date_display.text = f"{date_str}"
         else:
-            self.ids.date_display.text = "Check confirmed!"
+            self.ids.date_display.text = "Checkout confirmed!"
             
         # Add summary of items
         transactions = getattr(app.session, 'transactions', [])
@@ -26,18 +37,12 @@ class CheckoutConfirmationScreen(BaseScreen):
         
         if not transactions:
             list_container.add_widget(
-                Label(text="No tools tracked", size_hint_y=None, height="40dp", color=(0,0,0,1))
+                Factory.ReadonlyToolListItem(text="No tools tracked")
             )
         else:
             for idx, tx in enumerate(transactions, 1):
                 tool_name = tx.get('tool_name', 'Unknown Tool')
-                lbl = Label(
-                    text=f"{idx}. {tool_name}", 
-                    size_hint_y=None, 
-                    height="40dp", 
-                    color=(0,0,0,1),
-                    font_size="24sp"
-                )
+                lbl = Factory.ReadonlyToolListItem(text=f"{idx}. {tool_name}")
                 list_container.add_widget(lbl)
     
     def return_to_menu(self):
@@ -56,7 +61,7 @@ class CheckoutConfirmationScreen(BaseScreen):
         
         # Clear only transaction-specific data, keep user_data
         app.session.scanned_tools = []
-        app.session.return_date = None
+        app.session.return_date = ""
         app.session.transaction_type = "borrow"  # Reset to default
         
         # Navigate to action selection screen

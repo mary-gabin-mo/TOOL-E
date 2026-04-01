@@ -107,19 +107,18 @@
             padding: '15dp'             # Optional padding around the row
 
             AppButton:
-                text: "Back"
-                font_size: "34sp"
+                text: "BACK"
+                font_size: "32sp"
                 size_hint: 0.5, 1
                 background_normal: ''
-                base_color: 0.7, 0.7, 0.7, 1  # Grey
-                down_color: 0.6, 0.6, 0.6, 1
+                base_color: 0.4, 0.4, 0.4, 1  # Grey
                 color: 1, 1, 1, 1
                 on_release: root.go_back('tool confirm screen')
 
             AppButton:
                 id: next_button
-                text: "Use This Tool"
-                font_size: "34sp"
+                text: "USE THIS TOOL"
+                font_size: "32sp"
                 size_hint: 0.5, 1
                 background_normal: ''
                 base_color: 0.2, 0.7, 0.2, 1  # Green
@@ -127,18 +126,6 @@
                 color: 1, 1, 1, 1
                 disabled: True
                 on_release: root.proceed()
-
-        # -- Cancel AppButton --
-        AppButton:
-            text: "CANCEL"
-            font_size: "34sp"
-            size_hint: 1, 0.1
-            pos_hint: {"center_x": .5}
-            background_normal: ''
-            base_color: 0.9, 0.17, 0.25, 1  # Red
-            down_color: 0.8, 0.1, 0.15, 1
-            color: 1, 1, 1, 1
-            on_release: root.cancel_transaction()
 
         Widget:
             size_hint_y: None

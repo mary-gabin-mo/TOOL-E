@@ -39,7 +39,7 @@ class HardwareManager(EventDispatcher):
         # Load Cell State
         self.lgpio_handle = None
         self.stable_reads = 0
-        self.offset = 475000  # From your calibration script
+        self.offset = 499750 # weight of the bed in raw number
         # OPTIMIZATION: Adjusted stable reads for lower polling frequency
         # At 5Hz (0.2s), 2 reads = ~0.4s debounce (was 3 reads @ 10Hz = ~0.3s)
         self.STABLE_READS_REQUIRED = 2
@@ -198,7 +198,7 @@ class HardwareManager(EventDispatcher):
                 print("[HARDWARE] Load cell sensor not responding")
             return # Sensor not ready
 
-        current_weight = raw_val - self.offset
+        current_weight = (raw_val - self.offset)
         
         # # Print status every 10 polls (1 second)
         # if self.poll_counter % 10 == 0:
@@ -214,7 +214,7 @@ class HardwareManager(EventDispatcher):
         if self.stable_reads >= self.STABLE_READS_REQUIRED:
             print(f"\n{'='*60}")
             print(f"[HARDWARE] **OBJECT DETECTED!**")
-            print(f"[HARDWARE] Weight: {current_weight:.1f}g (raw: {raw_val})")
+            print(f"[HARDWARE] Weight: {(current_weight/377):.1f}g (raw: {raw_val})")
             print(f"[HARDWARE] Dispatching on_load_cell_detect event...")
             print(f"{'='*60}\n")
             self.dispatch('on_load_cell_detect', current_weight)

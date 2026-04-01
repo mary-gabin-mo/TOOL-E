@@ -15,4 +15,4 @@ class UserErrorScreen(BaseScreen):
         if hasattr(app, 'session'):
             app.session.reset()
             
-        self.manager.current = 'welcome screen'
+        self.go_back('welcome screen') 

@@ -64,11 +64,11 @@
                 Label:
                     text: "Checkout / Return Tools Here"
                     halign: "center"
-                    font_size: "30sp"
+                    font_size: "34sp"
                     bold: True
                     color: 0, 0, 0, 1
                     size_hint_y: None
-                    height: "100dp"
+                    height: "250dp"
                     text_size: self.width, None
                     valign: "middle"
 
@@ -78,7 +78,7 @@
                     font_size: "38sp"
                     color: 0.5, 0.5, 0.5, 1
                     size_hint_y: None
-                    height: "100dp"
+                    height: "220dp"
                     text_size: self.width, None
                     valign: "middle"
 
@@ -120,33 +120,24 @@
             height: "118dp"
             spacing: "18dp"
 
-            # -- DEV BUTTON --
-            AppButton:
-                text: "DEV - ERROR PAGE)"
-                font_size: "30sp"
-                size_hint: 1, 1
-                pos_hint: {"center_x": .5}
-                background_color: 0.4, 0.4, 0.4, 1  # Grey
-                on_release: root.go_to('user error screen')
-
-            # # -- DEV BUTTON --
-            # AppButton:
-            #     text: "DEV - SCAN CARD \n(server OFFLINE)"
-            #     font_size: "24sp"
-            #     size_hint: 1, 1
-            #     pos_hint: {"center_x": .5}
-            #     background_color: 0.4, 0.4, 0.4, 1  # Grey
-            #     on_release: root.go_to('action selection screen')
-
         # -- Manual Entry Button --
         WelcomeActionButton:
             text: "MANUAL UCID ENTRY"
-            font_size: "30sp"
-            size_hint: .65, None
+            font_size: "28sp"
+            size_hint: .5, None
             height: "80dp"
             pos_hint: {"center_x": .5}
             on_release: root.go_to('manual entry screen')
 
         # -- Spacer --
         Widget:
-            size_hint_y: 0.04
+            size_hint_y: 0.02
+    
+    # -- Quit Button --
+    AppButton:
+        text: "QUIT"
+        font_size: "15sp"
+        size_hint: None, None
+        size: "80dp", "45dp"
+        pos_hint: {"right": 0.98, "top": 0.13} # bottom right
+        on_release: root.exit_program()

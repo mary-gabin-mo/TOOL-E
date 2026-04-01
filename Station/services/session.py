@@ -28,6 +28,10 @@ class SessionManager(EventDispatcher):
     
     # Track if the scanned tool was confirmed correct (for return filtering)
     tool_was_confirmed = BooleanProperty(False)
+
+    # Selected return date for the current checkout flow.
+    # Stored as a backend-formatted string: YYYY-MM-DD HH:MM:SS
+    return_date = StringProperty("")
     
     def reset(self):
         """Clear data for the next user."""
@@ -38,6 +42,7 @@ class SessionManager(EventDispatcher):
         self.transactions = []
         self.current_transaction = {}
         self.tool_was_confirmed = False
+        self.return_date = ""
         
     def set_transaction_type(self, type_str):
         if type_str.lower() not in ["borrow", "return"]:
@@ -105,5 +110,45 @@ class SessionManager(EventDispatcher):
         
         # Clear current
         self.current_transaction = {}
+
+    def update_last_confirmed_tool(self, tool_name):
+        """
+        Update the most recently confirmed tool entry in-place.
+        Used when user goes back from transaction confirmation to edit the last tool.
+        """
+        if not self.transactions:
+            print("[SESSION] Warning: No confirmed transaction exists to update.")
+            return
+
+        tx = dict(self.transactions[-1])
+        tx["tool_name"] = tool_name
+
+        temp_fname = tx.get("temp_img_filename") or tx.get("img_filename")
+        if temp_fname:
+            ext = os.path.splitext(os.path.basename(temp_fname))[1] or ".jpg"
+            sanitized_tool = tool_name.replace(" ", "")
+            action = self.transaction_type.upper() if self.transaction_type else ""
+            tx["img_filename"] = f"{sanitized_tool}_{tx['transaction_id']}_{action}{ext}"
+
+        # Reassign list to ensure Kivy property change propagation.
+        updated = list(self.transactions)
+        updated[-1] = tx
+        self.transactions = updated
+        print(f"[SESSION] Updated last confirmed tool to: {tool_name}")
+
+    def move_last_confirmed_to_current(self):
+        """
+        Move the latest confirmed tool back to current_transaction for re-editing.
+        """
+        if not self.transactions:
+            print("[SESSION] Warning: No confirmed transaction exists to move back.")
+            return False
+
+        tx_list = list(self.transactions)
+        tx = dict(tx_list.pop())
+        self.transactions = tx_list
+        self.current_transaction = tx
+        print(f"[SESSION] Moved confirmed transaction back to current: {tx.get('transaction_id')}")
+        return True
         
         

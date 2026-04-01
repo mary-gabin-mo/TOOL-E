@@ -7,6 +7,7 @@ from kivy.uix.label import Label as KivyLabel
 from kivy.uix.textinput import TextInput
 from kivy.uix.behaviors import ButtonBehavior
 from kivy.properties import ListProperty
+from kivy.factory import Factory
 from View.baseScreen import BaseScreen
 from widgets.calendar_popup import CalendarPopup
 from datetime import datetime, date
@@ -46,9 +47,13 @@ class TransactionConfirmScreen(BaseScreen):
         self.purpose = None
         self.ids.course_code_box.opacity = 0
         self.ids.course_code_box.disabled = True
+        self.ids.course_code_box.pos_hint = {'x': 10, 'y': 0}
+        self.ids.course_code_input.disabled = True
         self.ids.course_code_input.text = ''
         self.ids.team_name_box.opacity = 0
         self.ids.team_name_box.disabled = True
+        self.ids.team_name_box.pos_hint = {'x': 10, 'y': 0}
+        self.ids.team_name_input.disabled = True
         self.ids.team_name_input.text = ''
         
         app = App.get_running_app()
@@ -83,12 +88,8 @@ class TransactionConfirmScreen(BaseScreen):
         if not transactions:
             # Fallback if list is empty (shouldn't happen in flow)
             list_container.add_widget(
-                KivyLabel(
+                Factory.ReadonlyToolListItem(
                     text="No tools scanned",
-                    size_hint_y=None,
-                    height='56dp',
-                    font_size='28sp',
-                    color=(0, 0, 0, 1),
                 )
             )
         else:
@@ -97,12 +98,8 @@ class TransactionConfirmScreen(BaseScreen):
                 # Handle dictionary or simple string
                 tool_name = tx.get('tool_name', 'Unknown Tool')
                 list_container.add_widget(
-                    KivyLabel(
+                    Factory.ReadonlyToolListItem(
                         text=tool_name,
-                        size_hint_y=None,
-                        height='56dp',
-                        font_size='28sp',
-                        color=(0, 0, 0, 1),
                     )
                 )
         
@@ -143,20 +140,28 @@ class TransactionConfirmScreen(BaseScreen):
 
         # Show/hide course code input
         if selected_purpose == "Academic Course":
+            self.ids.course_code_box.pos_hint = {'x': 0, 'y': 0}
             self.ids.course_code_box.opacity = 1
             self.ids.course_code_box.disabled = False
+            self.ids.course_code_input.disabled = False
         else:
+            self.ids.course_code_box.pos_hint = {'x': 10, 'y': 0}
             self.ids.course_code_box.opacity = 0
             self.ids.course_code_box.disabled = True
+            self.ids.course_code_input.disabled = True
             self.ids.course_code_input.text = ''
 
         # Show/hide team name input
         if selected_purpose == "Team":
+            self.ids.team_name_box.pos_hint = {'x': 0, 'y': 0}
             self.ids.team_name_box.opacity = 1
             self.ids.team_name_box.disabled = False
+            self.ids.team_name_input.disabled = False
         else:
+            self.ids.team_name_box.pos_hint = {'x': 10, 'y': 0}
             self.ids.team_name_box.opacity = 0
             self.ids.team_name_box.disabled = True
+            self.ids.team_name_input.disabled = True
             self.ids.team_name_input.text = ''
 
         self.check_can_finish()
@@ -236,6 +241,9 @@ class TransactionConfirmScreen(BaseScreen):
             "purpose": purpose_str,
             "transactions": tx_list
         }
+
+        # Persist selected date so checkout confirmation can display it.
+        app.session.return_date = formatted_date
         
         print(f"[UI] Submitting Transaction via APIClient...")
         
@@ -253,6 +261,20 @@ class TransactionConfirmScreen(BaseScreen):
         except Exception as e:
             response = {'success': False, 'error': str(e)}
         self._handle_submission_result(response)
+
+    def _cleanup_local_images(self):
+        """Delete local captured images only after successful submission."""
+        app = App.get_running_app()
+        for tx in getattr(app.session, 'transactions', []):
+            img_path = tx.get('local_img_path')
+            if not img_path:
+                continue
+            try:
+                if os.path.exists(img_path):
+                    os.remove(img_path)
+                    print(f"[UI] Deleted image file after confirmation: {img_path}")
+            except Exception as e:
+                print(f"[UI] Warning: could not delete image {img_path}: {e}")
         
     @mainthread
     def _handle_submission_result(self, response):
@@ -262,6 +284,7 @@ class TransactionConfirmScreen(BaseScreen):
 
         if response.get('success'):
             print("Transaction Success")
+            self._cleanup_local_images()
             self.go_to('checkout confirmation screen')
         else:
             print(f"Transaction Failed: {response.get('error')}")

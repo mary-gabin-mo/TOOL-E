@@ -16,12 +16,15 @@ class ToolConfirmScreen(BaseScreen):
         if hasattr(app, 'hardware') and hasattr(app.hardware, 'set_led_state'):
             app.hardware.set_led_state('transaction')
         
-        # 1. Get the Image Path from the current transaction
-        # Default to a placeholder if missing
-        img_path = "assets/images/logo_white.png"
+        # 1. Get the image path from current transaction, or fall back to the
+        # latest confirmed one when user returned from transaction confirm.
+        img_path = ""
         if hasattr(app, 'session') and app.session.current_transaction:
             # Display the local full path on the screen (not the server's uuid name)
-            img_path = app.session.current_transaction.get('local_img_path', app.session.current_transaction.get('img_filename', img_path))
+            img_path = app.session.current_transaction.get('local_img_path', app.session.current_transaction.get('img_filename', ''))
+        elif hasattr(app, 'session') and getattr(app.session, 'transactions', None):
+            last_tx = app.session.transactions[-1]
+            img_path = last_tx.get('local_img_path', last_tx.get('img_filename', ''))
         
         self.ids.tool_image.source = img_path
         self.ids.tool_image.reload() # Force reload if file changed
@@ -54,13 +57,17 @@ class ToolConfirmScreen(BaseScreen):
             tx_type = None
         self.mode = 'return' if tx_type == 'return' else 'confirm'
 
-    def _delete_current_image(self):
-        """Delete the temporary captured image after user leaves confirmation."""
+    def _delete_current_image(self, tx_override=None):
+        """Delete the temporary captured image for the current or provided transaction."""
         app = App.get_running_app()
-        if not hasattr(app, 'session') or not app.session.current_transaction:
+        if not hasattr(app, 'session'):
             return
 
-        tx = app.session.current_transaction
+        tx = tx_override if tx_override is not None else app.session.current_transaction
+        if not tx and getattr(app.session, 'transactions', None):
+            tx = app.session.transactions[-1]
+        if not tx:
+            return
         # Prefer local absolute path from capture step; keep fallbacks for compatibility.
         img_path = tx.get('local_img_path') or tx.get('img_filename')
 
@@ -76,6 +83,21 @@ class ToolConfirmScreen(BaseScreen):
                 print(f"[UI] Deleted image file {img_path} after tool confirmation.")
             except Exception as e:
                 print(f"[UI] Warning: could not delete image {img_path}: {e}")
+
+    def _remove_last_confirmed_transaction(self):
+        """Remove and return the latest confirmed transaction from session."""
+        app = App.get_running_app()
+        if not hasattr(app, 'session'):
+            return None
+
+        tx_list = list(getattr(app.session, 'transactions', []))
+        if not tx_list:
+            return None
+
+        removed = dict(tx_list.pop())
+        app.session.transactions = tx_list
+        print(f"[SESSION] Removed last confirmed transaction: {removed.get('transaction_id')}")
+        return removed
 
     def confirm_scan_more(self):
         """
@@ -98,8 +120,11 @@ class ToolConfirmScreen(BaseScreen):
         else:
             # For borrows, confirm and scan more
             if hasattr(app, 'session'):
-                self._delete_current_image()
-                app.session.confirm_current_tool(self.predicted_name)
+                if app.session.current_transaction:
+                    self._delete_current_image()
+                    app.session.confirm_current_tool(self.predicted_name)
+                else:
+                    app.session.update_last_confirmed_tool(self.predicted_name)
             self.go_to('capture screen') 
         
     def confirm_finish(self):
@@ -121,10 +146,13 @@ class ToolConfirmScreen(BaseScreen):
             # Keep the captured image so return selection can attach it
             self.go_to('tool return selection screen')
         else:
-            # For borrows, confirm and finish
+            # For borrows, confirm and finish.
+            # Do NOT delete image here; keep it until final transaction confirmation.
             if hasattr(app, 'session'):
-                self._delete_current_image()
-                app.session.confirm_current_tool(self.predicted_name)
+                if app.session.current_transaction:
+                    app.session.confirm_current_tool(self.predicted_name)
+                else:
+                    app.session.update_last_confirmed_tool(self.predicted_name)
             self.go_to('transaction confirm screen') 
 
     def reject_tool(self):
@@ -144,9 +172,21 @@ class ToolConfirmScreen(BaseScreen):
             self.go_to('tool return selection screen')
         else:
             # For borrows, go to manual selection
+            if hasattr(app, 'session') and not app.session.current_transaction:
+                app.session.move_last_confirmed_to_current()
             self.go_to('tool select screen')
 
     def go_back_to_capture(self):
         """Back button handler for confirm screen."""
-        self._delete_current_image()
+        app = App.get_running_app()
+
+        removed_tx = None
+        if hasattr(app, 'session'):
+            # If there is no active pending tx, user is editing an already confirmed item.
+            # Remove that latest confirmed item before returning to capture.
+            if not app.session.current_transaction:
+                removed_tx = self._remove_last_confirmed_transaction()
+
+        # Delete the image associated with the removed or current transaction.
+        self._delete_current_image(tx_override=removed_tx)
         self.go_back('capture screen')
