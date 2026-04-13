@@ -51,7 +51,7 @@ class SessionManager(EventDispatcher):
         self.transaction_type = type_str.lower()
         print(f"[SESSION] Transaction Type set to: {self.transaction_type}")
         
-    def start_new_transaction(self, transaction_id, img_filename):
+    def start_new_transaction(self, transaction_id, img_filename, weight=0):
         """
         Called by Capture Screen immediately after taking a photo.
         Initializes a new pending transaction.
@@ -63,7 +63,8 @@ class SessionManager(EventDispatcher):
             "temp_img_filename": temp_filename,  # Temp filename uploaded to /identify_tool
             "local_img_path": img_filename, # Keep a backup of the local path for the UI preview
             "tool_name": None,  # Will be filled after ML/User confirmation
-            "classification_correct": None # User feedback on ML prediction
+            "classification_correct": None, # User feedback on ML prediction
+            "weight": int(weight) if weight is not None else 0,
         }
         print(f"[SESSION] Started Transaction: {transaction_id}")
 

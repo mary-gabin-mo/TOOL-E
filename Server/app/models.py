@@ -92,6 +92,7 @@ class KioskToolItem(BaseModel):
     temp_img_filename: Optional[str] = None
     tool_name: str
     classification_correct: Optional[bool] = None
+    weight: Optional[int] = 0
 
 class KioskTransactionRequest(BaseModel):
     user_id: str

@@ -29,6 +29,7 @@ class CaptureScreen(BaseScreen):
 
     _pending_capture_event = None
     _is_capturing = False
+    _pending_weight_grams = 0
     _camera_init_timeout_event = None
     _camera_ready_reported = False
 
@@ -40,6 +41,7 @@ class CaptureScreen(BaseScreen):
         print("[DEBUG] CaptureScreen: on_enter called")
 
         self._is_capturing = False
+        self._pending_weight_grams = 0
         self._camera_ready_reported = False
         if self._pending_capture_event:
             self._pending_capture_event.cancel()
@@ -234,6 +236,13 @@ class CaptureScreen(BaseScreen):
         print(f"[LOADCELL DETECTED] Instance: {instance}")
         print(f"{'='*60}\n")
 
+        # Keep a normalized grams value to attach to the next captured transaction payload.
+        try:
+            self._pending_weight_grams = int(round(float(weight) / 377.0))
+        except Exception:
+            self._pending_weight_grams = 0
+        print(f"[LOADCELL DETECTED] Normalized weight for payload: {self._pending_weight_grams}g")
+
         print("[DEBUG] Waiting 0.6 seconds for object to settle...")
         self._pending_capture_event = Clock.schedule_once(self._delayed_capture, 0.6)
 
@@ -294,6 +303,7 @@ class CaptureScreen(BaseScreen):
                     app.session.start_new_transaction(
                         transaction_id=timestamp_id,
                         img_filename=full_path,
+                        weight=self._pending_weight_grams,
                     )
                 return full_path
 
