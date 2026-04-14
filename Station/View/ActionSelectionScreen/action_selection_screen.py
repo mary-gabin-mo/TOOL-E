@@ -1,4 +1,16 @@
 
+"""
+PURPOSE:
+Lets the user choose transaction mode (borrow or return) after identity is validated.
+
+RUNTIME ROLE:
+- Sets `session.transaction_type`.
+- Routes user to capture flow.
+
+API ENDPOINTS USED:
+- None directly.
+"""
+
 from kivy.app import App
 from kivy.clock import Clock
 

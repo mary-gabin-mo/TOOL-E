@@ -1,3 +1,14 @@
+"""
+PURPOSE:
+Displays successful checkout summary and offers navigation to next workflow step.
+
+RUNTIME ROLE:
+- Final confirmation UI for borrow flow after backend submission succeeds.
+
+API ENDPOINTS USED:
+- None directly.
+"""
+
 from View.baseScreen import BaseScreen
 from kivy.factory import Factory
 from datetime import datetime
@@ -5,7 +16,6 @@ from datetime import datetime
 class CheckoutConfirmationScreen(BaseScreen):
     
     def on_enter(self):
-
         # Get the date from the session or previous screen
         from kivy.app import App
         app = App.get_running_app()

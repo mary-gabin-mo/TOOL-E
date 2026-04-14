@@ -1,3 +1,17 @@
+"""
+PURPOSE:
+Main kiosk application entrypoint. Configures runtime mode (Pi vs dev),
+initializes global services, and builds/launches the full Kivy screen flow.
+
+RUNTIME ROLE:
+- Starts the app UI loop.
+- Creates singleton services (`hardware`, `api_client`, `session`).
+- Registers screen instances from `View/screens.py`.
+
+API ENDPOINTS USED:
+- None directly. API calls are delegated to `services/api_client.py`.
+"""
+
 import importlib
 import os
 import platform

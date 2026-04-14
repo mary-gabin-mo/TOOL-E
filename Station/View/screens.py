@@ -1,3 +1,15 @@
+"""
+PURPOSE:
+Central screen registry for the Station app.
+
+RUNTIME ROLE:
+- Imports all screen classes and maps runtime route names to view classes.
+- Consumed by `main.py` during app/screen manager initialization.
+
+API ENDPOINTS USED:
+- None directly.
+"""
+
 from View.WelcomeScreen.welcome_screen import WelcomeScreen
 from View.ActionSelectionScreen.action_selection_screen import ActionSelectionScreen
 from View.CaptureScreen.capture_screen import CaptureScreen

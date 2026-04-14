@@ -1,3 +1,15 @@
+"""
+PURPOSE:
+Shared base class for Station screens with common navigation helpers.
+
+RUNTIME ROLE:
+- Standardizes forward/back navigation behavior and transaction cancel flow.
+- Parent class inherited by most screen implementations.
+
+API ENDPOINTS USED:
+- None directly.
+"""
+
 from kivy.app import App
 from kivy.uix.screenmanager import Screen
 from View.components.user_info_footer import UserInfoFooter

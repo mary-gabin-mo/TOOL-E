@@ -1,3 +1,14 @@
+"""
+PURPOSE:
+Reusable date-picker popup widget used by Station screens that need date input.
+
+RUNTIME ROLE:
+- Presents calendar UI and returns selected date to calling screen logic.
+
+API ENDPOINTS USED:
+- None directly.
+"""
+
 from kivy.uix.modalview import ModalView
 from kivy.uix.button import Button
 from kivy.uix.gridlayout import GridLayout

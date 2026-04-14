@@ -1,3 +1,16 @@
+"""
+PURPOSE:
+In-memory session state manager shared across all Station screens.
+
+RUNTIME ROLE:
+- Stores user/session identity, transaction mode (borrow/return), and
+    in-progress transaction data.
+- Provides helper methods for transaction lifecycle transitions.
+
+API ENDPOINTS USED:
+- None directly.
+"""
+
 import os
 from kivy.event import EventDispatcher
 from kivy.properties import StringProperty, ObjectProperty, ListProperty, DictProperty, BooleanProperty

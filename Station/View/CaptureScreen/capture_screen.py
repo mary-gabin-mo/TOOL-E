@@ -1,3 +1,16 @@
+"""
+PURPOSE:
+Captures tool image (camera), stores local transaction image metadata, and
+submits image for ML identification.
+
+RUNTIME ROLE:
+- Entry point for image-based tool recognition in both borrow and return flows.
+- Persists capture info into session for downstream screens.
+
+API ENDPOINTS USED:
+- POST /identify_tool (via `APIClient.upload_tool_image`).
+"""
+
 import cv2
 import platform
 import os

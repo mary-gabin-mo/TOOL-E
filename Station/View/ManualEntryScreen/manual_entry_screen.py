@@ -1,3 +1,14 @@
+"""
+PURPOSE:
+Allows manual user-ID entry when card scanning is unavailable.
+
+RUNTIME ROLE:
+- Captures typed ID, validates user via API workflow, and routes into action flow.
+
+API ENDPOINTS USED:
+- POST /validate_user (indirectly via `APIClient`).
+"""
+
 from View.baseScreen import BaseScreen
 from kivy.app import App
 from kivy.core.window import Window

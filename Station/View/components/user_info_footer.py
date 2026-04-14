@@ -1,3 +1,15 @@
+"""
+PURPOSE:
+Reusable footer component showing current user and transaction context.
+
+RUNTIME ROLE:
+- Binds to session state and updates footer labels across screens.
+- Keeps user context visible during kiosk flow.
+
+API ENDPOINTS USED:
+- None directly.
+"""
+
 from kivy.uix.boxlayout import BoxLayout
 from kivy.properties import StringProperty, ListProperty, NumericProperty, BooleanProperty
 from kivy.app import App
@@ -6,8 +18,7 @@ class UserInfoFooter(BoxLayout):
     """
     Footer component that displays current user info and transaction type.
     Automatically updates when session data changes.
-    """
-    
+    """    
     user_name = StringProperty("Guest")
     user_ucid = NumericProperty(0)
     user_email = StringProperty("--")

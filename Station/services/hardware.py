@@ -1,3 +1,16 @@
+"""
+PURPOSE:
+Hardware abstraction/service for kiosk peripherals (load cell, LEDs, buzzer,
+card reader, and Pi-specific GPIO behavior).
+
+RUNTIME ROLE:
+- Dispatches app events: `on_load_cell_detect`, `on_card_scanned`.
+- Encapsulates Pi hardware polling and mock behavior for non-Pi development.
+
+API ENDPOINTS USED:
+- None directly.
+"""
+
 import platform
 import traceback
 import subprocess

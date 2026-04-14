@@ -1,3 +1,15 @@
+"""
+PURPOSE:
+Final step for borrow workflow where user selects return date/purpose and submits.
+
+RUNTIME ROLE:
+- Builds kiosk transaction payload from session data.
+- Submits checkout and handles success/failure UI transitions.
+
+API ENDPOINTS USED:
+- POST /transactions/kiosk (via `APIClient.submit_transaction`)
+"""
+
 import os
 import threading
 from kivy.clock import mainthread

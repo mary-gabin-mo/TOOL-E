@@ -1,3 +1,14 @@
+"""
+PURPOSE:
+Standalone GPIO LED/buzzer hardware test script for Raspberry Pi.
+
+RUNTIME ROLE:
+- Developer utility only; not used by kiosk runtime.
+
+API ENDPOINTS USED:
+- None.
+"""
+
 import lgpio
 import time
 

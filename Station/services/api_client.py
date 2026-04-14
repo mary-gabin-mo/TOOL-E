@@ -1,3 +1,20 @@
+"""
+PURPOSE:
+HTTP client layer for all Station-to-Server communication.
+
+RUNTIME ROLE:
+- Wraps backend calls with retries/timeouts and response normalization.
+- Provides a single API surface for UI screens and workflow logic.
+
+API ENDPOINTS USED:
+- POST /validate_user
+- POST /identify_tool
+- POST /transactions/kiosk
+- PUT /transactions/{transaction_id}
+- GET /transactions/unreturned
+- GET /tools
+"""
+
 import requests
 import os
 import json

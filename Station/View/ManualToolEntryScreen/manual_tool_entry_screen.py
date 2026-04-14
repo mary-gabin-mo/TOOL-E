@@ -1,3 +1,15 @@
+"""
+PURPOSE:
+Manual fallback for entering tool name when prediction/selection paths fail.
+
+RUNTIME ROLE:
+- Writes manual tool name into session transaction state.
+- Routes user back into confirmation/selection flow.
+
+API ENDPOINTS USED:
+- None directly.
+"""
+
 from kivy.app import App
 from kivy.properties import ObjectProperty
 from View.baseScreen import BaseScreen

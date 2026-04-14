@@ -1,4 +1,16 @@
 
+"""
+PURPOSE:
+Landing screen that waits for card scan or manual user entry to start kiosk flow.
+
+RUNTIME ROLE:
+- Binds/unbinds card reader events.
+- Validates scanned users and routes to next screen.
+
+API ENDPOINTS USED:
+- POST /validate_user (indirectly via `APIClient`).
+"""
+
 from kivy.app import App
 from kivy.clock import Clock, mainthread
 from kivy.metrics import dp

@@ -1,3 +1,15 @@
+"""
+PURPOSE:
+Displays return success state and offers options to end session or return more tools.
+
+RUNTIME ROLE:
+- Final confirmation UI for return workflow.
+- Controls session reset/continuation navigation.
+
+API ENDPOINTS USED:
+- None directly.
+"""
+
 from View.baseScreen import BaseScreen
 
 class ReturnConfirmationScreen(BaseScreen):

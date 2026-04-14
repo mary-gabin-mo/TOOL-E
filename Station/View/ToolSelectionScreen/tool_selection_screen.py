@@ -1,3 +1,15 @@
+"""
+PURPOSE:
+Manual tool list selection UI used when auto-classification is uncertain or rejected.
+
+RUNTIME ROLE:
+- Loads tool list, allows user selection, and updates current transaction metadata.
+- Supports optional expansion/preview behavior for tool entries.
+
+API ENDPOINTS USED:
+- GET /tools (via `APIClient.get_tools`)
+"""
+
 from kivy.app import App
 from kivy.properties import ObjectProperty, DictProperty, StringProperty, ListProperty
 from kivy.uix.recycleview.views import RecycleDataViewBehavior

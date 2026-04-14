@@ -1,3 +1,16 @@
+"""
+PURPOSE:
+Lets user choose which unreturned transaction item to close during return flow.
+
+RUNTIME ROLE:
+- Fetches unreturned tools for current user.
+- Submits return updates and optional return-image metadata.
+
+API ENDPOINTS USED:
+- GET /transactions/unreturned (via `APIClient.get_user_unreturned_tools`)
+- PUT /transactions/{transaction_id} (via `APIClient.return_tools`)
+"""
+
 from kivy.app import App
 from View.baseScreen import BaseScreen
 import threading

@@ -1,3 +1,18 @@
+"""
+PURPOSE:
+Central configuration for Station app networking, hardware pins, and UI paths.
+
+RUNTIME ROLE:
+- Defines server base URL and API endpoint constants used by `APIClient`.
+- Defines GPIO pins and load-cell/card-reader behavior settings.
+
+API ENDPOINTS DEFINED:
+- /validate_user
+- /identify_tool
+- /transactions
+- /tools
+"""
+
 import os
 from dotenv import load_dotenv
 

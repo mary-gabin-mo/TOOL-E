@@ -1,3 +1,15 @@
+"""
+PURPOSE:
+Presents captured tool image/prediction and asks user to confirm or reject.
+
+RUNTIME ROLE:
+- Branches workflow to borrow or return paths based on session mode.
+- Persists classification feedback and image lifecycle decisions.
+
+API ENDPOINTS USED:
+- None directly.
+"""
+
 import os
 from kivy.app import App
 from kivy.properties import StringProperty
