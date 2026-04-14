@@ -1,3 +1,12 @@
+"""
+PURPOSE:
+Exposes ML image-classification endpoint used by kiosk and debug UI.
+
+API ENDPOINTS OWNED:
+- POST /identify_tool
+
+"""
+
 from fastapi import APIRouter, HTTPException, UploadFile, File
 from app.services import ml_service, image_service
 from PIL import Image

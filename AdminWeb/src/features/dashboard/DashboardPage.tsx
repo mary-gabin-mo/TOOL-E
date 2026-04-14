@@ -1,3 +1,13 @@
+/**
+ * PURPOSE:
+ * Admin dashboard page showing live stats, period analytics, and term
+ * configuration used by reporting/analytics filters.
+ *
+ * API ENDPOINTS USED:
+ * - GET /terms
+ * - PUT /terms
+ * - GET /analytics/dashboard
+ */
 import { useEffect, useMemo, useState } from 'react';
 import { useMutation, useQuery } from '@tanstack/react-query';
 import { api } from '../../lib/axios';

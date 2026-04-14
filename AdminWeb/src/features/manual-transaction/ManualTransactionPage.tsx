@@ -1,3 +1,14 @@
+/**
+ * PURPOSE:
+ * Staff fallback page to manually create checkout transactions or process
+ * returns when kiosk flow is unavailable.
+ *
+ * API ENDPOINTS USED:
+ * - GET /tools
+ * - POST /transactions
+ * - GET /transactions
+ * - PUT /transactions/{transaction_id}
+ */
 import { useMemo, useState } from 'react';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { api } from '../../lib/axios';

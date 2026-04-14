@@ -1,3 +1,12 @@
+/**
+ * PURPOSE:
+ * Transaction log page for staff to search, filter, sort, paginate, and
+ * delete transaction records.
+ *
+ * API ENDPOINTS USED:
+ * - GET /transactions
+ * - DELETE /transactions/{transaction_id}
+ */
 import React, { useState, useRef, useEffect } from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { ChevronDown, Trash2, ArrowUp, ArrowDown, ArrowUpDown, Loader2, ChevronLeft, ChevronRight } from 'lucide-react';

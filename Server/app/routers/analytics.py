@@ -1,3 +1,14 @@
+"""
+PURPOSE:
+Provides dashboard analytics aggregates and period-based usage stats.
+
+API ENDPOINTS OWNED:
+- GET /analytics/dashboard
+
+API ENDPOINTS USED:
+- None (this module defines endpoints).
+"""
+
 from datetime import datetime, timedelta
 
 from fastapi import APIRouter, HTTPException

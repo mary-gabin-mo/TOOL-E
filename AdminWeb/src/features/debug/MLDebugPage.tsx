@@ -1,3 +1,11 @@
+/**
+ * PURPOSE:
+ * Manual ML debugging page for admins to upload a tool image and inspect
+ * raw prediction output from the backend classifier.
+ *
+ * API ENDPOINTS USED:
+ * - POST /identify_tool (multipart/form-data, field: file)
+ */
 import React, { useState } from 'react';
 import axios from 'axios';
 

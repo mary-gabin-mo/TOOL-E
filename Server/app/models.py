@@ -1,3 +1,12 @@
+"""
+PURPOSE:
+Defines shared Pydantic request/response models used by auth, tools,
+transactions, kiosk, and term-management routes.
+
+API ENDPOINTS USED:
+- None directly. This module provides schemas for endpoint handlers.
+"""
+
 from pydantic import BaseModel
 from typing import Optional, Dict
 

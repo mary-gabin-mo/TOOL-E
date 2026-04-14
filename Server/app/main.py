@@ -1,3 +1,15 @@
+"""
+PURPOSE:
+Application entry module for the FastAPI backend. Wires middleware, startup
+tasks, CORS policy, and router registration.
+
+API ENDPOINTS OWNED:
+- GET /
+
+API ENDPOINTS USED:
+- None directly. This module mounts routers that provide API endpoints.
+"""
+
 from fastapi import FastAPI, Request
 from fastapi.middleware.cors import CORSMiddleware
 from app.routers import auth, tools, transactions, ml, analytics, terms

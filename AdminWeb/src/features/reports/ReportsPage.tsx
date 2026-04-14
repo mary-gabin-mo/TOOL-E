@@ -1,3 +1,12 @@
+/**
+ * PURPOSE:
+ * Reporting page that filters transactions by term/date range and exports
+ * the resulting dataset to CSV.
+ *
+ * API ENDPOINTS USED:
+ * - GET /terms
+ * - GET /transactions
+ */
 import { useEffect, useMemo, useState } from 'react';
 import { Download, Loader2, Calendar } from 'lucide-react';
 import { useQuery } from '@tanstack/react-query';

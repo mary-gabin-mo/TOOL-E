@@ -1,3 +1,12 @@
+"""
+PURPOSE:
+Manages persistent term configuration in services/terms.json with validation
+and atomic writes.
+
+API ENDPOINTS USED:
+- None directly. Called by GET /terms and PUT /terms.
+"""
+
 import json
 import os
 import tempfile

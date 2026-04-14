@@ -1,3 +1,15 @@
+"""
+PURPOSE:
+Provides tool catalog CRUD operations and stock image upload/update.
+
+API ENDPOINTS OWNED:
+- GET /tools
+- POST /tools
+- PUT /tools/{tool_id}
+- PUT /tools/{tool_id}/stock-image
+
+"""
+
 import base64
 
 from fastapi import APIRouter, File, HTTPException, UploadFile

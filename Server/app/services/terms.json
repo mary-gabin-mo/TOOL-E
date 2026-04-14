@@ -23,6 +23,12 @@
       "name": "Winter 2026",
       "start": "2026-01-01",
       "end": "2026-04-30"
+    },
+    {
+      "id": "winter_2027",
+      "name": "Winter 2027",
+      "start": "2027-01-01",
+      "end": "2027-04-30"
     }
   ],
   "_comment": "This file stores admin-managed analytics terms.",

@@ -1,3 +1,12 @@
+"""
+PURPOSE:
+Exposes term configuration endpoints used by dashboard/report filtering.
+
+API ENDPOINTS OWNED:
+- GET /terms
+- PUT /terms
+"""
+
 from fastapi import APIRouter, HTTPException
 
 from app.models import TermListPayload, TermListResponse

@@ -1,3 +1,19 @@
+"""
+PURPOSE:
+Handles transaction listing, creation, batch kiosk submission, updates,
+returns, and deletion logic (including inventory adjustments).
+
+API ENDPOINTS OWNED:
+- GET /transactions
+- GET /transactions/unreturned
+- POST /transactions
+- POST /transactions/batch
+- DELETE /transactions/{transaction_id}
+- PUT /transactions/{transaction_id}
+- POST /transactions/kiosk
+
+"""
+
 from fastapi import APIRouter, HTTPException, Request
 from sqlalchemy import text
 from typing import Optional

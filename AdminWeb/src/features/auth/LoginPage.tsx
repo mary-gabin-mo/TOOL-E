@@ -1,3 +1,10 @@
+/**
+ * PURPOSE:
+ * Admin authentication page that collects credentials and starts a session.
+ *
+ * API ENDPOINTS USED:
+ * - POST /api/auth/login (via `login()` helper)
+ */
 import React, { useState } from 'react';
 import { useMutation } from '@tanstack/react-query';
 import { useNavigate, Navigate } from 'react-router-dom';

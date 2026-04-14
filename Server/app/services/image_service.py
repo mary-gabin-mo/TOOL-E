@@ -1,3 +1,16 @@
+"""
+PURPOSE:
+Handles image filesystem operations for temporary uploads, permanent storage,
+and scheduled cleanup of stale temp files.
+
+API ENDPOINTS USED:
+- None directly. Called by:
+    - POST /identify_tool
+    - POST /transactions
+    - PUT /transactions/{transaction_id}
+    - POST /transactions/kiosk
+"""
+
 import os
 import time
 import shutil

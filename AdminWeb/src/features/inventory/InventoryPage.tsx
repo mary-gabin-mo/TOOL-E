@@ -1,3 +1,12 @@
+/**
+ * PURPOSE:
+ * Inventory management page for browsing tools, sorting/filtering, and
+ * uploading or replacing stock reference images.
+ *
+ * API ENDPOINTS USED:
+ * - GET /tools
+ * - PUT /tools/{tool_id}/stock-image
+ */
 import { useMemo, useRef, useState } from 'react';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { Plus, ArrowUp, ArrowDown, ArrowUpDown, Loader2, Search, X, ImagePlus, ChevronRight } from 'lucide-react';
